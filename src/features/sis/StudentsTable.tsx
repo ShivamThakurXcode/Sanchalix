@@ -4,12 +4,14 @@ import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { EmptyState } from '@/components/EmptyState';
@@ -50,6 +52,7 @@ export function StudentsTable({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [searchText, setSearchText] = useState('');
 
   const setParams = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -66,6 +69,14 @@ export function StudentsTable({
   const counter = data
     ? `(${data.total > COUNT_CAP ? `${numbers.format(COUNT_CAP)}+` : numbers.format(data.total)})`
     : '';
+
+  const filteredRows = rows.filter(
+    (student) =>
+      student.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      student.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
+      (student.guardianName && student.guardianName.toLowerCase().includes(searchText.toLowerCase())) ||
+      (student.guardianPhone && student.guardianPhone.includes(searchText))
+  );
 
   const fields: { id: string; header: string; content: (student: StudentRow) => ReactNode }[] = [
     {
@@ -92,7 +103,7 @@ export function StudentsTable({
   const shared = {
     trackBy: 'id',
     stickyHeader: true,
-    items: rows,
+    items: filteredRows,
     loading: !data,
     loadingText: t('loading'),
     header: (
@@ -131,12 +142,19 @@ export function StudentsTable({
       </Header>
     ),
     filter: (
-      <Select
-        inlineLabelText={t('filter.status')}
-        selectedOption={{ value: status, label: t(`status.${status}`) }}
-        options={STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
-        onChange={({ detail }) => setParams({ status: detail.selectedOption.value ?? null, cursor: null })}
-      />
+      <SpaceBetween size="s">
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchText}
+          onChange={({ detail }) => setSearchText(detail.value)}
+        />
+        <Select
+          inlineLabelText={t('filter.status')}
+          selectedOption={{ value: status, label: t(`status.${status}`) }}
+          options={STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
+          onChange={({ detail }) => setParams({ status: detail.selectedOption.value ?? null, cursor: null })}
+        />
+      </SpaceBetween>
     ),
     pagination: (
       <Pagination
@@ -164,17 +182,17 @@ export function StudentsTable({
       />
     ),
     empty:
-      status === 'active' && page === 1 ? (
-        <EmptyState icon="students" heading={t('empty.heading')} body={t('empty.body')} />
-      ) : (
+      searchText || (status !== 'active' || page !== 1) ? (
         <EmptyState
           icon="students"
           heading={t('noMatches.heading')}
           body={t('noMatches.body')}
           action={
-            <Button onClick={() => setParams({ status: null, cursor: null })}>{t('noMatches.clear')}</Button>
+            <Button onClick={() => { setSearchText(''); setParams({ status: null, cursor: null }); }}>{t('noMatches.clear')}</Button>
           }
         />
+      ) : (
+        <EmptyState icon="students" heading={t('empty.heading')} body={t('empty.body')} />
       ),
   };
 

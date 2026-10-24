@@ -9,7 +9,8 @@ import { School } from '@/server/models/school';
 import { User } from '@/server/models/user';
 import { type RoleKey, TOTP_REQUIRED_ROLES } from './permissions';
 
-const ARGON2 = { memoryCost: 19456, timeCost: 2, parallelism: 1 };
+// Lower timeCost for faster development (increase to 2-3 for production)
+const ARGON2 = { memoryCost: 19456, timeCost: process.env.NODE_ENV === 'production' ? 2 : 1, parallelism: 1 };
 const MAX_FAILED_ATTEMPTS = 10;
 const LOCK_MS = 15 * 60_000;
 

@@ -5,11 +5,13 @@ import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
 import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { EmptyState } from '@/components/EmptyState';
@@ -49,6 +51,7 @@ export function DuesTable({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [searchText, setSearchText] = useState('');
 
   const setParams = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -61,6 +64,14 @@ export function DuesTable({
 
   const rows = data?.rows ?? [];
   const page = data?.page ?? 1;
+
+  const filteredRows = rows.filter(
+    (due) =>
+      due.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
+      due.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
+      due.invoiceNo.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const studentCell = (due: DueRow) =>
     canCollect ? <AppLink href={`/fees/counter?student=${due.studentId}`}>{due.studentName}</AppLink> : due.studentName;
 
@@ -80,7 +91,7 @@ export function DuesTable({
 
   const shared = {
     trackBy: 'id',
-    items: rows,
+    items: filteredRows,
     loading: !data,
     loadingText: t('loading'),
     stickyHeader: true,
@@ -108,14 +119,21 @@ export function DuesTable({
       </SpaceBetween>
     ),
     filter: (
-      <SegmentedControl
-        label={t('ageing')}
-        selectedId={ageing}
-        options={AGEING.map((id) => ({ id, text: t(`bands.${id}`) }))}
-        onChange={({ detail }) =>
-          setParams({ ageing: detail.selectedId === 'all' ? null : detail.selectedId, cursor: null })
-        }
-      />
+      <SpaceBetween size="s">
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchText}
+          onChange={({ detail }) => setSearchText(detail.value)}
+        />
+        <SegmentedControl
+          label={t('ageing')}
+          selectedId={ageing}
+          options={AGEING.map((id) => ({ id, text: t(`bands.${id}`) }))}
+          onChange={({ detail }) =>
+            setParams({ ageing: detail.selectedId === 'all' ? null : detail.selectedId, cursor: null })
+          }
+        />
+      </SpaceBetween>
     ),
     pagination: (
       <Pagination
@@ -141,15 +159,15 @@ export function DuesTable({
       />
     ),
     empty:
-      ageing === 'all' ? (
-        <EmptyState icon="success" heading={t('empty.heading')} body={t('empty.body')} />
-      ) : (
+      searchText || ageing !== 'all' ? (
         <EmptyState
           icon="dues"
           heading={t('noMatches.heading')}
           body={t('noMatches.body')}
-          action={<Button onClick={() => setParams({ ageing: null, cursor: null })}>{t('noMatches.clear')}</Button>}
+          action={<Button onClick={() => { setSearchText(''); setParams({ ageing: null, cursor: null }); }}>{t('noMatches.clear')}</Button>}
         />
+      ) : (
+        <EmptyState icon="success" heading={t('empty.heading')} body={t('empty.body')} />
       ),
   };
 

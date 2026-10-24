@@ -553,6 +553,7 @@
       "title": "Students",
       "loading": "Loading students",
       "showing": "Showing {count, plural, one {# student} other {# students}}",
+      "searchPlaceholder": "Search by name, admission no., parent or phone",
       "columns": {
         "name": "Name",
         "admissionNo": "Admission no.",
@@ -963,6 +964,12 @@
       "strength": "{strength} of {capacity}",
       "optional": "optional",
       "cancel": "Cancel",
+      "searchPlaceholder": "Search by section, class or teacher",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No sections match your search."
+      },
+      "pageSize": "{count} per page",
       "columns": {
         "class": "Class",
         "section": "Section",
@@ -1019,6 +1026,12 @@
       "cancel": "Cancel",
       "dismiss": "Dismiss message",
       "added": "{name} added.",
+      "searchPlaceholder": "Search by subject name or code",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No subjects match your search."
+      },
+      "pageSize": "{count} per page",
       "name": "Subject",
       "code": "Code",
       "codeHint": "2 to 8 letters or digits, for example MATH or SCI.",
@@ -1096,6 +1109,12 @@
     "classSubjects": {
       "title": "Subjects by class",
       "description": "Which subjects each class studies. The timetable offers only these for the class. A class with none set is offered every subject.",
+      "searchPlaceholder": "Search by class name",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No classes match your search."
+      },
+      "pageSize": "{count} per page",
       "class": "Class",
       "subjects": "Subjects",
       "actions": "Actions",
@@ -1251,6 +1270,12 @@
       "add": "Add holiday",
       "cancel": "Cancel",
       "dismiss": "Dismiss message",
+      "searchPlaceholder": "Search by holiday name or date",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No holidays match your search."
+      },
+      "pageSize": "{count} per page",
       "created": "{name} added. Attendance is blocked on that day.",
       "createdWithAttendance": "{name} added. Attendance was already taken that day for {count, plural, one {# section} other {# sections}}; those records are kept.",
       "deleted": "{name} deleted. Attendance can be taken on that day again.",
@@ -1388,6 +1413,11 @@
       "title": "Fee structures",
       "add": "Add fee structure",
       "feeHeads": "Fee heads",
+      "searchPlaceholder": "Search by fee structure name or class",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No fee structures match your search."
+      },
       "created": "{name} saved as a draft. The principal can now approve it.",
       "approved": "{name} approved. {count, plural, =0 {No invoices were issued because its classes have no students.} one {# invoice issued.} other {# invoices issued.}}",
       "approve": "Approve",
@@ -1453,6 +1483,7 @@
       "loading": "Loading invoices",
       "showing": "Showing {count, plural, one {# invoice} other {# invoices}}",
       "pageSize": "{count, plural, one {# invoice} other {# invoices}}",
+      "searchPlaceholder": "Search by student, admission no. or invoice",
       "filter": {
         "status": "Status",
         "all": "All statuses"
@@ -1615,6 +1646,11 @@
       "loading": "Loading payments",
       "showing": "Showing {count, plural, one {# payment} other {# payments}}",
       "pageSize": "{count, plural, one {# payment} other {# payments}}",
+      "searchPlaceholder": "Search by student, admission no. or receipt",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No payments match your search."
+      },
       "columns": {
         "receiptNo": "Receipt no.",
         "date": "Date",
@@ -1634,6 +1670,7 @@
       "loading": "Loading dues",
       "showing": "Showing {count, plural, one {# overdue invoice} other {# overdue invoices}}",
       "pageSize": "{count, plural, one {# invoice} other {# invoices}}",
+      "searchPlaceholder": "Search by student, admission no. or invoice",
       "outstanding": "Total overdue",
       "ageing": "Days overdue",
       "bands": {
@@ -1968,6 +2005,12 @@
       "markAll": "Mark all as read",
       "unread": "Unread",
       "open": "Open",
+      "searchPlaceholder": "Search notifications",
+      "noMatches": {
+        "heading": "No matches",
+        "body": "No notifications match your search."
+      },
+      "pageSize": "{count} per page",
       "empty": {
         "heading": "You're all caught up",
         "body": "New notifications appear here."
@@ -3499,6 +3542,12 @@
   "outbox": {
     "title": "Sent messages",
     "description": "SMS and email the school has sent in the last 30 days. Until an SMS and email service is connected, messages are recorded here instead of being delivered, so codes and links can be read from this list.",
+    "searchPlaceholder": "Search by recipient or message",
+    "noMatches": {
+      "heading": "No matches",
+      "body": "No messages match your search."
+    },
+    "pageSize": "{count} per page",
     "sentAt": "Sent",
     "channel": "Channel",
     "to": "To",
@@ -3726,12 +3775,12 @@
         "reason": "Reason"
       },
       "actions": {
-        "auth.signIn": "Signed in",
-        "auth.totp.enable": "Turned on two-step verification",
-        "platform.school.create": "Added a school",
-        "platform.school.activate": "Switched a school on",
-        "platform.school.suspend": "Paused a school",
-        "platform.admin.resetPassword": "Gave a school admin a new password"
+        "auth_signIn": "Signed in",
+        "auth_totp_enable": "Turned on two-step verification",
+        "platform_school_create": "Added a school",
+        "platform_school_activate": "Switched a school on",
+        "platform_school_suspend": "Paused a school",
+        "platform_admin_resetPassword": "Gave a school admin a new password"
       },
       "empty": {
         "heading": "Nothing yet",

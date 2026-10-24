@@ -3,9 +3,11 @@
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { EmptyState } from '@/components/EmptyState';
@@ -27,6 +29,7 @@ export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [searchText, setSearchText] = useState('');
 
   const setParams = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -39,6 +42,14 @@ export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data
 
   const rows = data?.rows ?? [];
   const page = data?.page ?? 1;
+
+  const filteredRows = rows.filter(
+    (payment) =>
+      payment.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
+      payment.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
+      payment.receiptNo.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const receiptLink = (payment: PaymentRow) => (
     <AppLink href={`/fees/payments/${payment.id}`}>{payment.receiptNo}</AppLink>
   );
@@ -58,7 +69,7 @@ export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data
 
   const shared = {
     trackBy: 'id',
-    items: rows,
+    items: filteredRows,
     loading: !data,
     loadingText: t('loading'),
     stickyHeader: true,
@@ -66,6 +77,13 @@ export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data
       <Header variant="h2" actions={<ExportButton href="/api/v1/export/payments" label={tExport('label.payments')} />}>
         {t('title')}
       </Header>
+    ),
+    filter: (
+      <Input
+        placeholder={t('searchPlaceholder')}
+        value={searchText}
+        onChange={({ detail }) => setSearchText(detail.value)}
+      />
     ),
     pagination: (
       <Pagination
@@ -90,7 +108,11 @@ export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data
         onConfirm={({ detail }) => setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })}
       />
     ),
-    empty: <EmptyState icon="receipt" heading={t('empty.heading')} body={t('empty.body')} />,
+    empty: searchText ? (
+      <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
+    ) : (
+      <EmptyState icon="receipt" heading={t('empty.heading')} body={t('empty.body')} />
+    ),
   };
 
   if (isMobile) {

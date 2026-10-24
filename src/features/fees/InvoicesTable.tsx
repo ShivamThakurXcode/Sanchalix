@@ -4,11 +4,14 @@ import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
+import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { usePathname, useRouter } from '@/i18n/navigation';
@@ -44,6 +47,7 @@ export function InvoicesTable({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [searchText, setSearchText] = useState('');
 
   const setParams = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -60,6 +64,13 @@ export function InvoicesTable({
     { value: ALL, label: t('filter.all') },
     ...STATUSES.map((value) => ({ value, label: t(`status.${value}`) })),
   ];
+
+  const filteredRows = rows.filter(
+    (invoice) =>
+      invoice.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
+      invoice.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
+      invoice.invoiceNo.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const fields: { id: string; header: string; content: (invoice: InvoiceRow) => ReactNode }[] = [
     { id: 'invoiceNo', header: t('columns.invoiceNo'), content: (invoice) => invoice.invoiceNo },
@@ -84,21 +95,28 @@ export function InvoicesTable({
 
   const shared = {
     trackBy: 'id',
-    items: rows,
+    items: filteredRows,
     loading: !data,
     loadingText: t('loading'),
     stickyHeader: true,
     header: <Header variant="h2">{t('title')}</Header>,
     filter: (
-      <Select
-        inlineLabelText={t('filter.status')}
-        selectedOption={statusOptions.find((option) => option.value === (status ?? ALL)) ?? null}
-        options={statusOptions}
-        onChange={({ detail }) => {
-          const value = detail.selectedOption.value;
-          setParams({ status: !value || value === ALL ? null : value, cursor: null });
-        }}
-      />
+      <SpaceBetween size="s">
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchText}
+          onChange={({ detail }) => setSearchText(detail.value)}
+        />
+        <Select
+          inlineLabelText={t('filter.status')}
+          selectedOption={statusOptions.find((option) => option.value === (status ?? ALL)) ?? null}
+          options={statusOptions}
+          onChange={({ detail }) => {
+            const value = detail.selectedOption.value;
+            setParams({ status: !value || value === ALL ? null : value, cursor: null });
+          }}
+        />
+      </SpaceBetween>
     ),
     pagination: (
       <Pagination
@@ -123,12 +141,12 @@ export function InvoicesTable({
         onConfirm={({ detail }) => setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })}
       />
     ),
-    empty: status ? (
+    empty: searchText || status ? (
       <EmptyState
         icon="invoice"
         heading={t('noMatches.heading')}
         body={t('noMatches.body')}
-        action={<Button onClick={() => setParams({ status: null, cursor: null })}>{t('noMatches.clear')}</Button>}
+        action={<Button onClick={() => { setSearchText(''); setParams({ status: null, cursor: null }); }}>{t('noMatches.clear')}</Button>}
       />
     ) : (
       <EmptyState icon="invoice" heading={t('empty.heading')} body={t('empty.body')} />

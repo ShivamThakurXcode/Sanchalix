@@ -3,11 +3,15 @@
 import Alert from '@cloudscape-design/components/alert';
 import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
+import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
+import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { usePathname, useRouter } from '@/i18n/navigation';
@@ -16,6 +20,7 @@ import { assignClassTeacher } from '@/server/modules/academics/actions';
 import type { SectionRow } from '@/server/modules/academics/schemas';
 
 const NONE = '—';
+const PAGE_SIZES = [10, 25, 50, 100];
 
 export function SectionsTable({
   sections,
@@ -32,6 +37,19 @@ export function SectionsTable({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const filteredSections = sections.filter(
+    (section) =>
+      section.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      section.className.toLowerCase().includes(searchText.toLowerCase()) ||
+      section.classTeacher?.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const paginatedSections = filteredSections.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(filteredSections.length / pageSize);
 
   const link = (href: string, label: string, primary = false) => (
     <Button
@@ -66,12 +84,12 @@ export function SectionsTable({
   const shared = {
     trackBy: 'id',
     stickyHeader: true,
-    items: sections,
+    items: paginatedSections,
     header: (
       <SpaceBetween size="m">
         <Header
           variant="h2"
-          counter={`(${sections.length})`}
+          counter={`(${filteredSections.length})`}
           actions={
             canCreate && (
               <SpaceBetween direction="horizontal" size="xs">
@@ -90,7 +108,38 @@ export function SectionsTable({
         )}
       </SpaceBetween>
     ),
-    empty: (
+    filter: (
+      <Input
+        placeholder={t('searchPlaceholder')}
+        value={searchText}
+        onChange={({ detail }) => {
+          setSearchText(detail.value);
+          setCurrentPage(1);
+        }}
+      />
+    ),
+    pagination: (
+      <Pagination
+        currentPageIndex={currentPage}
+        pagesCount={totalPages}
+        onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+      />
+    ),
+    preferences: (
+      <CollectionPreferences
+        preferences={{ pageSize }}
+        pageSizePreference={{
+          options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
+        }}
+        onConfirm={({ detail }) => {
+          setPageSize(detail.pageSize ?? pageSize);
+          setCurrentPage(1);
+        }}
+      />
+    ),
+    empty: searchText ? (
+      <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
+    ) : (
       <EmptyState
         icon="classes"
         heading={t('empty.heading')}

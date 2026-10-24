@@ -46,7 +46,7 @@ export async function signInWithPassword(_previous: ActionResult<void> | null, f
     });
     await createSession(userId, role, schoolId, needsTotp);
     await setModeCookie(visualMode);
-    if (!needsTotp) await auditSignIn({ userId, role, schoolId }, 'auth.signIn');
+    if (!needsTotp) await auditSignIn({ userId, role, schoolId }, 'auth_signIn');
   });
 }
 
@@ -76,7 +76,7 @@ export async function verifyTotp(_previous: ActionResult<void> | null, formData:
     const actor = await requirePendingSession();
     const method = await verifyTotpChallenge(actor.userId, TotpCode.parse(formData.get('code')));
     await User.updateOne({ _id: actor.userId }, { failedLoginCount: 0 });
-    await completeSignIn(actor, method === 'totp' ? 'auth.signIn' : 'auth.signIn.recoveryCode');
+    await completeSignIn(actor, method === 'totp' ? 'auth_signIn' : 'auth.signIn.recoveryCode');
   });
 }
 
@@ -84,7 +84,7 @@ export async function confirmTotp(code: unknown) {
   return withAction('auth.confirmTotp', async () => {
     const actor = await requirePendingSession();
     const recoveryCodes = await confirmTotpSetup(actor.userId, TotpCode.parse(code));
-    await auditSignIn(actor, 'auth.totp.enable');
+    await auditSignIn(actor, 'auth_totp_enable');
     return { recoveryCodes };
   });
 }
@@ -94,7 +94,7 @@ export async function completeTotpSetup() {
     const actor = await requirePendingSession();
     const user = await User.findById(actor.userId).select('totp.enabledAt').lean();
     if (!user?.totp?.enabledAt) throw new AppError('FORBIDDEN', 'errors.forbidden');
-    await completeSignIn(actor, 'auth.signIn');
+    await completeSignIn(actor, 'auth_signIn');
   });
 }
 

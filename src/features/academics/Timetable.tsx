@@ -4,11 +4,13 @@ import Alert from '@cloudscape-design/components/alert';
 import Checkbox from '@cloudscape-design/components/checkbox';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
+import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
 import Multiselect from '@cloudscape-design/components/multiselect';
+import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
@@ -24,6 +26,7 @@ type Option = { id: string; name: string };
 type Failure = { message: string; fieldErrors?: Record<string, string> };
 const DAYS = [1, 2, 3, 4, 5, 6];
 const TYPES = ['scholastic', 'co_scholastic'];
+const PAGE_SIZES = [10, 25, 50, 100];
 
 export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[]; canCreate: boolean }) {
   const t = useTranslations('academics.subjects');
@@ -33,7 +36,20 @@ export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[];
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Failure | null>(null);
   const [added, setAdded] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const typeOptions = TYPES.map((value) => ({ value, label: t(`type.${value}`) }));
+
+  const filteredSubjects = subjects.filter(
+    (subject) =>
+      subject.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      subject.code.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const paginatedSubjects = filteredSubjects.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(filteredSubjects.length / pageSize);
+
   const addButton = (primary: boolean) => (
     <Button {...(primary && { variant: 'primary' as const })} onClick={() => setOpen(true)}>
       {t('add')}
@@ -58,10 +74,10 @@ export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[];
         variant="container"
         stickyHeader
         trackBy="id"
-        items={subjects}
+        items={paginatedSubjects}
         header={
           <SpaceBetween size="m">
-            <Header variant="h2" counter={`(${subjects.length})`} actions={canCreate && addButton(true)}>
+            <Header variant="h2" counter={`(${filteredSubjects.length})`} actions={canCreate && addButton(true)}>
               {t('title')}
             </Header>
             {added && (
@@ -71,13 +87,46 @@ export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[];
             )}
           </SpaceBetween>
         }
-        empty={
-          <EmptyState
-            icon="subjects"
-            heading={t('empty.heading')}
-            body={t('empty.body')}
-            action={canCreate && addButton(false)}
+        filter={
+          <Input
+            placeholder={t('searchPlaceholder')}
+            value={searchText}
+            onChange={({ detail }) => {
+              setSearchText(detail.value);
+              setCurrentPage(1);
+            }}
           />
+        }
+        pagination={
+          <Pagination
+            currentPageIndex={currentPage}
+            pagesCount={totalPages}
+            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+          />
+        }
+        preferences={
+          <CollectionPreferences
+            preferences={{ pageSize }}
+            pageSizePreference={{
+              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
+            }}
+            onConfirm={({ detail }) => {
+              setPageSize(detail.pageSize ?? pageSize);
+              setCurrentPage(1);
+            }}
+          />
+        }
+        empty={
+          searchText ? (
+            <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
+          ) : (
+            <EmptyState
+              icon="subjects"
+              heading={t('empty.heading')}
+              body={t('empty.body')}
+              action={canCreate && addButton(false)}
+            />
+          )
         }
         columnDefinitions={[
           { id: 'name', header: t('name'), cell: (subject) => subject.name, isRowHeader: true },
@@ -354,8 +403,15 @@ export function ClassSubjects({ classes, subjects, canEdit }: { classes: ClassRo
   const [chosen, setChosen] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const subjectOptions = subjects.map(({ id, name }) => ({ value: id, label: name }));
   const nameOf = new Map(subjects.map(({ id, name }) => [id, name]));
+
+  const filteredClasses = classes.filter((cls) => cls.name.toLowerCase().includes(searchText.toLowerCase()));
+  const paginatedClasses = filteredClasses.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(filteredClasses.length / pageSize);
 
   async function save() {
     if (!editing) return;
@@ -377,10 +433,10 @@ export function ClassSubjects({ classes, subjects, canEdit }: { classes: ClassRo
         variant="container"
         trackBy="id"
         wrapLines
-        items={classes}
+        items={paginatedClasses}
         header={
           <SpaceBetween size="m">
-            <Header variant="h2" counter={`(${classes.length})`} description={t('description')}>
+            <Header variant="h2" counter={`(${filteredClasses.length})`} description={t('description')}>
               {t('title')}
             </Header>
             {feedback && (
@@ -390,7 +446,42 @@ export function ClassSubjects({ classes, subjects, canEdit }: { classes: ClassRo
             )}
           </SpaceBetween>
         }
-        empty={<EmptyState icon="classes" heading={t('empty.heading')} body={t('empty.body')} />}
+        filter={
+          <Input
+            placeholder={t('searchPlaceholder')}
+            value={searchText}
+            onChange={({ detail }) => {
+              setSearchText(detail.value);
+              setCurrentPage(1);
+            }}
+          />
+        }
+        pagination={
+          <Pagination
+            currentPageIndex={currentPage}
+            pagesCount={totalPages}
+            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+          />
+        }
+        preferences={
+          <CollectionPreferences
+            preferences={{ pageSize }}
+            pageSizePreference={{
+              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
+            }}
+            onConfirm={({ detail }) => {
+              setPageSize(detail.pageSize ?? pageSize);
+              setCurrentPage(1);
+            }}
+          />
+        }
+        empty={
+          searchText ? (
+            <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
+          ) : (
+            <EmptyState icon="classes" heading={t('empty.heading')} body={t('empty.body')} />
+          )
+        }
         columnDefinitions={[
           { id: 'name', header: t('class'), cell: (row) => row.name, isRowHeader: true, width: 160 },
           {

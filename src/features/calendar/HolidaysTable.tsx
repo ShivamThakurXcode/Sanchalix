@@ -3,8 +3,11 @@
 import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
+import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
+import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
+import Pagination from '@cloudscape-design/components/pagination';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
@@ -16,6 +19,7 @@ import { deleteHoliday } from '@/server/modules/calendar/actions';
 import type { HolidayRow } from '@/server/modules/calendar/schemas';
 
 const NEW = '/calendar/holidays/new';
+const PAGE_SIZES = [10, 25, 50, 100];
 const dateFormat = new Intl.DateTimeFormat('en-IN', { dateStyle: 'full', timeZone: 'UTC' });
 
 type Feedback = { type: 'success' | 'warning' | 'error'; text: string };
@@ -37,6 +41,18 @@ export function HolidaysTable({
   const [pendingDelete, setPendingDelete] = useState<HolidayRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleted, setDeleted] = useState<Feedback | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const filteredHolidays = holidays.filter(
+    (holiday) =>
+      holiday.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      holiday.date.includes(searchText)
+  );
+
+  const paginatedHolidays = filteredHolidays.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(filteredHolidays.length / pageSize);
 
   const feedback: Feedback | null =
     deleted ??
@@ -81,10 +97,10 @@ export function HolidaysTable({
         stickyHeader
         enableKeyboardNavigation
         trackBy="id"
-        items={holidays}
+        items={paginatedHolidays}
         header={
           <SpaceBetween size="m">
-            <Header variant="h2" counter={`(${holidays.length})`} actions={canEdit && addButton(true)}>
+            <Header variant="h2" counter={`(${filteredHolidays.length})`} actions={canEdit && addButton(true)}>
               {t('title')}
             </Header>
             {feedback && (
@@ -102,13 +118,46 @@ export function HolidaysTable({
             )}
           </SpaceBetween>
         }
-        empty={
-          <EmptyState
-            icon="holiday"
-            heading={t('empty.heading')}
-            body={t('empty.body')}
-            action={canEdit && addButton(false)}
+        filter={
+          <Input
+            placeholder={t('searchPlaceholder')}
+            value={searchText}
+            onChange={({ detail }) => {
+              setSearchText(detail.value);
+              setCurrentPage(1);
+            }}
           />
+        }
+        pagination={
+          <Pagination
+            currentPageIndex={currentPage}
+            pagesCount={totalPages}
+            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+          />
+        }
+        preferences={
+          <CollectionPreferences
+            preferences={{ pageSize }}
+            pageSizePreference={{
+              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
+            }}
+            onConfirm={({ detail }) => {
+              setPageSize(detail.pageSize ?? pageSize);
+              setCurrentPage(1);
+            }}
+          />
+        }
+        empty={
+          searchText ? (
+            <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
+          ) : (
+            <EmptyState
+              icon="holiday"
+              heading={t('empty.heading')}
+              body={t('empty.body')}
+              action={canEdit && addButton(false)}
+            />
+          )
         }
         columnDefinitions={[
           {
