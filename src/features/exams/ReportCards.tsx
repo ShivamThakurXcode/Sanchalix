@@ -142,7 +142,7 @@ export function ReportCardsTable({
         }
         filter={
           <Select
-            inlineLabelText={t('section')}
+            ariaLabel={t('section')}
             placeholder={t('sectionPlaceholder')}
             selectedOption={sectionOptions.find((option) => option.value === section?.id) ?? null}
             options={sectionOptions}

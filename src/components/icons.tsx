@@ -14,6 +14,7 @@ import BookOpen from 'reicon-react/icons/BookOpen';
 import Box from 'reicon-react/icons/Box';
 import Briefcase from 'reicon-react/icons/Briefcase';
 import Building from 'reicon-react/icons/Building';
+import Document from 'reicon-react/icons/Document';
 import Buildings from 'reicon-react/icons/Buildings';
 import Bus from 'reicon-react/icons/Bus';
 import Calendar from 'reicon-react/icons/Calendar';
@@ -211,6 +212,7 @@ export const icons = {
   roles: ShieldCheck,
   switchRole: UserTag,
   auditLog: History,
+  blog: Document,
   import: Import,
   export: Export,
   download: Download,

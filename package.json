@@ -17,6 +17,7 @@
     "e2e": "playwright test",
     "seed": "node --conditions=react-server --env-file=.env.local node_modules/tsx/dist/cli.mjs scripts/seed.ts",
     "totp": "tsx scripts/totp.ts",
+    "blog:import": "tsx --conditions=react-server --env-file=.env.local scripts/importBlogPosts.ts",
     "superadmin": "tsx --conditions=react-server --env-file=.env.local scripts/createSuperAdmin.ts",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down"

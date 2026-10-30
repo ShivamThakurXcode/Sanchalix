@@ -81,6 +81,8 @@ export type Permission =
   | 'platform.school.create'
   | 'platform.school.update'
   | 'platform.audit.read'
+  | 'platform.blog.read'
+  | 'platform.blog.manage'
   | 'messaging.outbox.read'
   | 'audit.log.read';
 
@@ -90,7 +92,7 @@ const OWN_LEAVE: readonly Permission[] = ['hr.leave.read', 'hr.leave.create'];
 const OWN_CHECKIN: readonly Permission[] = ['hr.checkin.create'];
 
 const ROLE_PERMISSIONS: Record<RoleKey, readonly Permission[]> = {
-  super_admin: ['platform.school.read', 'platform.school.create', 'platform.school.update', 'platform.audit.read'],
+  super_admin: ['platform.school.read', 'platform.school.create', 'platform.school.update', 'platform.audit.read', 'platform.blog.read', 'platform.blog.manage'],
   school_admin: [
     ...EVERYONE,
     'exams.reportCard.read',

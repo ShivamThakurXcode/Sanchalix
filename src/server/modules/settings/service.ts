@@ -16,8 +16,6 @@ const text = (key: string, max: number) => z.string().trim().min(1, `${E}.${key}
 export const SchoolInput = z.object({
   name: text('name', 120),
   affiliationNo: z.string().trim().max(40, `${E}.affiliationNo`).default(''),
-  // https only: the address is loaded by every signed-in browser of the school.
-  logoUrl: z.union([z.literal(''), z.url({ protocol: /^https$/, error: `${E}.logoUrl` }).max(300, `${E}.logoUrl`)]).default(''),
   address: z.object({
     line1: text('line1', 120),
     city: text('city', 60),
@@ -89,6 +87,7 @@ export const TermsInput = z
 export type TermsInput = z.infer<typeof TermsInput>;
 
 export type SchoolSettings = SchoolInput & {
+  hasLogo: boolean;
   code: string;
   board: string;
   periods: { start: string; end: string }[];
@@ -111,7 +110,7 @@ export async function getSettings(ctx: RequestContext): Promise<SchoolSettings |
     code: school.code,
     board: school.board,
     affiliationNo: school.affiliationNo ?? '',
-    logoUrl: school.logoUrl ?? '',
+    hasLogo: Boolean(school.logoUrl),
     address: {
       line1: school.address.line1,
       city: school.address.city,
@@ -145,7 +144,6 @@ export async function updateSchool(ctx: RequestContext, input: SchoolInput) {
     {
       name: input.name,
       affiliationNo: input.affiliationNo || null,
-      logoUrl: input.logoUrl || null,
       'address.line1': input.address.line1,
       'address.city': input.address.city,
       'address.state': input.address.state,

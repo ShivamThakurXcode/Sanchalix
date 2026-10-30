@@ -26,7 +26,7 @@ Every MongoDB collection in Sanchalix, with its fields, validation, indexes and 
 2. On `find*`, `count*`, `update*`, `delete*` and `aggregate`, throws `TenantScopeError` if the query or pipeline does not include `schoolId`. This makes a cross-tenant leak impossible to write by accident.
 3. Adds `deletedAt: null` to filters unless `{ withDeleted: true }` is passed.
 
-Platform-level collections (`organizations`, `schools`, `users`, `sessions`, `platformAuditLogs`) are exempt and accessed only through `src/server/platform/*`.
+Platform-level collections (`organizations`, `schools`, `users`, `sessions`, `platformAuditLogs`, `blogPosts`) are exempt and accessed only through `src/server/platform/*`.
 
 ## Entity relationship overview
 
@@ -93,7 +93,7 @@ Indexes: `{ name: 1 }`.
 | timezone | IANA string | default `Asia/Kolkata` |
 | currency | ISO 4217 | default `INR` |
 | locales | string[] | default `['en', 'hi']` |
-| logoUrl | string | S3 key |
+| logoUrl | string | Storage key of the uploaded logo (`school/school/uuid.ext`), served at `/api/v1/settings/logo` |
 | settings | SchoolSettings | see below |
 | integrations | `{ razorpay?: { keyId, keySecret🔒, webhookSecret🔒 }, stripe?: {...🔒}, emailDomain?, allowedGoogleDomains: string[] }` | optional; the platform defaults apply when unset |
 | status | `'onboarding' \| 'active' \| 'suspended'` | |
@@ -503,6 +503,9 @@ Indexes: `{ schoolId: 1, at: -1 }`, `{ schoolId: 1, 'entity.type': 1, 'entity.id
 
 ### platformAuditLogs
 Append-only record of what platform staff do: sign-ins, creating a school, switching one on or pausing it, giving a school admin a new password. It belongs to no school, so it has no `schoolId` (the school it concerns is `targetSchoolId`). `actorId`, `action`, `entity: { type, id }`, `targetSchoolId?`, `before`, `after`, `reason?`, `ip`, `userAgent`, `at`. Indexes: `{ at: -1 }`, `{ targetSchoolId: 1, at: -1 }`.
+
+### blogPosts
+The platform's own blog, shown on the public site. It belongs to no school, so it has no `schoolId`. `slug` (unique, the address `/blog/{slug}`), `title`, `summary`, `topic: 'fees' | 'attendance' | 'admissions' | 'exams' | 'gettingStarted' | 'timetable'`, `cover` (a picture from `public/banners`), `publishedOn` (`YYYY-MM-DD`), `status: 'draft' | 'published'`, `sections: { heading, paragraphs[] }[]`, `createdBy`, `updatedBy`, `createdAt`, `updatedAt`. The public site shows only `published` posts whose `publishedOn` is today (India) or earlier. Index: `{ status: 1, publishedOn: -1 }`.
 
 ### importJobs
 `schoolId`, `kind: 'students' | 'guardians' | 'staff' | 'fees_opening_balance' | 'marks' | 'books'`, `fileKey`, `status: 'uploaded' | 'validating' | 'validated' | 'importing' | 'done' | 'failed'`, `totalRows`, `validRows`, `errors: { row, field, message }[]` (the first 1,000; the rest go to an error file), `errorFileKey`, `dryRun`, `startedBy`.

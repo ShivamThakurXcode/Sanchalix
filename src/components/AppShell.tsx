@@ -238,6 +238,7 @@ export function AppShell({
         headerSelector="#top-nav"
         toolsHide
         disableContentPaddings={Boolean(banner)}
+        navigationWidth={240}
         navigationCloseBehavior="collapse"
         navigationOpen={navigationOpen}
         onNavigationChange={({ detail }) => setNavigationChoice(detail.open)}

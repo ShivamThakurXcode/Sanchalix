@@ -186,6 +186,15 @@ body {
   }
 }
 
+/* The two logo boxes together span the navigation panel's 240px width (navigationWidth in AppShell), so the divider under the header
+   lines up with the panel's edge. */
+@media (min-width: 689px) {
+  .vw-top-nav:not(.vw-public-nav) > .vw-platform-logo:not(.vw-maker-logo) {
+    inline-size: 184px;
+    padding-inline: 22px;
+  }
+}
+
 .vw-public-nav [class*='awsui_identity_'] [class*='awsui_title_']::before {
   content: '';
   display: inline-block;

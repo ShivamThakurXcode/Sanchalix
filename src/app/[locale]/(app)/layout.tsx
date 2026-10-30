@@ -135,6 +135,7 @@ async function PlatformLayout({ platform, children }: { platform: PlatformContex
   const pages = [
     { key: 'platformHome', href: '/platform', icon: 'dashboard' },
     { key: 'platformSchools', href: '/platform/schools', icon: 'school' },
+    { key: 'platformBlog', href: '/platform/blog', icon: 'blog' },
     { key: 'platformAudit', href: '/platform/audit', icon: 'auditLog' },
   ] as const;
   const nav: NavItem[] = pages.map(({ key, href, icon }) => ({
@@ -211,7 +212,7 @@ export default async function AppGroupLayout({ children }: { children: ReactNode
     <AppShell
       nav={nav}
       schoolName={school.name}
-      schoolLogo={school.logoUrl}
+      schoolLogo={school.logoUrl ? `/api/v1/settings/logo?v=${school.logoUrl.split('/').pop()}` : null}
       userName={ctx.name}
       roleLabel={t(`roles.${ctx.role}`)}
       signOut={signOut}

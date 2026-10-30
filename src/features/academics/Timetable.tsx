@@ -283,7 +283,7 @@ export function TimetableGrid({
         }
         filter={
           <Select
-            inlineLabelText={t('section')}
+            ariaLabel={t('section')}
             placeholder={t('sectionPlaceholder')}
             selectedOption={sectionOptions.find((option) => option.value === sectionId) ?? null}
             options={sectionOptions}

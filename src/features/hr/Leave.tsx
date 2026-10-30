@@ -153,7 +153,7 @@ export function LeaveTable({
         }
         filter={
           <Select
-            inlineLabelText={t('filter.label')}
+            ariaLabel={t('filter.label')}
             selectedOption={filterOptions.find((option) => option.value === status) ?? null}
             options={filterOptions}
             onChange={({ detail }) => go(null, detail.selectedOption.value ?? 'all')}

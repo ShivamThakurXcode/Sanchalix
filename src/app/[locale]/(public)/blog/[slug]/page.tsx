@@ -8,29 +8,26 @@ import SpaceBetween from '@cloudscape-design/components/space-between';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getEntry, PublicPage } from '@/features/marketing/PublicPage';
-import { postDate, POSTS, type PostSection } from '@/features/marketing/posts';
+import { postDate } from '@/features/marketing/posts';
+import { getPublishedPost, listPublishedPosts } from '@/server/modules/blog/service';
 
 type Props = { params: Promise<{ slug: string }> };
 
-const find = (slug: string) => POSTS.find((post) => post.slug === slug);
-
 export async function generateMetadata({ params }: Props) {
-  const post = find((await params).slug);
-  if (!post) return {};
-  const t = await getTranslations('marketing.blog.posts');
-  return { title: t(`${post.slug}.title`), description: t(`${post.slug}.summary`) };
+  const post = await getPublishedPost((await params).slug);
+  return post ? { title: post.title, description: post.summary } : {};
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const post = find((await params).slug);
+  const post = await getPublishedPost((await params).slug);
   if (!post) notFound();
-  const [t, tMarketing, enter] = await Promise.all([
+  const [t, tMarketing, enter, posts] = await Promise.all([
     getTranslations('marketing.blog'),
     getTranslations('marketing'),
     getEntry(),
+    listPublishedPosts(),
   ]);
-  const sections = t.raw(`posts.${post.slug}.sections`) as PostSection[];
-  const others = POSTS.filter(({ slug }) => slug !== post.slug).slice(0, 3);
+  const others = posts.filter(({ slug }) => slug !== post.slug).slice(0, 3);
 
   return (
     <PublicPage>
@@ -49,10 +46,10 @@ export default async function BlogPostPage({ params }: Props) {
                 {t(`topics.${post.topic}`)}
               </Box>
               <Box variant="h1" fontSize="display-l" fontWeight="bold">
-                {t(`posts.${post.slug}.title`)}
+                {post.title}
               </Box>
               <Box variant="p" fontSize="heading-m" color="inherit">
-                {t(`posts.${post.slug}.summary`)}
+                {post.summary}
               </Box>
               <Box color="inherit" fontSize="body-s">
                 {t('meta', { date: postDate(post.date), minutes: post.minutes })}
@@ -65,7 +62,7 @@ export default async function BlogPostPage({ params }: Props) {
           <SpaceBetween size="xxl">
             <article>
               <SpaceBetween size="xl">
-                {sections.map(({ heading, paragraphs }) => (
+                {post.sections.map(({ heading, paragraphs }) => (
                   <section key={heading}>
                     <SpaceBetween size="s">
                       <Box variant="h2">{heading}</Box>
@@ -80,20 +77,22 @@ export default async function BlogPostPage({ params }: Props) {
               </SpaceBetween>
             </article>
 
-            <Container header={<Header variant="h2">{t('more')}</Header>}>
-              <SpaceBetween size="m">
-                {others.map(({ slug, date, minutes }) => (
-                  <div key={slug}>
-                    <Link href={`/blog/${slug}`} fontSize="heading-s">
-                      {t(`posts.${slug}.title`)}
-                    </Link>
-                    <Box color="text-body-secondary" fontSize="body-s">
-                      {t('meta', { date: postDate(date), minutes })}
-                    </Box>
-                  </div>
-                ))}
-              </SpaceBetween>
-            </Container>
+            {others.length > 0 && (
+              <Container header={<Header variant="h2">{t('more')}</Header>}>
+                <SpaceBetween size="m">
+                  {others.map(({ slug, title, date, minutes }) => (
+                    <div key={slug}>
+                      <Link href={`/blog/${slug}`} fontSize="heading-s">
+                        {title}
+                      </Link>
+                      <Box color="text-body-secondary" fontSize="body-s">
+                        {t('meta', { date: postDate(date), minutes })}
+                      </Box>
+                    </div>
+                  ))}
+                </SpaceBetween>
+              </Container>
+            )}
 
             <Container>
               <SpaceBetween size="m" alignItems="center">

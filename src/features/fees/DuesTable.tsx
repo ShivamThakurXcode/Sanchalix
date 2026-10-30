@@ -4,6 +4,7 @@ import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
+import Grid from '@cloudscape-design/components/grid';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
@@ -119,7 +120,7 @@ export function DuesTable({
       </SpaceBetween>
     ),
     filter: (
-      <SpaceBetween size="s">
+      <Grid gridDefinition={[{ colspan: { default: 12, xs: 5 } }, { colspan: { default: 12, xs: 7 } }]}>
         <Input
           placeholder={t('searchPlaceholder')}
           value={searchText}
@@ -133,7 +134,7 @@ export function DuesTable({
             setParams({ ageing: detail.selectedId === 'all' ? null : detail.selectedId, cursor: null })
           }
         />
-      </SpaceBetween>
+      </Grid>
     ),
     pagination: (
       <Pagination

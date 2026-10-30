@@ -7,7 +7,8 @@ import SpaceBetween from '@cloudscape-design/components/space-between';
 import { getTranslations } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import { PublicPage } from '@/features/marketing/PublicPage';
-import { postDate, POSTS } from '@/features/marketing/posts';
+import { postDate } from '@/features/marketing/posts';
+import { listPublishedPosts } from '@/server/modules/blog/service';
 
 export async function generateMetadata() {
   const t = await getTranslations('marketing.blog');
@@ -15,7 +16,7 @@ export async function generateMetadata() {
 }
 
 export default async function BlogPage() {
-  const t = await getTranslations('marketing.blog');
+  const [t, posts] = await Promise.all([getTranslations('marketing.blog'), listPublishedPosts()]);
 
   return (
     <PublicPage>
@@ -38,8 +39,9 @@ export default async function BlogPage() {
         }
       >
         <Box padding={{ vertical: 'xl' }}>
+          {posts.length === 0 && <Box color="text-body-secondary">{t('empty')}</Box>}
           <ColumnLayout columns={3} minColumnWidth={280}>
-            {POSTS.map(({ slug, date, minutes, topic, cover }) => (
+            {posts.map(({ slug, title, summary, date, minutes, topic, cover }) => (
               <Container
                 key={slug}
                 fitHeight
@@ -58,10 +60,10 @@ export default async function BlogPage() {
                   <Box variant="awsui-key-label">{t(`topics.${topic}`)}</Box>
                   <Box variant="h2" fontSize="heading-m">
                     <Link href={`/blog/${slug}`} fontSize="heading-m">
-                      {t(`posts.${slug}.title`)}
+                      {title}
                     </Link>
                   </Box>
-                  <Box color="text-body-secondary">{t(`posts.${slug}.summary`)}</Box>
+                  <Box color="text-body-secondary">{summary}</Box>
                   <Box color="text-body-secondary" fontSize="body-s">
                     {t('meta', { date: postDate(date), minutes })}
                   </Box>

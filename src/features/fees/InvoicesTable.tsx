@@ -3,11 +3,11 @@
 import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
+import Grid from '@cloudscape-design/components/grid';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
-import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
@@ -101,14 +101,14 @@ export function InvoicesTable({
     stickyHeader: true,
     header: <Header variant="h2">{t('title')}</Header>,
     filter: (
-      <SpaceBetween size="s">
+      <Grid gridDefinition={[{ colspan: { default: 12, xs: 8 } }, { colspan: { default: 12, xs: 4 } }]}>
         <Input
           placeholder={t('searchPlaceholder')}
           value={searchText}
           onChange={({ detail }) => setSearchText(detail.value)}
         />
         <Select
-          inlineLabelText={t('filter.status')}
+          ariaLabel={t('filter.status')}
           selectedOption={statusOptions.find((option) => option.value === (status ?? ALL)) ?? null}
           options={statusOptions}
           onChange={({ detail }) => {
@@ -116,7 +116,7 @@ export function InvoicesTable({
             setParams({ status: !value || value === ALL ? null : value, cursor: null });
           }}
         />
-      </SpaceBetween>
+      </Grid>
     ),
     pagination: (
       <Pagination

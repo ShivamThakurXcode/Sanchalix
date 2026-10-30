@@ -193,7 +193,7 @@ export function Promotion({ state, sheet }: { state: PromotionState; sheet: Prom
           }
           filter={
             <Select
-              inlineLabelText={t('section')}
+              ariaLabel={t('section')}
               placeholder={t('sectionPlaceholder')}
               selectedOption={sectionOptions.find((option) => option.value === sheet?.section.id) ?? null}
               options={sectionOptions}

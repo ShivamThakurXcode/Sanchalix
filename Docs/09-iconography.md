@@ -551,6 +551,7 @@ Key = the key in `icons.tsx`. Component = the Reicon component. Default size is 
 | Users | `users` | `Users` | Settings → Users |
 | Roles and permissions | `roles` | `ShieldCheck` | Settings → Roles; the permission matrix view |
 | Audit log | `auditLog` | `History` | Settings → Audit log; the "History" tab on records |
+| Blog | `blog` | `Document` | Platform panel: Blog |
 | Import / Export | `import` / `export` | `Import` / `Export` | Settings → Data import; the "Export" button on every table |
 | Download / Upload | `download` / `upload` | `Download` / `Upload` | File downloads (PDF, CSV) and uploads |
 | Backups | `backups` | `Database` | Super Admin → Backups |

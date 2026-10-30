@@ -9,6 +9,7 @@ import Container from '@cloudscape-design/components/container';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import Form from '@cloudscape-design/components/form';
+import FileUpload from '@cloudscape-design/components/file-upload';
 import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
@@ -80,6 +81,73 @@ function SettingsForm({
   );
 }
 
+const MAX_LOGO_BYTES = 5 * 1024 * 1024;
+
+function LogoUpload({ hasLogo }: { hasLogo: boolean }) {
+  const t = useTranslations('settings.logo');
+  const router = useRouter();
+  const [files, setFiles] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const file = files[0];
+  const tooBig = Boolean(file && file.size > MAX_LOGO_BYTES);
+
+  async function send(init: RequestInit) {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/settings/logo', init);
+      const result = (await response.json()) as { ok: boolean; error?: { message: string } };
+      if (result.ok) {
+        setFiles([]);
+        router.refresh();
+      } else setError(result.error?.message ?? t('failed'));
+    } catch {
+      setError(t('failed'));
+    }
+    setBusy(false);
+  }
+
+  return (
+    <FormField label={t('label')} description={t('hint')} errorText={error ?? (tooBig ? t('tooBig') : null)}>
+      <SpaceBetween size="xs">
+        <FileUpload
+          value={files}
+          accept=".jpg,.jpeg,.png,.webp"
+          showFileSize
+          i18nStrings={{
+            uploadButtonText: () => t('choose'),
+            dropzoneText: () => t('drop'),
+            removeFileAriaLabel: () => t('remove'),
+            limitShowFewer: t('showFewer'),
+            limitShowMore: t('showMore'),
+            errorIconAriaLabel: t('errorIcon'),
+          }}
+          onChange={({ detail }) => setFiles(detail.value.slice(-1))}
+        />
+        <SpaceBetween direction="horizontal" size="xs">
+          <Button
+            loading={busy}
+            disabled={!file || tooBig}
+            onClick={() => {
+              const body = new FormData();
+              body.set('file', file as File);
+              void send({ method: 'POST', body });
+            }}
+          >
+            {t('upload')}
+          </Button>
+          {hasLogo && (
+            <Button variant="link" disabled={busy} onClick={() => void send({ method: 'DELETE' })}>
+              {t('removeLogo')}
+            </Button>
+          )}
+        </SpaceBetween>
+      </SpaceBetween>
+    </FormField>
+  );
+}
+
 export function Settings({ settings, tab }: { settings: SchoolSettings; tab: string }) {
   const t = useTranslations('settings');
   const router = useRouter();
@@ -87,7 +155,6 @@ export function Settings({ settings, tab }: { settings: SchoolSettings; tab: str
   const [school, setSchool] = useState({
     name: settings.name,
     affiliationNo: settings.affiliationNo,
-    logoUrl: settings.logoUrl,
     ...settings.address,
   });
   const [workingDays, setWorkingDays] = useState(settings.workingDays);
@@ -142,7 +209,6 @@ export function Settings({ settings, tab }: { settings: SchoolSettings; tab: str
                   updateSchoolSettings({
                     name: school.name,
                     affiliationNo: school.affiliationNo,
-                    logoUrl: school.logoUrl,
                     address: { line1: school.line1, city: school.city, state: school.state, pincode: school.pincode },
                     workingDays,
                     shiftDueDates,
@@ -168,20 +234,7 @@ export function Settings({ settings, tab }: { settings: SchoolSettings; tab: str
                           {field('state', errors, 'address.state')}
                           {field('pincode', errors, 'address.pincode')}
                         </ColumnLayout>
-                        <FormField
-                          label={t('school.logoUrl')}
-                          description={t('school.logoUrlHint')}
-                          errorText={errors.logoUrl}
-                        >
-                          <Input
-                            type="url"
-                            inputMode="url"
-                            placeholder="https://"
-                            value={school.logoUrl}
-                            autoComplete={false}
-                            onChange={({ detail }) => setSchool({ ...school, logoUrl: detail.value })}
-                          />
-                        </FormField>
+                        <LogoUpload hasLogo={settings.hasLogo} />
                       </SpaceBetween>
                     </Container>
                     <Container header={<Header variant="h2">{t('workingDays.title')}</Header>}>

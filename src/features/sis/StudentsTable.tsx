@@ -3,6 +3,7 @@
 import Button from '@cloudscape-design/components/button';
 import Cards from '@cloudscape-design/components/cards';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
+import Grid from '@cloudscape-design/components/grid';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Pagination from '@cloudscape-design/components/pagination';
@@ -142,19 +143,19 @@ export function StudentsTable({
       </Header>
     ),
     filter: (
-      <SpaceBetween size="s">
+      <Grid gridDefinition={[{ colspan: { default: 12, xs: 8 } }, { colspan: { default: 12, xs: 4 } }]}>
         <Input
           placeholder={t('searchPlaceholder')}
           value={searchText}
           onChange={({ detail }) => setSearchText(detail.value)}
         />
         <Select
-          inlineLabelText={t('filter.status')}
+          ariaLabel={t('filter.status')}
           selectedOption={{ value: status, label: t(`status.${status}`) }}
           options={STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
           onChange={({ detail }) => setParams({ status: detail.selectedOption.value ?? null, cursor: null })}
         />
-      </SpaceBetween>
+      </Grid>
     ),
     pagination: (
       <Pagination
