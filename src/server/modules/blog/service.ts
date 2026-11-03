@@ -1,10 +1,11 @@
 import 'server-only';
 import { z } from 'zod';
+import { DEFAULT_PAGE_SIZE, TableQuery } from '@/lib/tableQuery';
 import { todayIn } from '@/lib/dates';
 import { AppError } from '@/lib/appError';
 import { bodyToSections, COVERS, readingMinutes, sectionsToBody, TOPICS } from '@/features/marketing/posts';
 import { connectDb } from '@/server/db/connect';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { BlogPost } from '@/server/models/blogPost';
 import { DATE_STR } from '@/server/models/shared';
 
@@ -28,17 +29,17 @@ export const PostInput = z.object({
 });
 export type PostInput = z.input<typeof PostInput>;
 
-export const ListPosts = z.object({ cursor: z.string().optional().catch(undefined) });
+export const ListPosts = TableQuery;
 export type ListPosts = z.infer<typeof ListPosts>;
 
 export type PostRow = { id: string; title: string; topic: string; status: 'draft' | 'published'; publishedOn: string };
 
 export async function listPosts(query: ListPosts) {
-  const { rows, ...page } = await paginate(BlogPost, {}, {
+  const { rows, ...page } = await paginate(BlogPost, textMatch(query.q, ['title', 'slug']), {
     sortField: 'publishedOn',
     descending: true,
     select: ['title', 'topic', 'status', 'publishedOn'],
-    limit: 25,
+    limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
     cursor: query.cursor,
   });
   const posts: PostRow[] = rows.map((row) => ({

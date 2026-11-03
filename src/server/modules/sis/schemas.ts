@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { TableQuery } from '@/lib/tableQuery';
 import { STUDENT_STATUSES } from '@/server/models/student';
 
 export type StudentStatus = (typeof STUDENT_STATUSES)[number];
@@ -12,14 +13,7 @@ const Id = z.string().regex(/^[0-9a-f]{24}$/, 'sis.students.errors.section');
 const required = (key: string, max: number) => z.string().trim().min(1, key).max(max, key);
 const ageOn = (dob: string) => (Date.now() - Date.parse(dob)) / (365.25 * 24 * 60 * 60 * 1000);
 
-export const ListStudents = z.object({
-  status: z.enum(STUDENT_STATUSES).catch('active'),
-  cursor: z.string().optional().catch(undefined),
-  pageSize: z.coerce
-    .number()
-    .refine((size) => [10, 25, 50, 100].includes(size))
-    .catch(25),
-});
+export const ListStudents = TableQuery.extend({ status: z.enum(STUDENT_STATUSES).catch('active') });
 export type ListStudents = z.infer<typeof ListStudents>;
 
 export const StudentInput = z.object({

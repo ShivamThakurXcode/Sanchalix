@@ -1,22 +1,10 @@
 'use client';
 
-import Button from '@cloudscape-design/components/button';
-import Cards from '@cloudscape-design/components/cards';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
-import Grid from '@cloudscape-design/components/grid';
-import Header from '@cloudscape-design/components/header';
-import Input from '@cloudscape-design/components/input';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { EmptyState } from '@/components/EmptyState';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { type Column, DataTable, useSetParams } from '@/components/DataTable';
 import { formatMoney } from '@/lib/money';
-import { useIsMobile } from '@/lib/useIsMobile';
 import type { InvoiceRow, InvoiceStatus } from '@/server/modules/fees/schemas';
 
 const STATUS_TYPE: Record<InvoiceStatus, StatusIndicatorProps.Type> = {
@@ -28,85 +16,40 @@ const STATUS_TYPE: Record<InvoiceStatus, StatusIndicatorProps.Type> = {
   void: 'stopped',
 };
 const STATUSES = Object.keys(STATUS_TYPE) as InvoiceStatus[];
-const PAGE_SIZES = [10, 25, 50, 100];
 const ALL = 'all';
 const dateFormat = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'UTC' });
 
 type Data = { rows: InvoiceRow[]; page: number; nextCursor: string | null; prevCursor: string | null };
 
-export function InvoicesTable({
-  status,
-  pageSize,
-  data,
-}: {
-  status: InvoiceStatus | null;
-  pageSize: number;
-  data: Data | null;
-}) {
+export function InvoicesTable({ status, data }: { status: InvoiceStatus | null; data: Data | null }) {
   const t = useTranslations('fees.invoices');
-  const router = useRouter();
-  const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const [searchText, setSearchText] = useState('');
+  const setParams = useSetParams();
+  const statusOptions = [{ value: ALL, label: t('filter.all') }, ...STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))];
 
-  const setParams = (changes: Record<string, string | null>) => {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === null) params.delete(key);
-      else params.set(key, value);
-    }
-    router.replace(`${pathname}?${params}`);
-  };
-
-  const rows = data?.rows ?? [];
-  const page = data?.page ?? 1;
-  const statusOptions = [
-    { value: ALL, label: t('filter.all') },
-    ...STATUSES.map((value) => ({ value, label: t(`status.${value}`) })),
-  ];
-
-  const filteredRows = rows.filter(
-    (invoice) =>
-      invoice.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
-      invoice.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
-      invoice.invoiceNo.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const fields: { id: string; header: string; content: (invoice: InvoiceRow) => ReactNode }[] = [
-    { id: 'invoiceNo', header: t('columns.invoiceNo'), content: (invoice) => invoice.invoiceNo },
-    { id: 'student', header: t('columns.student'), content: (invoice) => invoice.studentName },
-    { id: 'admissionNo', header: t('columns.admissionNo'), content: (invoice) => invoice.admissionNo },
-    { id: 'installment', header: t('columns.installment'), content: (invoice) => invoice.installment },
-    {
-      id: 'dueDate',
-      header: t('columns.dueDate'),
-      content: (invoice) => dateFormat.format(new Date(`${invoice.dueDate}T00:00:00Z`)),
-    },
-    { id: 'total', header: t('columns.total'), content: (invoice) => formatMoney(invoice.totalMinor) },
-    { id: 'balance', header: t('columns.balance'), content: (invoice) => formatMoney(invoice.balanceMinor) },
+  const columns: Column<InvoiceRow>[] = [
+    { id: 'invoiceNo', header: t('columns.invoiceNo'), cell: (invoice) => invoice.invoiceNo, isRowHeader: true },
+    { id: 'student', header: t('columns.student'), cell: (invoice) => invoice.studentName },
+    { id: 'admissionNo', header: t('columns.admissionNo'), cell: (invoice) => invoice.admissionNo },
+    { id: 'installment', header: t('columns.installment'), cell: (invoice) => invoice.installment },
+    { id: 'dueDate', header: t('columns.dueDate'), cell: (invoice) => dateFormat.format(new Date(`${invoice.dueDate}T00:00:00Z`)) },
+    { id: 'total', header: t('columns.total'), cell: (invoice) => formatMoney(invoice.totalMinor) },
+    { id: 'balance', header: t('columns.balance'), cell: (invoice) => formatMoney(invoice.balanceMinor) },
     {
       id: 'status',
       header: t('columns.status'),
-      content: (invoice) => (
-        <StatusIndicator type={STATUS_TYPE[invoice.status]}>{t(`status.${invoice.status}`)}</StatusIndicator>
-      ),
+      cell: (invoice) => <StatusIndicator type={STATUS_TYPE[invoice.status]}>{t(`status.${invoice.status}`)}</StatusIndicator>,
     },
   ];
 
-  const shared = {
-    trackBy: 'id',
-    items: filteredRows,
-    loading: !data,
-    loadingText: t('loading'),
-    stickyHeader: true,
-    header: <Header variant="h2">{t('title')}</Header>,
-    filter: (
-      <Grid gridDefinition={[{ colspan: { default: 12, xs: 8 } }, { colspan: { default: 12, xs: 4 } }]}>
-        <Input
-          placeholder={t('searchPlaceholder')}
-          value={searchText}
-          onChange={({ detail }) => setSearchText(detail.value)}
-        />
+  return (
+    <DataTable
+      id="fees-invoices"
+      title={t('title')}
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      filters={
         <Select
           ariaLabel={t('filter.status')}
           selectedOption={statusOptions.find((option) => option.value === (status ?? ALL)) ?? null}
@@ -116,65 +59,10 @@ export function InvoicesTable({
             setParams({ status: !value || value === ALL ? null : value, cursor: null });
           }}
         />
-      </Grid>
-    ),
-    pagination: (
-      <Pagination
-        currentPageIndex={page}
-        pagesCount={data?.nextCursor ? page + 1 : page}
-        openEnd={Boolean(data?.nextCursor)}
-        disabled={!data}
-        onChange={({ detail }) => {
-          if (!data) return;
-          // Cursors only step one page at a time, so any earlier page other than the first steps back by one.
-          const target = detail.currentPageIndex;
-          setParams({ cursor: target === 1 ? null : target > page ? data.nextCursor : data.prevCursor });
-        }}
-      />
-    ),
-    preferences: (
-      <CollectionPreferences
-        preferences={{ pageSize }}
-        pageSizePreference={{
-          options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-        }}
-        onConfirm={({ detail }) => setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })}
-      />
-    ),
-    empty: searchText || status ? (
-      <EmptyState
-        icon="invoice"
-        heading={t('noMatches.heading')}
-        body={t('noMatches.body')}
-        action={<Button onClick={() => { setSearchText(''); setParams({ status: null, cursor: null }); }}>{t('noMatches.clear')}</Button>}
-      />
-    ) : (
-      <EmptyState icon="invoice" heading={t('empty.heading')} body={t('empty.body')} />
-    ),
-  };
-
-  if (isMobile) {
-    return (
-      <Cards
-        {...shared}
-        variant="container"
-        cardDefinition={{ header: (invoice) => invoice.invoiceNo, sections: fields.slice(1) }}
-      />
-    );
-  }
-  return (
-    <Table
-      {...shared}
-      variant="container"
-      resizableColumns
-      enableKeyboardNavigation
-      renderAriaLive={() => t('showing', { count: rows.length })}
-      columnDefinitions={fields.map(({ id, header, content }) => ({
-        id,
-        header,
-        cell: content,
-        isRowHeader: id === 'invoiceNo',
-      }))}
+      }
+      filtered={Boolean(status)}
+      clearParams={['status']}
+      empty={{ icon: 'invoice', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

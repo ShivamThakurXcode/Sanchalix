@@ -1,7 +1,8 @@
 import 'server-only';
+import { DEFAULT_PAGE_SIZE } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import type { RequestContext } from '@/server/auth/context';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { withTransaction } from '@/server/db/transaction';
 import { AcademicYear } from '@/server/models/academicYear';
 import { Admission } from '@/server/models/admission';
@@ -105,11 +106,15 @@ async function classNamesOf(ctx: RequestContext, ids: unknown[]) {
 export async function listAdmissions(ctx: RequestContext, query: ListAdmissions) {
   const { rows, ...page } = await paginate(
     Admission,
-    { ...scopeOf(ctx), status: query.status === 'open' ? { $nin: FINAL } : query.status },
+    {
+      ...scopeOf(ctx),
+      status: query.status === 'open' ? { $nin: FINAL } : query.status,
+      ...textMatch(query.q, ['applicationNo', 'applicant.firstName', 'applicant.lastName']),
+    },
     {
       sortField: 'applicationNo',
       select: ['applicationNo', 'status', 'applicant', 'guardians', 'createdAt'],
-      limit: 25,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
       descending: true,
     },

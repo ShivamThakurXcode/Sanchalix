@@ -13,9 +13,9 @@ import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { type Column, DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { closeAcademicYear, createAcademicYear, promoteStudents } from '@/server/modules/promotion/actions';
@@ -149,6 +149,24 @@ export function Promotion({ state, sheet }: { state: PromotionState; sheet: Prom
     );
   }
 
+  const columns: Column<NonNullable<typeof sheet>['students'][number]>[] = [
+    { id: 'rollNo', header: t('columns.rollNo'), cell: (student) => student.rollNo, width: 110, sortBy: (student) => student.rollNo },
+    { id: 'name', header: t('columns.name'), cell: (student) => student.name, isRowHeader: true, sortBy: (student) => student.name },
+    {
+      id: 'decision',
+      header: t('columns.decision'),
+      cell: (student) => (
+        <Select
+          ariaLabel={t('decisionFor', { name: student.name })}
+          selectedOption={options.find((option) => option.value === (choices.get(student.id) ?? fallback)) ?? null}
+          options={options}
+          expandToViewport
+          onChange={({ detail }) => setChoices((current) => new Map(current).set(student.id, detail.selectedOption.value ?? fallback))}
+        />
+      ),
+    },
+  ];
+
   return (
     <ContentLayout
       header={
@@ -170,28 +188,24 @@ export function Promotion({ state, sheet }: { state: PromotionState; sheet: Prom
         <Alert type="info">
           {state.remaining > 0 ? t('remaining', { count: state.remaining }) : t('allDone', { next: state.next.label })}
         </Alert>
-        <Table
-          variant="container"
-          stickyHeader
-          trackBy="id"
-          items={sheet?.students ?? []}
-          header={
-            <Header
-              variant="h2"
-              counter={sheet ? `(${sheet.students.length})` : ''}
-              actions={
-                sheet &&
-                sheet.students.length > 0 && (
-                  <Button variant="primary" loading={busy} onClick={() => void promote()}>
-                    {t('submit', { count: sheet.students.length })}
-                  </Button>
-                )
-              }
-            >
-              {sheet ? t('sheetTitle', { section: sheet.section.name }) : t('choose.title')}
-            </Header>
+        <DataTable
+          id="promotion"
+          defaultPageSize={100}
+          title={sheet ? t('sheetTitle', { section: sheet.section.name }) : t('choose.title')}
+          counter={sheet ? `(${sheet.students.length})` : ''}
+          actions={
+            sheet &&
+            sheet.students.length > 0 && (
+              <Button variant="primary" loading={busy} onClick={() => void promote()}>
+                {t('submit', { count: sheet.students.length })}
+              </Button>
+            )
           }
-          filter={
+          items={sheet?.students ?? []}
+          columns={columns}
+          search={(student) => `${student.rollNo} ${student.name}`}
+          searchPlaceholder={t('searchPlaceholder')}
+          filters={
             <Select
               ariaLabel={t('section')}
               placeholder={t('sectionPlaceholder')}
@@ -201,32 +215,11 @@ export function Promotion({ state, sheet }: { state: PromotionState; sheet: Prom
               onChange={({ detail }) => router.replace(`${pathname}?section=${detail.selectedOption.value ?? ''}`)}
             />
           }
-          empty={
-            <EmptyState
-              icon="promote"
-              heading={t(sheet ? 'sheetEmpty.heading' : 'choose.heading')}
-              body={t(sheet ? 'sheetEmpty.body' : 'choose.body')}
-            />
-          }
-          columnDefinitions={[
-            { id: 'rollNo', header: t('columns.rollNo'), cell: (student) => student.rollNo, width: 110 },
-            { id: 'name', header: t('columns.name'), cell: (student) => student.name, isRowHeader: true },
-            {
-              id: 'decision',
-              header: t('columns.decision'),
-              cell: (student) => (
-                <Select
-                  ariaLabel={t('decisionFor', { name: student.name })}
-                  selectedOption={options.find((option) => option.value === (choices.get(student.id) ?? fallback)) ?? null}
-                  options={options}
-                  expandToViewport
-                  onChange={({ detail }) =>
-                    setChoices((current) => new Map(current).set(student.id, detail.selectedOption.value ?? fallback))
-                  }
-                />
-              ),
-            },
-          ]}
+          empty={{
+            icon: 'promote',
+            heading: t(sheet ? 'sheetEmpty.heading' : 'choose.heading'),
+            body: t(sheet ? 'sheetEmpty.body' : 'choose.body'),
+          }}
         />
       </SpaceBetween>
       <Modal

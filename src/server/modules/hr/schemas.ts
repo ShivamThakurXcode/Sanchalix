@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { TableQuery } from '@/lib/tableQuery';
 import type { LeaveBalance } from './leave';
 import type { DocumentRow } from '@/server/modules/sis/documents';
 import { STAFF_STATUSES, STAFF_TYPES } from '@/server/models/staff';
@@ -72,13 +73,7 @@ export type StaffProfile = {
   leave: LeaveBalance[];
 };
 
-export const ListStaff = z.object({
-  cursor: z.string().optional().catch(undefined),
-  pageSize: z.coerce
-    .number()
-    .refine((size) => [10, 25, 50, 100].includes(size))
-    .catch(25),
-});
+export const ListStaff = TableQuery;
 export type ListStaff = z.infer<typeof ListStaff>;
 
 export type StaffRow = {

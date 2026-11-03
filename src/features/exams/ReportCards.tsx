@@ -12,13 +12,12 @@ import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { usePrintInLightMode } from '@/lib/usePrintInLightMode';
@@ -101,46 +100,82 @@ export function ReportCardsTable({
     router.refresh();
   }
 
+  const columns: Column<ReportCardRow>[] = [
+    { id: 'rollNo', header: t('columns.rollNo'), cell: (row) => row.rollNo, width: 110, sortBy: (row) => row.rollNo },
+    {
+      id: 'name',
+      header: t('columns.name'),
+      isRowHeader: true,
+      cell: (row) => (row.cardId ? <AppLink href={`/report-cards/${row.cardId}`}>{row.name}</AppLink> : row.name),
+      sortBy: (row) => row.name,
+    },
+    { id: 'percent', header: t('columns.percent'), cell: (row) => (row.percent === null ? NONE : `${row.percent}%`), sortBy: (row) => row.percent ?? -1 },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    { id: 'remark', header: t('columns.remark'), cell: (row) => row.classTeacherRemark || NONE },
+    ...(mayEditTeacherRemark || canPublish
+      ? [
+          {
+            id: 'actions',
+            header: t('columns.actions'),
+            cell: (row: ReportCardRow) =>
+              row.status === 'draft' && (
+                <Button
+                  variant="inline-link"
+                  ariaLabel={t('remarksLabel', { name: row.name })}
+                  onClick={() => {
+                    setRemarks({ classTeacherRemark: row.classTeacherRemark, principalRemark: row.principalRemark });
+                    setEditing(row);
+                  }}
+                >
+                  {t('remarks')}
+                </Button>
+              ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        trackBy="studentId"
-        items={list.rows}
-        header={
-          <SpaceBetween size="m">
-            <Header
-              variant="h2"
-              counter={section ? `(${list.rows.length})` : ''}
-              description={t('description')}
-              actions={
-                section && (
-                  <SpaceBetween direction="horizontal" size="xs">
-                    {canPublish && (
-                      <Button disabled={drafts === 0} onClick={() => setPublishing(true)}>
-                        {t('publish', { count: drafts })}
-                      </Button>
-                    )}
-                    {canGenerate && (
-                      <Button variant="primary" loading={busy === 'generate'} onClick={() => void generate()}>
-                        {t('generate')}
-                      </Button>
-                    )}
-                  </SpaceBetween>
-                )
-              }
-            >
-              {t('title')}
-            </Header>
-            {feedback && (
-              <Alert type={feedback.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setFeedback(null)}>
-                {feedback.text}
-              </Alert>
-            )}
-          </SpaceBetween>
+      <DataTable
+        id="exams-report-cards"
+        title={t('title')}
+        counter={section ? `(${list.rows.length})` : ''}
+        description={t('description')}
+        actions={
+          section && (
+            <SpaceBetween direction="horizontal" size="xs">
+              {canPublish && (
+                <Button disabled={drafts === 0} onClick={() => setPublishing(true)}>
+                  {t('publish', { count: drafts })}
+                </Button>
+              )}
+              {canGenerate && (
+                <Button variant="primary" loading={busy === 'generate'} onClick={() => void generate()}>
+                  {t('generate')}
+                </Button>
+              )}
+            </SpaceBetween>
+          )
         }
-        filter={
+        above={
+          feedback && (
+            <Alert type={feedback.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setFeedback(null)}>
+              {feedback.text}
+            </Alert>
+          )
+        }
+        items={list.rows}
+        columns={columns}
+        trackBy="studentId"
+        search={(row) => `${row.rollNo} ${row.name}`}
+        searchPlaceholder={t('searchPlaceholder')}
+        defaultPageSize={100}
+        filters={
           <Select
             ariaLabel={t('section')}
             placeholder={t('sectionPlaceholder')}
@@ -150,50 +185,11 @@ export function ReportCardsTable({
             onChange={({ detail }) => router.replace(`${pathname}?section=${detail.selectedOption.value ?? ''}`)}
           />
         }
-        empty={
-          <EmptyState
-            icon="reportCard"
-            heading={t(section ? 'empty.heading' : 'choose.heading')}
-            body={t(section ? 'empty.body' : 'choose.body')}
-          />
-        }
-        columnDefinitions={[
-          { id: 'rollNo', header: t('columns.rollNo'), cell: (row) => row.rollNo, width: 110 },
-          {
-            id: 'name',
-            header: t('columns.name'),
-            isRowHeader: true,
-            cell: (row) => (row.cardId ? <AppLink href={`/report-cards/${row.cardId}`}>{row.name}</AppLink> : row.name),
-          },
-          { id: 'percent', header: t('columns.percent'), cell: (row) => (row.percent === null ? NONE : `${row.percent}%`) },
-          {
-            id: 'status',
-            header: t('columns.status'),
-            cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
-          },
-          { id: 'remark', header: t('columns.remark'), cell: (row) => row.classTeacherRemark || NONE },
-          ...(mayEditTeacherRemark || canPublish
-            ? [
-                {
-                  id: 'actions',
-                  header: t('columns.actions'),
-                  cell: (row: ReportCardRow) =>
-                    row.status === 'draft' && (
-                      <Button
-                        variant="inline-link"
-                        ariaLabel={t('remarksLabel', { name: row.name })}
-                        onClick={() => {
-                          setRemarks({ classTeacherRemark: row.classTeacherRemark, principalRemark: row.principalRemark });
-                          setEditing(row);
-                        }}
-                      >
-                        {t('remarks')}
-                      </Button>
-                    ),
-                },
-              ]
-            : []),
-        ]}
+        empty={{
+          icon: 'reportCard',
+          heading: t(section ? 'empty.heading' : 'choose.heading'),
+          body: t(section ? 'empty.body' : 'choose.body'),
+        }}
       />
       <Modal
         visible={Boolean(editing)}

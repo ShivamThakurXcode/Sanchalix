@@ -261,5 +261,167 @@
         ]
       }
     ]
+  },
+  {
+    "slug": "your-first-week-with-sanchalix",
+    "date": "2026-10-26",
+    "topic": "gettingStarted",
+    "cover": "dashboard",
+    "title": "Your first week with Sanchalix",
+    "summary": "You do not need to switch everything on at once. A short order for the first week keeps the office calm and the data clean.",
+    "sections": [
+      {
+        "heading": "Start with people, not features",
+        "paragraphs": [
+          "The first week goes wrong when a school tries to start every module on Monday. Staff learn five new screens at once, mistakes pile up, and by Friday the old register is back on the desk.",
+          "Start with the records everything else depends on: classes and sections, then staff, then students. A timetable, an invoice or a report card is only as good as the people attached to it."
+        ]
+      },
+      {
+        "heading": "Days one and two: set up the year",
+        "paragraphs": [
+          "Create the academic year, the classes and their sections, and the subjects each class studies. Do this once, with the principal in the room, so the decisions are made by the person who owns them.",
+          "Then add staff and give each teacher the sections they teach. A teacher who signs in and sees only their own classes understands the system in a minute."
+        ]
+      },
+      {
+        "heading": "Days three and four: bring the students in",
+        "paragraphs": [
+          "Import students from your existing spreadsheet rather than typing them again. Check a handful of records by hand, especially phone numbers, because those decide whether a parent ever receives a message.",
+          "Fix errors in the file and import again instead of patching records one by one. It is faster, and the next import will be cleaner."
+        ]
+      },
+      {
+        "heading": "Day five: take attendance for real",
+        "paragraphs": [
+          "End the week by taking attendance in Sanchalix for one full day, alongside the paper register. Compare the two on Monday.",
+          "This is the habit that makes everything else useful. Once attendance is daily, parents see it, the office stops chasing absentees, and the dashboard starts showing something true."
+        ]
+      },
+      {
+        "heading": "What can wait",
+        "paragraphs": [
+          "Fees, exams and the timetable are better started in the second or third week, once the team is comfortable. Nothing is lost by waiting, and each module goes in cleaner on top of records people already trust."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "reminders-parents-actually-read",
+    "date": "2026-10-19",
+    "topic": "fees",
+    "cover": "announcements",
+    "title": "Fee reminders that parents actually read",
+    "summary": "A reminder that is late, vague or sent to everyone gets ignored. Send it early, say the amount, and send it only to those who owe.",
+    "sections": [
+      {
+        "heading": "Why most reminders fail",
+        "paragraphs": [
+          "A message that says “fees are due” to the whole school teaches parents to ignore it. Half of them have already paid, and the rest cannot tell whether it is about them.",
+          "A reminder works when it is specific enough that the parent can act without calling the office."
+        ]
+      },
+      {
+        "heading": "Say who, how much and by when",
+        "paragraphs": [
+          "Name the child, the installment, the amount and the last date. “Aarav’s second installment of ₹6,000 is due on 10 November” answers every question the parent would have asked.",
+          "Keep it to one message with one clear next step, such as paying at the counter or online."
+        ]
+      },
+      {
+        "heading": "Send it twice, not ten times",
+        "paragraphs": [
+          "One reminder a few days before the due date and one the day after it passes is enough for most families. More than that reads as pressure and costs SMS credits.",
+          "Families who still have not paid after the second reminder are the ones worth a phone call, and now the list is short enough to call."
+        ]
+      },
+      {
+        "heading": "Never send it to people who have paid",
+        "paragraphs": [
+          "Build the list from open dues, not from the class list. A parent who paid last week and is reminded anyway loses trust in every later message, including the ones that matter."
+        ]
+      },
+      {
+        "heading": "Be kind about part payments",
+        "paragraphs": [
+          "Many families pay in parts. Show the remaining balance, not the original amount, so a parent who has paid half sees that the school noticed."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "an-exam-schedule-without-clashes",
+    "date": "2026-10-14",
+    "topic": "exams",
+    "cover": "exams",
+    "title": "An exam schedule without clashes",
+    "summary": "Exam week fails when two papers share a room or a student. Settle the rules first and the date sheet almost writes itself.",
+    "sections": [
+      {
+        "heading": "Start from the constraints",
+        "paragraphs": [
+          "An exam schedule has three limits: a student cannot sit two papers at once, a room holds only so many, and an invigilator cannot be in two halls. Write these down before choosing a single date.",
+          "Most clashes come from choosing dates first and checking afterwards."
+        ]
+      },
+      {
+        "heading": "Give each class its own order",
+        "paragraphs": [
+          "Place the heavier subjects early in the week and leave a day between the two hardest. Students prepare better, and the results show it.",
+          "Keep the same order across sections of a class so that nobody asks why one section had an easier week."
+        ]
+      },
+      {
+        "heading": "Assign invigilators last",
+        "paragraphs": [
+          "Once rooms and papers are fixed, assign invigilators from teachers who are free in those periods, and avoid a teacher invigilating the subject they teach.",
+          "Spread the duty evenly. A teacher with four invigilations in two days is not marking well on the third."
+        ]
+      },
+      {
+        "heading": "Publish early and freeze it",
+        "paragraphs": [
+          "Share the date sheet with parents and students at least two weeks ahead. After that, change it only for something serious, and tell everyone the same day."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "half-days-leave-and-attendance-percentages",
+    "date": "2026-10-02",
+    "topic": "attendance",
+    "cover": "students",
+    "title": "Half-days, leave and attendance percentages",
+    "summary": "A school’s attendance figure is only as fair as its rules. Decide how half-days and approved leave count before the term starts.",
+    "sections": [
+      {
+        "heading": "The number everyone asks about",
+        "paragraphs": [
+          "Boards and schools set a minimum attendance percentage for exam eligibility, and parents ask about it more than almost any other figure. If two teachers count it differently, the result is an argument at the office door.",
+          "The fix is to agree the rules once and apply them the same way for every student."
+        ]
+      },
+      {
+        "heading": "Decide how a half-day counts",
+        "paragraphs": [
+          "A student who arrives late or leaves at noon is neither fully present nor fully absent. Many schools count a half-day as half a day present, and the school’s own policy should say so in writing.",
+          "Whatever you choose, record the half-day as it happened. The percentage is then calculated, not guessed."
+        ]
+      },
+      {
+        "heading": "Treat approved leave separately",
+        "paragraphs": [
+          "Illness with a note and a family function with prior notice are different from an unexplained absence. Record the reason when the leave is approved, so the register shows why a child was away.",
+          "Keep the reason visible to teachers and the office, but not wider than that. A child’s medical details are not for everyone."
+        ]
+      },
+      {
+        "heading": "Tell families before it matters",
+        "paragraphs": [
+          "A parent who learns in March that attendance is at 68% cannot do anything about it. Send a gentle note when a child first drops under the limit, and again if it continues.",
+          "Early information changes the number. Late information only explains it."
+        ]
+      }
+    ]
   }
 ]

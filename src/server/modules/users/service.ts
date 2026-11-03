@@ -2,11 +2,12 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
 import { z } from 'zod';
+import { DEFAULT_PAGE_SIZE, TableQuery } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import type { RequestContext } from '@/server/auth/context';
 import type { RoleKey, Scope } from '@/server/auth/permissions';
 import { hashPassword } from '@/server/auth/service';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { Session } from '@/server/models/session';
 import { Staff } from '@/server/models/staff';
 import { User } from '@/server/models/user';
@@ -36,7 +37,7 @@ export type UserInput = z.infer<typeof UserInput>;
 export const UserId = Id;
 export const AddRole = z.object({ id: Id, role: z.enum(STAFF_ROLES, `${E}.role`) });
 export const UserStatus = z.object({ id: Id, status: z.enum(['active', 'disabled']) });
-export const ListUsers = z.object({ cursor: z.string().optional().catch(undefined) });
+export const ListUsers = TableQuery;
 export type ListUsers = z.infer<typeof ListUsers>;
 
 export type UserRow = {
@@ -95,10 +96,10 @@ export async function createUser(ctx: RequestContext, { staffId, ...input }: Use
 }
 
 export async function listUsers(ctx: RequestContext, query: ListUsers) {
-  const { rows, ...page } = await paginate(User, inSchool(ctx), {
+  const { rows, ...page } = await paginate(User, { ...inSchool(ctx), ...textMatch(query.q, ['name', 'email']) }, {
     sortField: 'name',
     select: ['name', 'email', 'roles', 'staffId', 'status', 'lastLoginAt'],
-    limit: 50,
+    limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
     cursor: query.cursor,
   });
   const staff = await Staff.find({ schoolId: ctx.schoolId, _id: { $in: rows.flatMap((row) => row.staffId ?? []) } })

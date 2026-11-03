@@ -126,6 +126,25 @@ import Wallet from 'reicon-react/icons/Wallet';
 import Warehouse from 'reicon-react/icons/Warehouse';
 import WifiOff from 'reicon-react/icons/WifiOff';
 import XCircle from 'reicon-react/icons/XCircle';
+import ArrowLeft from 'reicon-react/icons/ArrowLeft';
+import Bold from 'reicon-react/icons/Bold';
+import Eraser from 'reicon-react/icons/Eraser';
+import EyeOff from 'reicon-react/icons/EyeOff';
+import Grid from 'reicon-react/icons/Grid';
+import Image from 'reicon-react/icons/Image';
+import Italic from 'reicon-react/icons/Italic';
+import LinkOff from 'reicon-react/icons/LinkOff';
+import List from 'reicon-react/icons/List';
+import List3 from 'reicon-react/icons/List3';
+import QuoteDown from 'reicon-react/icons/QuoteDown';
+import Redo from 'reicon-react/icons/Redo';
+import Save from 'reicon-react/icons/Save';
+import TextalignCenter from 'reicon-react/icons/TextalignCenter';
+import TextalignLeft from 'reicon-react/icons/TextalignLeft';
+import TextalignRight from 'reicon-react/icons/TextalignRight';
+import Underline from 'reicon-react/icons/Underline';
+import UnderlineX from 'reicon-react/icons/UnderlineX';
+import Undo from 'reicon-react/icons/Undo';
 import type { IconComponent } from 'reicon-react/createIcon';
 
 export const icons = {
@@ -243,6 +262,25 @@ export const icons = {
   print: Printer,
   copy: Copy,
   link: Link,
+  unlink: LinkOff,
+  back: ArrowLeft,
+  hide: EyeOff,
+  save: Save,
+  bold: Bold,
+  italic: Italic,
+  underline: Underline,
+  strikethrough: UnderlineX,
+  bulletList: List,
+  numberedList: List3,
+  quote: QuoteDown,
+  image: Image,
+  table: Grid,
+  alignLeft: TextalignLeft,
+  alignCenter: TextalignCenter,
+  alignRight: TextalignRight,
+  undo: Undo,
+  redo: Redo,
+  clearFormatting: Eraser,
   external: ArrowUpRight,
   refresh: Refresh,
   send: Send,

@@ -7,20 +7,18 @@ import Checkbox from '@cloudscape-design/components/checkbox';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import FileUpload from '@cloudscape-design/components/file-upload';
 import FormField from '@cloudscape-design/components/form-field';
-import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
 import Multiselect from '@cloudscape-design/components/multiselect';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { MARKS_FILE_HEADER, type MarksFileProblem, type MarksFileRow, readMarksFile } from '@/lib/marksFile';
@@ -116,42 +114,35 @@ export function ExamsTable({
     router.push(`/exams/${result.data.id}`);
   }
 
+  const columns: Column<ExamRow>[] = [
+    { id: 'name', header: t('columns.name'), isRowHeader: true, cell: (exam) => <AppLink href={`/exams/${exam.id}`}>{exam.name}</AppLink>, sortBy: (exam) => exam.name },
+    { id: 'type', header: t('columns.type'), cell: (exam) => t(`type.${exam.type}`) },
+    { id: 'term', header: t('columns.term'), cell: (exam) => exam.term ?? '—' },
+    { id: 'classes', header: t('columns.classes'), cell: (exam) => exam.classes },
+    { id: 'papers', header: t('columns.papers'), cell: (exam) => exam.papers, sortBy: (exam) => exam.papers },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (exam) => (
+        <StatusIndicator type={exam.published ? 'success' : 'in-progress'}>
+          {t(exam.published ? 'status.published' : 'status.open')}
+        </StatusIndicator>
+      ),
+    },
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        trackBy="id"
+      <DataTable
+        id="exams"
+        title={t('title')}
+        description={t('description')}
+        actions={canEdit && addButton(true)}
         items={exams}
-        header={
-          <Header variant="h2" counter={`(${exams.length})`} description={t('description')} actions={canEdit && addButton(true)}>
-            {t('title')}
-          </Header>
-        }
-        empty={
-          <EmptyState icon="exams" heading={t('empty.heading')} body={t('empty.body')} action={canEdit && addButton(false)} />
-        }
-        columnDefinitions={[
-          {
-            id: 'name',
-            header: t('columns.name'),
-            isRowHeader: true,
-            cell: (exam) => <AppLink href={`/exams/${exam.id}`}>{exam.name}</AppLink>,
-          },
-          { id: 'type', header: t('columns.type'), cell: (exam) => t(`type.${exam.type}`) },
-          { id: 'term', header: t('columns.term'), cell: (exam) => exam.term ?? '—' },
-          { id: 'classes', header: t('columns.classes'), cell: (exam) => exam.classes },
-          { id: 'papers', header: t('columns.papers'), cell: (exam) => exam.papers },
-          {
-            id: 'status',
-            header: t('columns.status'),
-            cell: (exam) => (
-              <StatusIndicator type={exam.published ? 'success' : 'in-progress'}>
-                {t(exam.published ? 'status.published' : 'status.open')}
-              </StatusIndicator>
-            ),
-          },
-        ]}
+        columns={columns}
+        search={(exam) => `${exam.name} ${exam.term ?? ''} ${exam.classes}`}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'exams', heading: t('empty.heading'), body: t('empty.body'), action: canEdit && addButton(false) }}
       />
       <Dialog
         visible={adding}
@@ -288,42 +279,86 @@ export function ExamView({
     </FormField>
   );
 
+  const paperColumns: Column<Paper>[] = [
+    { id: 'date', header: t('paper.date'), cell: (row) => day(row.date), sortBy: (row) => row.date },
+    { id: 'class', header: t('paper.classId'), cell: (row) => row.className, sortBy: (row) => row.className },
+    {
+      id: 'subject',
+      header: t('paper.subjectId'),
+      isRowHeader: true,
+      cell: (row) => <AppLink href={`/exams/${exam.id}/marks?paper=${row.id}`}>{row.subject}</AppLink>,
+      sortBy: (row) => row.subject,
+    },
+    { id: 'marks', header: t('paper.marks'), cell: (row) => t('paper.maxPass', { max: row.maxMarks, pass: row.passMarks }) },
+    { id: 'entered', header: t('paper.entered'), cell: (row) => row.entered, sortBy: (row) => row.entered },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => (
+        <StatusIndicator type={row.locked ? 'success' : 'in-progress'}>{t(row.locked ? 'paper.locked' : 'paper.open')}</StatusIndicator>
+      ),
+    },
+    ...(canLock && !exam.published
+      ? [
+          {
+            id: 'actions',
+            header: t('columns.actions'),
+            cell: (row: Paper) =>
+              row.locked ? (
+                <Button
+                  variant="inline-link"
+                  ariaLabel={t('unlockLabel', { subject: row.subject, className: row.className })}
+                  onClick={() => {
+                    setError(null);
+                    setUnlocking(row);
+                  }}
+                >
+                  {t('unlock')}
+                </Button>
+              ) : (
+                <Button
+                  variant="inline-link"
+                  loading={busy}
+                  ariaLabel={t('lockLabel', { subject: row.subject, className: row.className })}
+                  onClick={() => void lock(row)}
+                >
+                  {t('lock')}
+                </Button>
+              ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        trackBy="id"
-        items={exam.schedules}
-        header={
-          <SpaceBetween size="m">
-            <Header
-              variant="h1"
-              counter={`(${exam.schedules.length})`}
-              description={t('examDescription', { type: t(`type.${exam.type}`), classes: exam.classes })}
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  {canPublish && !exam.published && (
-                    <Button disabled={!allLocked} onClick={() => setPublishing(true)}>
-                      {t('publish')}
-                    </Button>
-                  )}
-                  {editable && (
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        setError(null);
-                        setAdding(true);
-                      }}
-                    >
-                      {t('paper.add')}
-                    </Button>
-                  )}
-                </SpaceBetween>
-              }
-            >
-              {exam.name}
-            </Header>
+      <DataTable
+        id="exams-papers"
+        variant="h1"
+        title={exam.name}
+        description={t('examDescription', { type: t(`type.${exam.type}`), classes: exam.classes })}
+        actions={
+          <SpaceBetween direction="horizontal" size="xs">
+            {canPublish && !exam.published && (
+              <Button disabled={!allLocked} onClick={() => setPublishing(true)}>
+                {t('publish')}
+              </Button>
+            )}
+            {editable && (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setError(null);
+                  setAdding(true);
+                }}
+              >
+                {t('paper.add')}
+              </Button>
+            )}
+          </SpaceBetween>
+        }
+        above={
+          <>
             {feedback && (
               <Alert type={feedback.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setFeedback(null)}>
                 {feedback.text}
@@ -333,60 +368,13 @@ export function ExamView({
             {!feedback && !exam.published && canPublish && exam.schedules.length > 0 && !allLocked && (
               <Alert type="info">{t('lockFirst')}</Alert>
             )}
-          </SpaceBetween>
+          </>
         }
-        empty={<EmptyState icon="exams" heading={t('paper.empty.heading')} body={t('paper.empty.body')} />}
-        columnDefinitions={[
-          { id: 'date', header: t('paper.date'), cell: (row) => day(row.date) },
-          { id: 'class', header: t('paper.classId'), cell: (row) => row.className },
-          {
-            id: 'subject',
-            header: t('paper.subjectId'),
-            isRowHeader: true,
-            cell: (row) => <AppLink href={`/exams/${exam.id}/marks?paper=${row.id}`}>{row.subject}</AppLink>,
-          },
-          { id: 'marks', header: t('paper.marks'), cell: (row) => t('paper.maxPass', { max: row.maxMarks, pass: row.passMarks }) },
-          { id: 'entered', header: t('paper.entered'), cell: (row) => row.entered },
-          {
-            id: 'status',
-            header: t('columns.status'),
-            cell: (row) => (
-              <StatusIndicator type={row.locked ? 'success' : 'in-progress'}>
-                {t(row.locked ? 'paper.locked' : 'paper.open')}
-              </StatusIndicator>
-            ),
-          },
-          ...(canLock && !exam.published
-            ? [
-                {
-                  id: 'actions',
-                  header: t('columns.actions'),
-                  cell: (row: Paper) =>
-                    row.locked ? (
-                      <Button
-                        variant="inline-link"
-                        ariaLabel={t('unlockLabel', { subject: row.subject, className: row.className })}
-                        onClick={() => {
-                          setError(null);
-                          setUnlocking(row);
-                        }}
-                      >
-                        {t('unlock')}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="inline-link"
-                        loading={busy}
-                        ariaLabel={t('lockLabel', { subject: row.subject, className: row.className })}
-                        onClick={() => void lock(row)}
-                      >
-                        {t('lock')}
-                      </Button>
-                    ),
-                },
-              ]
-            : []),
-        ]}
+        items={exam.schedules}
+        columns={paperColumns}
+        search={(row) => `${row.subject} ${row.className}`}
+        searchPlaceholder={t('paper.searchPlaceholder')}
+        empty={{ icon: 'exams', heading: t('paper.empty.heading'), body: t('paper.empty.body') }}
       />
       <Dialog
         visible={adding}
@@ -519,51 +507,87 @@ export function MarksSheet({ sheet, history }: { sheet: Sheet; history: HistoryE
           ? t('marks.readOnly')
           : null;
 
+  const markColumns: Column<(typeof sheet.students)[number]>[] = [
+    { id: 'rollNo', header: t('marks.rollNo'), cell: (student) => student.rollNo, width: 110, sortBy: (student) => student.rollNo },
+    { id: 'name', header: t('marks.student'), cell: (student) => student.name, isRowHeader: true, sortBy: (student) => student.name },
+    {
+      id: 'marks',
+      header: t('marks.outOf', { max: paper.maxMarks }),
+      width: 200,
+      cell: (student) => (
+        <Input
+          type="number"
+          inputMode="decimal"
+          step={0.5}
+          ariaLabel={t('marks.marksFor', { name: student.name })}
+          value={absent.has(student.id) ? '' : (marks.get(student.id) ?? '')}
+          disabled={!sheet.canEdit || absent.has(student.id)}
+          invalid={!absent.has(student.id) && invalid(student.id)}
+          onChange={({ detail }) => setMarks((current) => new Map(current).set(student.id, detail.value))}
+        />
+      ),
+    },
+    {
+      id: 'absent',
+      header: t('marks.absent'),
+      cell: (student) => (
+        <Checkbox
+          ariaLabel={t('marks.absentFor', { name: student.name })}
+          checked={absent.has(student.id)}
+          disabled={!sheet.canEdit}
+          onChange={({ detail }) =>
+            setAbsent((current) => {
+              const next = new Set(current);
+              if (detail.checked) next.add(student.id);
+              else next.delete(student.id);
+              return next;
+            })
+          }
+        />
+      ),
+    },
+    { id: 'grade', header: t('marks.grade'), cell: (student) => student.grade ?? '—' },
+  ];
+
   return (
     <>
-    <Table
-      variant="container"
-      stickyHeader
-      trackBy="id"
-      items={sheet.students}
-      header={
-        <SpaceBetween size="m">
-          <Header
-            variant="h1"
-            counter={`(${sheet.students.length})`}
-            description={t('marks.description', {
-              exam: sheet.exam.name,
-              className: paper.className,
-              date: day(paper.date),
-              max: paper.maxMarks,
-              pass: paper.passMarks,
-            })}
-            actions={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  href={`/exams/${sheet.exam.id}`}
-                  onFollow={(event) => {
-                    event.preventDefault();
-                    router.push(`/exams/${sheet.exam.id}`);
-                  }}
-                >
-                  {t('marks.back')}
-                </Button>
-                {sheet.canEdit && sheet.students.length > 0 && (
-                  <Button iconSvg={svg('upload')} onClick={() => setFilling(true)}>
-                    {t('marks.fill.button')}
-                  </Button>
-                )}
-                {sheet.canEdit && sheet.students.length > 0 && (
-                  <Button variant="primary" loading={busy} disabled={anyInvalid} onClick={() => void save()}>
-                    {t('marks.save')}
-                  </Button>
-                )}
-              </SpaceBetween>
-            }
+    <DataTable
+      id="exams-marks"
+      variant="h1"
+      defaultPageSize={100}
+      title={t('marks.title', { subject: paper.subject })}
+      description={t('marks.description', {
+        exam: sheet.exam.name,
+        className: paper.className,
+        date: day(paper.date),
+        max: paper.maxMarks,
+        pass: paper.passMarks,
+      })}
+      actions={
+        <SpaceBetween direction="horizontal" size="xs">
+          <Button
+            href={`/exams/${sheet.exam.id}`}
+            onFollow={(event) => {
+              event.preventDefault();
+              router.push(`/exams/${sheet.exam.id}`);
+            }}
           >
-            {t('marks.title', { subject: paper.subject })}
-          </Header>
+            {t('marks.back')}
+          </Button>
+          {sheet.canEdit && sheet.students.length > 0 && (
+            <Button iconSvg={svg('upload')} onClick={() => setFilling(true)}>
+              {t('marks.fill.button')}
+            </Button>
+          )}
+          {sheet.canEdit && sheet.students.length > 0 && (
+            <Button variant="primary" loading={busy} disabled={anyInvalid} onClick={() => void save()}>
+              {t('marks.save')}
+            </Button>
+          )}
+        </SpaceBetween>
+      }
+      above={
+        <>
           {sheet.sections.length > 1 && (
             <FormField label={t('marks.section')}>
               <Select
@@ -581,50 +605,13 @@ export function MarksSheet({ sheet, history }: { sheet: Sheet; history: HistoryE
             </Alert>
           )}
           {notice && !feedback && <Alert type="info">{notice}</Alert>}
-        </SpaceBetween>
+        </>
       }
-      empty={<EmptyState icon="marksEntry" heading={t('marks.empty.heading')} body={t('marks.empty.body')} />}
-      columnDefinitions={[
-        { id: 'rollNo', header: t('marks.rollNo'), cell: (student) => student.rollNo, width: 110 },
-        { id: 'name', header: t('marks.student'), cell: (student) => student.name, isRowHeader: true },
-        {
-          id: 'marks',
-          header: t('marks.outOf', { max: paper.maxMarks }),
-          width: 200,
-          cell: (student) => (
-            <Input
-              type="number"
-              inputMode="decimal"
-              step={0.5}
-              ariaLabel={t('marks.marksFor', { name: student.name })}
-              value={absent.has(student.id) ? '' : (marks.get(student.id) ?? '')}
-              disabled={!sheet.canEdit || absent.has(student.id)}
-              invalid={!absent.has(student.id) && invalid(student.id)}
-              onChange={({ detail }) => setMarks((current) => new Map(current).set(student.id, detail.value))}
-            />
-          ),
-        },
-        {
-          id: 'absent',
-          header: t('marks.absent'),
-          cell: (student) => (
-            <Checkbox
-              ariaLabel={t('marks.absentFor', { name: student.name })}
-              checked={absent.has(student.id)}
-              disabled={!sheet.canEdit}
-              onChange={({ detail }) =>
-                setAbsent((current) => {
-                  const next = new Set(current);
-                  if (detail.checked) next.add(student.id);
-                  else next.delete(student.id);
-                  return next;
-                })
-              }
-            />
-          ),
-        },
-        { id: 'grade', header: t('marks.grade'), cell: (student) => student.grade ?? '—' },
-      ]}
+      items={sheet.students}
+      columns={markColumns}
+      search={(student) => `${student.rollNo} ${student.name}`}
+      searchPlaceholder={t('marks.searchPlaceholder')}
+      empty={{ icon: 'marksEntry', heading: t('marks.empty.heading'), body: t('marks.empty.body') }}
     />
     <Modal
       visible={filling}
@@ -682,14 +669,12 @@ export function MarksSheet({ sheet, history }: { sheet: Sheet; history: HistoryE
       </SpaceBetween>
     </Modal>
     {history && (
-      <Table
-        variant="container"
-        trackBy="id"
+      <DataTable
+        id="exams-marks-history"
+        title={t('marks.history.title')}
         items={history}
-        header={<Header variant="h2" counter={`(${history.length})`}>{t('marks.history.title')}</Header>}
-        empty={<EmptyState icon="auditLog" heading={t('marks.history.emptyHeading')} body={t('marks.history.emptyBody')} />}
-        columnDefinitions={[
-          { id: 'when', header: t('marks.history.when'), isRowHeader: true, cell: (entry) => when.format(new Date(entry.at)) },
+        columns={[
+          { id: 'when', header: t('marks.history.when'), isRowHeader: true, cell: (entry) => when.format(new Date(entry.at)), sortBy: (entry) => entry.at },
           { id: 'who', header: t('marks.history.who'), cell: (entry) => entry.actor },
           {
             id: 'what',
@@ -700,6 +685,9 @@ export function MarksSheet({ sheet, history }: { sheet: Sheet; history: HistoryE
             },
           },
         ]}
+        search={(entry) => `${entry.actor} ${entry.action}`}
+        searchPlaceholder={t('marks.history.searchPlaceholder')}
+        empty={{ icon: 'auditLog', heading: t('marks.history.emptyHeading'), body: t('marks.history.emptyBody') }}
       />
     )}
     </>

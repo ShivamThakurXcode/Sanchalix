@@ -128,19 +128,35 @@ const ILLUSTRATED = new Set<ModuleKey>([
   'calendarEvents',
   'promotion',
   'users',
+  'attendanceReport',
+  'feeDiscounts',
+  'feeReports',
+  'reports',
+  'outbox',
+  'settings',
 ]);
+
+// Pages with no artwork of their own borrow the picture of a related page.
+const SHARED_BANNER: Partial<Record<ModuleKey, string>> = {
+  attendanceReport: 'attendance',
+  feeDiscounts: 'feeStructures',
+  feeReports: 'payments',
+  reports: 'dashboard',
+  outbox: 'announcements',
+  settings: 'users',
+};
 
 async function PlatformLayout({ platform, children }: { platform: PlatformContext; children: ReactNode }) {
   const [t, cookieStore] = await Promise.all([getTranslations('shell'), cookies()]);
   const pages = [
-    { key: 'platformHome', href: '/platform', icon: 'dashboard' },
-    { key: 'platformSchools', href: '/platform/schools', icon: 'school' },
-    { key: 'platformBlog', href: '/platform/blog', icon: 'blog' },
-    { key: 'platformAudit', href: '/platform/audit', icon: 'auditLog' },
+    { key: 'platformHome', href: '/console', icon: 'dashboard', image: 'platformHome' },
+    { key: 'platformSchools', href: '/console/schools', icon: 'school', image: 'academics' },
+    { key: 'platformBlog', href: '/console/blog', icon: 'blog', image: 'platformBlog' },
+    { key: 'platformAudit', href: '/console/audit', icon: 'auditLog', image: 'platformAudit' },
   ] as const;
-  const nav: NavItem[] = pages.map(({ key, href, icon }) => ({
+  const nav: NavItem[] = pages.map(({ key, href, icon, image }) => ({
     text: t(`nav.${key}`),
-    banner: { title: t(`banner.${key}.title`), description: t(`banner.${key}.description`) },
+    banner: { title: t(`banner.${key}.title`), description: t(`banner.${key}.description`), image: `/banners/${image}.svg` },
     href,
     icon,
   }));
@@ -200,7 +216,7 @@ export default async function AppGroupLayout({ children }: { children: ReactNode
       banner: {
         title: t(`banner.${key}.title`),
         description: t(`banner.${key}.description`),
-        ...(ILLUSTRATED.has(key) && { image: `/banners/${key}.svg` }),
+        ...(ILLUSTRATED.has(key) && { image: `/banners/${SHARED_BANNER[key] ?? key}.svg` }),
       },
       group: t(`groups.${group}`),
       href,

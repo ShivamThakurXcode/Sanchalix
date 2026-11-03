@@ -1,9 +1,10 @@
 import 'server-only';
 import { z } from 'zod';
+import { DEFAULT_PAGE_SIZE, TableQuery } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import type { RequestContext } from '@/server/auth/context';
 import { can } from '@/server/auth/permissions';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { AcademicYear } from '@/server/models/academicYear';
 import { LEAVE_STATUSES, LEAVE_TYPES, LeaveRequest } from '@/server/models/leaveRequest';
 import { School } from '@/server/models/school';
@@ -37,10 +38,7 @@ export const LeaveDecision = z.object({
 });
 export type LeaveDecision = z.infer<typeof LeaveDecision>;
 
-export const ListLeave = z.object({
-  status: z.enum(['all', ...LEAVE_STATUSES]).catch('all'),
-  cursor: z.string().optional().catch(undefined),
-});
+export const ListLeave = TableQuery.extend({ status: z.enum(['all', ...LEAVE_STATUSES]).catch('all') });
 export type ListLeave = z.infer<typeof ListLeave>;
 
 export type LeaveRow = {
@@ -121,6 +119,13 @@ export async function applyLeave(ctx: RequestContext, input: LeaveInput) {
 export async function listLeave(ctx: RequestContext, query: ListLeave) {
   const { schoolId } = ctx;
   const approver = can(ctx.role, 'hr.leave.approve');
+  const named = query.q
+    ? await Staff.find({ schoolId, ...textMatch(query.q, ['name']) })
+        .setOptions({ withDeleted: true })
+        .select('_id')
+        .limit(500)
+        .lean()
+    : [];
   const { rows, ...page } = await paginate(
     LeaveRequest,
     {
@@ -128,11 +133,12 @@ export async function listLeave(ctx: RequestContext, query: ListLeave) {
       requesterType: 'staff' as const,
       ...(!approver && { requesterId: ctx.staffId ?? null }),
       ...(query.status !== 'all' && { status: query.status }),
+      ...(query.q && { $or: [{ requesterId: { $in: named.map((member) => member._id) } }, textMatch(query.q, ['reason', 'leaveTypeCode'])] }),
     },
     {
       sortField: 'from',
       select: ['requesterId', 'leaveTypeCode', 'from', 'to', 'halfDay', 'reason', 'status', 'approvals'],
-      limit: 25,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
       descending: true,
     },

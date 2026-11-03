@@ -18,11 +18,11 @@ export default async function PlatformAuditPage({
   const query = ListAudit.parse(await searchParams);
   return (
     <Suspense key={JSON.stringify(query)} fallback={<PlatformAuditTable data={null} />}>
-      <Audit cursor={query.cursor} />
+      <Audit query={query} />
     </Suspense>
   );
 }
 
-async function Audit({ cursor }: { cursor: string | undefined }) {
-  return <PlatformAuditTable data={await listPlatformAudit({ cursor })} />;
+async function Audit({ query }: { query: ListAudit }) {
+  return <PlatformAuditTable data={await listPlatformAudit(query)} />;
 }

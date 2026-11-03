@@ -6,13 +6,11 @@ import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import FormField from '@cloudscape-design/components/form-field';
-import Header from '@cloudscape-design/components/header';
 import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import SpaceBetween from '@cloudscape-design/components/space-between';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { submitStaffAttendance } from '@/server/modules/hr/actions';
@@ -48,53 +46,74 @@ export function StaffAttendance({ sheet, canEdit }: { sheet: StaffSheet; canEdit
     if (result.ok) router.refresh();
   }
 
+  const columns: Column<(typeof sheet.staff)[number]>[] = [
+    { id: 'employeeNo', header: t('columns.employeeNo'), cell: (member) => member.employeeNo, width: 140, sortBy: (member) => member.employeeNo },
+    {
+      id: 'name',
+      header: t('columns.name'),
+      isRowHeader: true,
+      sortBy: (member) => member.name,
+      cell: (member) => (
+        <SpaceBetween direction="horizontal" size="xs">
+          <span>{member.name}</span>
+          {member.onApprovedLeave && <Badge color="blue">{t('approvedLeave')}</Badge>}
+        </SpaceBetween>
+      ),
+    },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (member) => (
+        <SegmentedControl
+          label={t('statusFor', { name: member.name })}
+          selectedId={marks.get(member.id) ?? 'present'}
+          options={MARKS.map((id) => ({ id, text: t(`status.${id}`), disabled: !editable }))}
+          onChange={({ detail }) => setMarks((current) => new Map(current).set(member.id, detail.selectedId as StaffMark))}
+        />
+      ),
+    },
+  ];
+
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      trackBy="id"
-      items={closed ? [] : sheet.staff}
-      header={
-        <SpaceBetween size="m">
-          <Header
-            variant="h2"
-            counter={closed ? '' : `(${sheet.staff.length})`}
-            description={t('description')}
-            actions={
-              canEdit && (
-                <SpaceBetween direction="horizontal" size="xs">
-                  <Button
-                    href={REGISTER}
-                    iconSvg={svg('reports')}
-                    onFollow={(event) => {
-                      event.preventDefault();
-                      router.push(REGISTER);
-                    }}
-                  >
-                    {t('register')}
-                  </Button>
-                  <Button
-                    href={QR}
-                    iconSvg={svg('qrAttendance')}
-                    onFollow={(event) => {
-                      event.preventDefault();
-                      router.push(QR);
-                    }}
-                  >
-                    {t('qr')}
-                  </Button>
-                  {editable && sheet.staff.length > 0 && (
-                    <Button variant="primary" iconSvg={svg('attendance')} loading={busy} onClick={() => void save()}>
-                      {t(sheet.saved ? 'update' : 'save')}
-                    </Button>
-                  )}
-                </SpaceBetween>
-              )
-            }
-          >
-            {t('title')}
-          </Header>
+    <DataTable
+      id="hr-attendance"
+      title={t('title')}
+      defaultPageSize={100}
+      counter={closed ? '' : `(${sheet.staff.length})`}
+      description={t('description')}
+      actions={
+        canEdit && (
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button
+              href={REGISTER}
+              iconSvg={svg('reports')}
+              onFollow={(event) => {
+                event.preventDefault();
+                router.push(REGISTER);
+              }}
+            >
+              {t('register')}
+            </Button>
+            <Button
+              href={QR}
+              iconSvg={svg('qrAttendance')}
+              onFollow={(event) => {
+                event.preventDefault();
+                router.push(QR);
+              }}
+            >
+              {t('qr')}
+            </Button>
+            {editable && sheet.staff.length > 0 && (
+              <Button variant="primary" iconSvg={svg('attendance')} loading={busy} onClick={() => void save()}>
+                {t(sheet.saved ? 'update' : 'save')}
+              </Button>
+            )}
+          </SpaceBetween>
+        )
+      }
+      above={
+        <>
           <FormField label={t('date')} constraintText={t('dateHint')}>
             <DatePicker
               value={sheet.date}
@@ -124,37 +143,13 @@ export function StaffAttendance({ sheet, canEdit }: { sheet: StaffSheet; canEdit
               </span>
             </Box>
           )}
-        </SpaceBetween>
+        </>
       }
-      empty={closed ? null : <EmptyState icon="staff" heading={t('empty.heading')} body={t('empty.body')} />}
-      columnDefinitions={[
-        { id: 'employeeNo', header: t('columns.employeeNo'), cell: (member) => member.employeeNo, width: 140 },
-        {
-          id: 'name',
-          header: t('columns.name'),
-          isRowHeader: true,
-          cell: (member) => (
-            <SpaceBetween direction="horizontal" size="xs">
-              <span>{member.name}</span>
-              {member.onApprovedLeave && <Badge color="blue">{t('approvedLeave')}</Badge>}
-            </SpaceBetween>
-          ),
-        },
-        {
-          id: 'status',
-          header: t('columns.status'),
-          cell: (member) => (
-            <SegmentedControl
-              label={t('statusFor', { name: member.name })}
-              selectedId={marks.get(member.id) ?? 'present'}
-              options={MARKS.map((id) => ({ id, text: t(`status.${id}`), disabled: !editable }))}
-              onChange={({ detail }) =>
-                setMarks((current) => new Map(current).set(member.id, detail.selectedId as StaffMark))
-              }
-            />
-          ),
-        },
-      ]}
+      items={closed ? [] : sheet.staff}
+      columns={columns}
+      search={(member) => `${member.employeeNo} ${member.name}`}
+      searchPlaceholder={t('searchPlaceholder')}
+      empty={closed ? null : { icon: 'staff', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

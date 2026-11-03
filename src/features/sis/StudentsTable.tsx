@@ -1,31 +1,20 @@
 'use client';
 
 import Button from '@cloudscape-design/components/button';
-import Cards from '@cloudscape-design/components/cards';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
-import Grid from '@cloudscape-design/components/grid';
-import Header from '@cloudscape-design/components/header';
-import Input from '@cloudscape-design/components/input';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { AppLink } from '@/components/AppLink';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable, useSetParams } from '@/components/DataTable';
 import { ExportButton } from '@/components/ExportButton';
 import { svg } from '@/components/icons';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { formatPhone } from '@/lib/phone';
-import { useIsMobile } from '@/lib/useIsMobile';
 import type { StudentRow, StudentStatus } from '@/server/modules/sis/schemas';
 import { STATUS_TYPE } from './studentStatus';
 
 const STATUSES = Object.keys(STATUS_TYPE) as StudentStatus[];
-const PAGE_SIZES = [10, 25, 50, 100];
 const COUNT_CAP = 10_000;
 const NONE = '—';
 
@@ -39,189 +28,73 @@ type Data = {
 
 export function StudentsTable({
   status,
-  pageSize,
   canCreate,
   data,
 }: {
   canCreate: boolean;
   status: StudentStatus;
-  pageSize: number;
   data: Data | null;
 }) {
   const t = useTranslations('sis.students');
   const tExport = useTranslations('export');
   const router = useRouter();
-  const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const [searchText, setSearchText] = useState('');
-
-  const setParams = (changes: Record<string, string | null>) => {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === null) params.delete(key);
-      else params.set(key, value);
-    }
-    router.replace(`${pathname}?${params}`);
-  };
-
-  const rows = data?.rows ?? [];
-  const page = data?.page ?? 1;
+  const setParams = useSetParams();
   const numbers = new Intl.NumberFormat('en-IN');
-  const counter = data
-    ? `(${data.total > COUNT_CAP ? `${numbers.format(COUNT_CAP)}+` : numbers.format(data.total)})`
-    : '';
-
-  const filteredRows = rows.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      student.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
-      (student.guardianName && student.guardianName.toLowerCase().includes(searchText.toLowerCase())) ||
-      (student.guardianPhone && student.guardianPhone.includes(searchText))
-  );
-
-  const fields: { id: string; header: string; content: (student: StudentRow) => ReactNode }[] = [
-    {
-      id: 'name',
-      header: t('columns.name'),
-      content: (s) => <AppLink href={`/students/${s.id}`}>{s.name}</AppLink>,
+  const link = (href: string) => ({
+    href,
+    onFollow: (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+      router.push(href);
     },
-    { id: 'admissionNo', header: t('columns.admissionNo'), content: (s) => s.admissionNo },
-    { id: 'classSection', header: t('columns.classSection'), content: (s) => s.classSection ?? NONE },
-    { id: 'rollNo', header: t('columns.rollNo'), content: (s) => s.rollNo ?? NONE },
-    { id: 'guardian', header: t('columns.guardian'), content: (s) => s.guardianName ?? NONE },
-    {
-      id: 'phone',
-      header: t('columns.phone'),
-      content: (s) => (s.guardianPhone ? formatPhone(s.guardianPhone) : NONE),
-    },
+  });
+
+  const columns: Column<StudentRow>[] = [
+    { id: 'name', header: t('columns.name'), cell: (s) => <AppLink href={`/students/${s.id}`}>{s.name}</AppLink>, isRowHeader: true },
+    { id: 'admissionNo', header: t('columns.admissionNo'), cell: (s) => s.admissionNo },
+    { id: 'classSection', header: t('columns.classSection'), cell: (s) => s.classSection ?? NONE },
+    { id: 'rollNo', header: t('columns.rollNo'), cell: (s) => s.rollNo ?? NONE },
+    { id: 'guardian', header: t('columns.guardian'), cell: (s) => s.guardianName ?? NONE },
+    { id: 'phone', header: t('columns.phone'), cell: (s) => (s.guardianPhone ? formatPhone(s.guardianPhone) : NONE) },
     {
       id: 'status',
       header: t('columns.status'),
-      content: (s) => <StatusIndicator type={STATUS_TYPE[s.status]}>{t(`status.${s.status}`)}</StatusIndicator>,
+      cell: (s) => <StatusIndicator type={STATUS_TYPE[s.status]}>{t(`status.${s.status}`)}</StatusIndicator>,
     },
   ];
 
-  const shared = {
-    trackBy: 'id',
-    stickyHeader: true,
-    items: filteredRows,
-    loading: !data,
-    loadingText: t('loading'),
-    header: (
-      <Header
-        variant="h2"
-        counter={counter}
-        actions={
-          canCreate && (
-            <SpaceBetween direction="horizontal" size="xs">
-              <ExportButton href="/api/v1/export/students" label={tExport('label.students')} />
-              <Button
-                href="/students/import"
-                iconSvg={svg('import')}
-                onFollow={(event) => {
-                  event.preventDefault();
-                  router.push('/students/import');
-                }}
-              >
-                {t('import')}
-              </Button>
-              <Button
-                variant="primary"
-                href="/students/new"
-                onFollow={(event) => {
-                  event.preventDefault();
-                  router.push('/students/new');
-                }}
-              >
-                {t('add')}
-              </Button>
-            </SpaceBetween>
-          )
-        }
-      >
-        {t('title')}
-      </Header>
-    ),
-    filter: (
-      <Grid gridDefinition={[{ colspan: { default: 12, xs: 8 } }, { colspan: { default: 12, xs: 4 } }]}>
-        <Input
-          placeholder={t('searchPlaceholder')}
-          value={searchText}
-          onChange={({ detail }) => setSearchText(detail.value)}
-        />
+  return (
+    <DataTable
+      id="students"
+      title={t('title')}
+      counter={data ? `(${data.total > COUNT_CAP ? `${numbers.format(COUNT_CAP)}+` : numbers.format(data.total)})` : ''}
+      actions={
+        canCreate && (
+          <SpaceBetween direction="horizontal" size="xs">
+            <ExportButton href="/api/v1/export/students" label={tExport('label.students')} />
+            <Button iconSvg={svg('import')} {...link('/students/import')}>
+              {t('import')}
+            </Button>
+            <Button variant="primary" {...link('/students/new')}>
+              {t('add')}
+            </Button>
+          </SpaceBetween>
+        )
+      }
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      filters={
         <Select
           ariaLabel={t('filter.status')}
           selectedOption={{ value: status, label: t(`status.${status}`) }}
           options={STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
           onChange={({ detail }) => setParams({ status: detail.selectedOption.value ?? null, cursor: null })}
         />
-      </Grid>
-    ),
-    pagination: (
-      <Pagination
-        currentPageIndex={page}
-        pagesCount={data?.nextCursor ? page + 1 : page}
-        openEnd={Boolean(data?.nextCursor)}
-        disabled={!data}
-        onChange={({ detail }) => {
-          if (!data) return;
-          // Cursors only step one page at a time, so any earlier page other than the first steps back by one.
-          const target = detail.currentPageIndex;
-          setParams({ cursor: target === 1 ? null : target > page ? data.nextCursor : data.prevCursor });
-        }}
-      />
-    ),
-    preferences: (
-      <CollectionPreferences
-        preferences={{ pageSize }}
-        pageSizePreference={{
-          options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-        }}
-        onConfirm={({ detail }) =>
-          setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })
-        }
-      />
-    ),
-    empty:
-      searchText || (status !== 'active' || page !== 1) ? (
-        <EmptyState
-          icon="students"
-          heading={t('noMatches.heading')}
-          body={t('noMatches.body')}
-          action={
-            <Button onClick={() => { setSearchText(''); setParams({ status: null, cursor: null }); }}>{t('noMatches.clear')}</Button>
-          }
-        />
-      ) : (
-        <EmptyState icon="students" heading={t('empty.heading')} body={t('empty.body')} />
-      ),
-  };
-
-  if (isMobile) {
-    return (
-      <Cards
-        {...shared}
-        variant="container"
-        cardDefinition={{
-          header: (student) => <AppLink href={`/students/${student.id}`}>{student.name}</AppLink>,
-          sections: fields.slice(1),
-        }}
-      />
-    );
-  }
-  return (
-    <Table
-      {...shared}
-      variant="container"
-      resizableColumns
-      enableKeyboardNavigation
-      renderAriaLive={() => t('showing', { count: rows.length })}
-      columnDefinitions={fields.map(({ id, header, content }) => ({
-        id,
-        header,
-        cell: content,
-        isRowHeader: id === 'name',
-      }))}
+      }
+      filtered={status !== 'active'}
+      clearParams={['status']}
+      empty={{ icon: 'students', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

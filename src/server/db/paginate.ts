@@ -7,7 +7,7 @@ type Row<T, K extends keyof T> = Pick<T, K> & { _id: Types.ObjectId };
 export async function paginate<T, K extends keyof T & string>(
   model: Model<T>,
   filter: QueryFilter<T>,
-  options: { sortField: K; select: K[]; limit: number; cursor?: string | undefined; descending?: boolean },
+  options: { sortField: K | '_id'; select: K[]; limit: number; cursor?: string | undefined; descending?: boolean },
 ) {
   const { sortField, select, limit } = options;
   const cursor = decodeCursor(options.cursor);
@@ -47,5 +47,16 @@ export async function paginate<T, K extends keyof T & string>(
     page,
     nextCursor: back || hasMore ? edge(rows.at(-1), 'next', page + 1) : null,
     prevCursor: (back ? hasMore : page > 1) ? edge(rows[0], 'prev', page - 1) : null,
+  };
+}
+
+/** Every word typed must appear in at least one of the fields, so "aarav sharma" finds a first and last name stored apart. */
+export function textMatch(q: string | undefined, fields: string[]) {
+  const terms = (q ?? '').split(/\s+/).filter(Boolean);
+  if (!terms.length) return {};
+  return {
+    $and: terms.map((term) => ({
+      $or: fields.map((field) => ({ [field]: { $regex: term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } })),
+    })),
   };
 }

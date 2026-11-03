@@ -24,7 +24,7 @@ export default async function StudentsPage({
   return (
     <Suspense
       key={JSON.stringify(query)}
-      fallback={<StudentsTable status={query.status} pageSize={query.pageSize} canCreate={canCreate} data={null} />}
+      fallback={<StudentsTable status={query.status} canCreate={canCreate} data={null} />}
     >
       <Students ctx={ctx} query={query} canCreate={canCreate} />
     </Suspense>
@@ -42,6 +42,6 @@ async function Students({
 }) {
   const [list, total] = await Promise.all([listStudents(ctx, query), countStudents(ctx, query.status)]);
   return (
-    <StudentsTable status={query.status} pageSize={query.pageSize} canCreate={canCreate} data={{ ...list, total }} />
+    <StudentsTable status={query.status} canCreate={canCreate} data={{ ...list, total }} />
   );
 }

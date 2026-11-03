@@ -58,8 +58,6 @@ const nextConfig: NextConfig = {
       '@cloudscape-design/design-tokens',
     ],
   }),
-  // Speed up compilation
-  swcMinify: true,
   // Reduce build time by skipping unnecessary steps
   ...(isDev && {
     eslint: {

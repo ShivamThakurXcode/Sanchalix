@@ -12,10 +12,9 @@ import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { useRouter } from '@/i18n/navigation';
 import { deleteAdmissionDocument, verifyAdmissionDocument } from '@/server/modules/admissions/actions';
@@ -103,6 +102,52 @@ export function StudentDocuments({
     router.refresh();
   }
 
+  const columns: Column<DocumentRow>[] = [
+    { id: 'type', header: t('columns.type'), cell: (row) => t(`type.${row.type}`), isRowHeader: true, sortBy: (row) => row.type },
+    {
+      id: 'file',
+      header: t('columns.file'),
+      cell: (row) => (
+        <Link href={`${base}/${row.id}`} external externalIconAriaLabel={t('download')}>
+          {row.fileName}
+        </Link>
+      ),
+      sortBy: (row) => row.fileName,
+    },
+    { id: 'size', header: t('columns.size'), cell: (row) => t('size', { kb: Math.max(1, Math.round(row.size / 1024)) }), sortBy: (row) => row.size },
+    {
+      id: 'verified',
+      header: t('columns.verified'),
+      cell: (row) => (
+        <StatusIndicator type={row.verified ? 'success' : 'pending'}>{t(row.verified ? 'verified' : 'notVerified')}</StatusIndicator>
+      ),
+    },
+    ...(canEdit
+      ? [
+          {
+            id: 'actions',
+            header: t('columns.actions'),
+            cell: (row: DocumentRow) => (
+              <SpaceBetween direction="horizontal" size="s">
+                {!row.verified && (
+                  <Button
+                    variant="inline-link"
+                    ariaLabel={t('verifyLabel', { name: row.fileName })}
+                    onClick={() => void act(() => verify(row.id), t('verifiedDone'))}
+                  >
+                    {t('verify')}
+                  </Button>
+                )}
+                <Button variant="inline-link" ariaLabel={t('deleteLabel', { name: row.fileName })} onClick={() => setRemoving(row)}>
+                  {t('delete')}
+                </Button>
+              </SpaceBetween>
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <SpaceBetween size="l">
       {feedback && (
@@ -110,66 +155,15 @@ export function StudentDocuments({
           {feedback.text}
         </Alert>
       )}
-      <Table
-        variant="container"
-        trackBy="id"
+      <DataTable
+        id="sis-documents"
+        title={t('title')}
+        description={t('description')}
         items={documents}
-        header={
-          <Header variant="h2" counter={`(${documents.length})`} description={t('description')}>
-            {t('title')}
-          </Header>
-        }
-        empty={<EmptyState icon="documents" heading={t('empty.heading')} body={t('empty.body')} />}
-        columnDefinitions={[
-          { id: 'type', header: t('columns.type'), cell: (row) => t(`type.${row.type}`), isRowHeader: true },
-          {
-            id: 'file',
-            header: t('columns.file'),
-            cell: (row) => (
-              <Link href={`${base}/${row.id}`} external externalIconAriaLabel={t('download')}>
-                {row.fileName}
-              </Link>
-            ),
-          },
-          { id: 'size', header: t('columns.size'), cell: (row) => t('size', { kb: Math.max(1, Math.round(row.size / 1024)) }) },
-          {
-            id: 'verified',
-            header: t('columns.verified'),
-            cell: (row) => (
-              <StatusIndicator type={row.verified ? 'success' : 'pending'}>
-                {t(row.verified ? 'verified' : 'notVerified')}
-              </StatusIndicator>
-            ),
-          },
-          ...(canEdit
-            ? [
-                {
-                  id: 'actions',
-                  header: t('columns.actions'),
-                  cell: (row: DocumentRow) => (
-                    <SpaceBetween direction="horizontal" size="s">
-                      {!row.verified && (
-                        <Button
-                          variant="inline-link"
-                          ariaLabel={t('verifyLabel', { name: row.fileName })}
-                          onClick={() => void act(() => verify(row.id), t('verifiedDone'))}
-                        >
-                          {t('verify')}
-                        </Button>
-                      )}
-                      <Button
-                        variant="inline-link"
-                        ariaLabel={t('deleteLabel', { name: row.fileName })}
-                        onClick={() => setRemoving(row)}
-                      >
-                        {t('delete')}
-                      </Button>
-                    </SpaceBetween>
-                  ),
-                },
-              ]
-            : []),
-        ]}
+        columns={columns}
+        search={(row) => `${t(`type.${row.type}`)} ${row.fileName}`}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'documents', heading: t('empty.heading'), body: t('empty.body') }}
       />
       {canEdit && (
         <Container header={<Header variant="h2">{t('upload.title')}</Header>}>

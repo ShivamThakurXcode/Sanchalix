@@ -3,8 +3,6 @@
 import Alert from '@cloudscape-design/components/alert';
 import AttributeEditor from '@cloudscape-design/components/attribute-editor';
 import Button from '@cloudscape-design/components/button';
-import Cards from '@cloudscape-design/components/cards';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Container from '@cloudscape-design/components/container';
 import ContentLayout from '@cloudscape-design/components/content-layout';
@@ -14,7 +12,6 @@ import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import Input, { type InputProps } from '@cloudscape-design/components/input';
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
@@ -23,11 +20,11 @@ import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
+import { type Column, DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { formatPhone } from '@/lib/phone';
-import { useIsMobile } from '@/lib/useIsMobile';
 import { StudentDocuments } from '@/features/sis/StudentDocuments';
 import { createStaff, updateStaff } from '@/server/modules/hr/actions';
 import type { HistoryEntry } from '@/server/modules/audit/history';
@@ -49,13 +46,11 @@ const STATUS_TYPE: Record<StaffRow['status'], StatusIndicatorProps.Type> = {
 type Data = { rows: StaffRow[]; page: number; nextCursor: string | null; prevCursor: string | null };
 
 export function StaffTable({
-  pageSize,
   canCreate,
   created,
   updated,
   data,
 }: {
-  pageSize: number;
   canCreate: boolean;
   created: string | null;
   updated: string | null;
@@ -64,143 +59,60 @@ export function StaffTable({
   const t = useTranslations('hr');
   const router = useRouter();
   const pathname = usePathname();
-  const isMobile = useIsMobile();
-
-  const setParams = (changes: Record<string, string | null>) => {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === null) params.delete(key);
-      else params.set(key, value);
-    }
-    router.replace(`${pathname}?${params}`);
-  };
-
-  const rows = data?.rows ?? [];
-  const page = data?.page ?? 1;
-  const addButton = (primary: boolean) => (
-    <Button
-      {...(primary && { variant: 'primary' as const })}
-      href={NEW}
-      onFollow={(event) => {
-        event.preventDefault();
-        router.push(NEW);
-      }}
-    >
-      {t('add')}
-    </Button>
-  );
-
-  const fields: { id: string; header: string; content: (member: StaffRow) => ReactNode }[] = [
-    {
-      id: 'name',
-      header: t('columns.name'),
-      content: (member) => <AppLink href={`${LIST}/${member.id}`}>{member.name}</AppLink>,
+  const link = (href: string) => ({
+    href,
+    onFollow: (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+      router.push(href);
     },
-    { id: 'employeeNo', header: t('columns.employeeNo'), content: (member) => member.employeeNo },
-    { id: 'designation', header: t('columns.designation'), content: (member) => member.designation },
-    { id: 'type', header: t('columns.type'), content: (member) => t(`type.${member.type}`) },
-    { id: 'phone', header: t('columns.phone'), content: (member) => formatPhone(member.phone) },
+  });
+
+  const columns: Column<StaffRow>[] = [
+    { id: 'name', header: t('columns.name'), cell: (member) => <AppLink href={`${LIST}/${member.id}`}>{member.name}</AppLink>, isRowHeader: true },
+    { id: 'employeeNo', header: t('columns.employeeNo'), cell: (member) => member.employeeNo },
+    { id: 'designation', header: t('columns.designation'), cell: (member) => member.designation },
+    { id: 'type', header: t('columns.type'), cell: (member) => t(`type.${member.type}`) },
+    { id: 'phone', header: t('columns.phone'), cell: (member) => formatPhone(member.phone) },
     {
       id: 'status',
       header: t('columns.status'),
-      content: (member) => (
-        <StatusIndicator type={STATUS_TYPE[member.status]}>{t(`status.${member.status}`)}</StatusIndicator>
-      ),
+      cell: (member) => <StatusIndicator type={STATUS_TYPE[member.status]}>{t(`status.${member.status}`)}</StatusIndicator>,
     },
   ];
 
-  const shared = {
-    trackBy: 'id',
-    items: rows,
-    loading: !data,
-    loadingText: t('loading'),
-    stickyHeader: true,
-    header: (
-      <SpaceBetween size="m">
-        <Header
-          variant="h2"
-          actions={
-            canCreate && (
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  href={IMPORT}
-                  iconSvg={svg('import')}
-                  onFollow={(event) => {
-                    event.preventDefault();
-                    router.push(IMPORT);
-                  }}
-                >
-                  {t('import.action')}
-                </Button>
-                {addButton(true)}
-              </SpaceBetween>
-            )
-          }
-        >
-          {t('title')}
-        </Header>
-        {(created ?? updated) && (
+  return (
+    <DataTable
+      id="staff"
+      title={t('title')}
+      actions={
+        canCreate && (
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button iconSvg={svg('import')} {...link(IMPORT)}>
+              {t('import.action')}
+            </Button>
+            <Button variant="primary" {...link(NEW)}>
+              {t('add')}
+            </Button>
+          </SpaceBetween>
+        )
+      }
+      above={
+        (created ?? updated) && (
           <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => router.replace(pathname)}>
             {created ? t('created', { name: created }) : t('updated', { name: updated ?? '' })}
           </Alert>
-        )}
-      </SpaceBetween>
-    ),
-    pagination: (
-      <Pagination
-        currentPageIndex={page}
-        pagesCount={data?.nextCursor ? page + 1 : page}
-        openEnd={Boolean(data?.nextCursor)}
-        disabled={!data}
-        onChange={({ detail }) => {
-          if (!data) return;
-          // Cursors only step one page at a time, so any earlier page other than the first steps back by one.
-          const target = detail.currentPageIndex;
-          setParams({ cursor: target === 1 ? null : target > page ? data.nextCursor : data.prevCursor });
-        }}
-      />
-    ),
-    preferences: (
-      <CollectionPreferences
-        preferences={{ pageSize }}
-        pageSizePreference={{
-          options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-        }}
-        onConfirm={({ detail }) => setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })}
-      />
-    ),
-    empty: (
-      <EmptyState
-        icon="staff"
-        heading={t('empty.heading')}
-        body={t('empty.body')}
-        action={canCreate && addButton(false)}
-      />
-    ),
-  };
-
-  if (isMobile) {
-    return (
-      <Cards
-        {...shared}
-        variant="container"
-        cardDefinition={{ header: (member) => fields[0]?.content(member), sections: fields.slice(1) }}
-      />
-    );
-  }
-  return (
-    <Table
-      {...shared}
-      variant="container"
-      resizableColumns
-      enableKeyboardNavigation
-      renderAriaLive={() => t('showing', { count: rows.length })}
-      columnDefinitions={fields.map(({ id, header, content }) => ({
-        id,
-        header,
-        cell: content,
-        isRowHeader: id === 'name',
-      }))}
+        )
+      }
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      empty={{
+        icon: 'staff',
+        heading: t('empty.heading'),
+        body: t('empty.body'),
+        action: canCreate && <Button {...link(NEW)}>{t('add')}</Button>,
+      }}
     />
   );
 }

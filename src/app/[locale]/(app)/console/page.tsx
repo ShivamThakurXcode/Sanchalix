@@ -12,7 +12,7 @@ export async function generateMetadata() {
 export default async function PlatformHomePage() {
   await platformContext('platform.school.read');
   const [t, summary] = await Promise.all([getTranslations('platform.home'), getPlatformSummary()]);
-  const schools = '/platform/schools';
+  const schools = '/console/schools';
   return (
     <ColumnLayout columns={3}>
       <KpiTile title={t('active')} value={String(summary.schools.active)} href={schools} description={t('activeNote')} />

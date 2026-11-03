@@ -1,8 +1,9 @@
 import 'server-only';
+import { DEFAULT_PAGE_SIZE } from '@/lib/tableQuery';
 import { Types } from 'mongoose';
 import { AppError } from '@/lib/appError';
 import type { RequestContext } from '@/server/auth/context';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { Class } from '@/server/models/class';
 import { Enrollment } from '@/server/models/enrollment';
 import { AcademicYear } from '@/server/models/academicYear';
@@ -48,11 +49,15 @@ async function scopeFilter(ctx: RequestContext) {
 
 export async function listStudents(ctx: RequestContext, query: ListStudents) {
   const { schoolId } = ctx;
-  const filter = { ...(await scopeFilter(ctx)), status: query.status };
+  const filter = {
+    ...(await scopeFilter(ctx)),
+    status: query.status,
+    ...textMatch(query.q, ['firstName', 'lastName', 'admissionNo']),
+  };
   const { rows, ...page } = await paginate(Student, filter, {
     sortField: 'lastName',
     select: ['firstName', 'lastName', 'admissionNo', 'status', 'primaryGuardianId', 'currentEnrollmentId'],
-    limit: query.pageSize,
+    limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
     cursor: query.cursor,
   });
 

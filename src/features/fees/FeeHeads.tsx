@@ -12,10 +12,9 @@ import Checkbox from '@cloudscape-design/components/checkbox';
 import Select from '@cloudscape-design/components/select';
 import Toggle from '@cloudscape-design/components/toggle';
 import SpaceBetween from '@cloudscape-design/components/space-between';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { setFeeHeadDiscountable, upsertFeeHead } from '@/server/modules/fees/actions';
 import type { FeeHeadRow } from '@/server/modules/fees/schemas';
@@ -49,60 +48,47 @@ export function FeeHeadsTable({
     </Button>
   );
 
+  const columns: Column<FeeHeadRow>[] = [
+    { id: 'name', header: t('heads.columns.name'), cell: (head) => head.name, isRowHeader: true, sortBy: (head) => head.name },
+    { id: 'code', header: t('heads.columns.code'), cell: (head) => head.code, sortBy: (head) => head.code },
+    { id: 'gst', header: t('heads.columns.gst'), cell: (head) => (head.gstRate ? `${head.gstRate}%` : t('heads.gstNone')) },
+    {
+      id: 'discountable',
+      header: t('heads.columns.discountable'),
+      cell: (head) =>
+        canEdit ? (
+          <Toggle
+            checked={head.discountable}
+            ariaLabel={t('heads.discountableLabel', { name: head.name })}
+            onChange={({ detail }) =>
+              void setFeeHeadDiscountable({ id: head.id, discountable: detail.checked }).then(() => router.refresh())
+            }
+          >
+            {t(head.discountable ? 'heads.discountableYes' : 'heads.discountableNo')}
+          </Toggle>
+        ) : (
+          t(head.discountable ? 'heads.discountableYes' : 'heads.discountableNo')
+        ),
+    },
+  ];
+
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      trackBy="id"
+    <DataTable
+      id="fees-heads"
+      title={t('heads.title')}
+      actions={canEdit && addButton(true)}
+      above={
+        created && (
+          <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => router.replace(pathname)}>
+            {t('heads.created', { name: created })}
+          </Alert>
+        )
+      }
       items={heads}
-      header={
-        <SpaceBetween size="m">
-          <Header variant="h1" counter={`(${heads.length})`} actions={canEdit && addButton(true)}>
-            {t('heads.title')}
-          </Header>
-          {created && (
-            <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => router.replace(pathname)}>
-              {t('heads.created', { name: created })}
-            </Alert>
-          )}
-        </SpaceBetween>
-      }
-      empty={
-        <EmptyState
-          icon="fees"
-          heading={t('heads.empty.heading')}
-          body={t('heads.empty.body')}
-          action={canEdit && addButton(false)}
-        />
-      }
-      columnDefinitions={[
-        { id: 'name', header: t('heads.columns.name'), cell: (head) => head.name, isRowHeader: true },
-        { id: 'code', header: t('heads.columns.code'), cell: (head) => head.code },
-        {
-          id: 'gst',
-          header: t('heads.columns.gst'),
-          cell: (head) => (head.gstRate ? `${head.gstRate}%` : t('heads.gstNone')),
-        },
-        {
-          id: 'discountable',
-          header: t('heads.columns.discountable'),
-          cell: (head) =>
-            canEdit ? (
-              <Toggle
-                checked={head.discountable}
-                ariaLabel={t('heads.discountableLabel', { name: head.name })}
-                onChange={({ detail }) =>
-                  void setFeeHeadDiscountable({ id: head.id, discountable: detail.checked }).then(() => router.refresh())
-                }
-              >
-                {t(head.discountable ? 'heads.discountableYes' : 'heads.discountableNo')}
-              </Toggle>
-            ) : (
-              t(head.discountable ? 'heads.discountableYes' : 'heads.discountableNo')
-            ),
-        },
-      ]}
+      columns={columns}
+      search={(head) => `${head.name} ${head.code}`}
+      searchPlaceholder={t('heads.searchPlaceholder')}
+      empty={{ icon: 'fees', heading: t('heads.empty.heading'), body: t('heads.empty.body'), action: canEdit && addButton(false) }}
     />
   );
 }

@@ -133,15 +133,21 @@ export function EventsCalendar({
   );
 
   const weeks = monthWeeks(month);
-  const cell = (date: string | null) => {
+  const cell = (date: string | null, column: number) => {
     if (!date) return null;
     const own = items.filter((item) => item.start <= date && item.end >= date);
+    const weekend = column >= 5;
     return (
-      <SpaceBetween size="xxxs">
-        <Box fontWeight="bold" color={date === today ? 'text-status-info' : 'inherit'}>
-          {Number(date.slice(8))}
-          {date === today && ` · ${t('today')}`}
-        </Box>
+      <SpaceBetween size="xs">
+        <SpaceBetween direction="horizontal" size="xs" alignItems="center">
+          <Box
+            variant={date === today ? 'h3' : 'strong'}
+            color={date === today ? 'text-status-info' : weekend ? 'text-body-secondary' : 'inherit'}
+          >
+            {Number(date.slice(8))}
+          </Box>
+          {date === today && <Badge color="blue">{t('today')}</Badge>}
+        </SpaceBetween>
         {own.map((item) =>
           canEdit && item.id ? (
             <Button
@@ -153,9 +159,9 @@ export function EventsCalendar({
               {item.title}
             </Button>
           ) : (
-            <Box key={`${item.start}-${item.title}`} fontSize="body-s">
+            <Badge key={`${item.start}-${item.title}`} color={item.type === 'holiday' ? 'red' : 'blue'}>
               {item.title}
-            </Box>
+            </Badge>
           ),
         )}
       </SpaceBetween>
@@ -209,7 +215,7 @@ export function EventsCalendar({
           columnDefinitions={WEEKDAYS.map((weekday, index) => ({
             id: weekday,
             header: t(`weekdays.${weekday}`),
-            cell: (week: Week) => cell(week.days[index] ?? null),
+            cell: (week: Week) => cell(week.days[index] ?? null, index),
           }))}
         />
       ) : (

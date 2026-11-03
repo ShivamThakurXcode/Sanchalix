@@ -558,7 +558,7 @@
       "title": "Students",
       "loading": "Loading students",
       "showing": "Showing {count, plural, one {# student} other {# students}}",
-      "searchPlaceholder": "Search by name, admission no., parent or phone",
+      "searchPlaceholder": "Search by name or admission no.",
       "columns": {
         "name": "Name",
         "admissionNo": "Admission no.",
@@ -928,7 +928,8 @@
         "kind": "The file isn't a PDF, JPEG, PNG or WebP. Scan or save it in one of those formats.",
         "notFound": "We couldn't find that student or document.",
         "failed": "The upload didn't finish. Check your connection and try again."
-      }
+      },
+      "searchPlaceholder": "Search by type or file name"
     }
   },
   "states": {
@@ -1195,7 +1196,8 @@
       "correct": "Save correction",
       "reason": "Reason for the correction",
       "reasonHint": "This day was already submitted. The reason is kept with the change in the audit log.",
-      "correctingNote": "You are correcting a day that was already submitted. Change the marks, give a reason and save."
+      "correctingNote": "You are correcting a day that was already submitted. Change the marks, give a reason and save.",
+      "searchPlaceholder": "Search by roll number or name"
     },
     "errors": {
       "section": "We couldn't find that section, or you aren't its class teacher.",
@@ -1232,7 +1234,8 @@
       "period": "Period",
       "wholeDay": "Whole day",
       "periodNo": "Period {number}",
-      "exportLabel": "Export this register"
+      "exportLabel": "Export this register",
+      "searchPlaceholder": "Search by roll number or name"
     },
     "report": {
       "title": "Attendance report",
@@ -1412,7 +1415,8 @@
       },
       "discountableYes": "Yes",
       "discountableNo": "No",
-      "discountableLabel": "Discounts apply to {name}"
+      "discountableLabel": "Discounts apply to {name}",
+      "searchPlaceholder": "Search by fee head name or code"
     },
     "structures": {
       "title": "Fee structures",
@@ -1882,7 +1886,8 @@
         "withdrawLabel": "Withdraw {name} from {student}",
         "withdrawTitle": "Withdraw {name} from {student}?",
         "withdrawBody": "The discount stops applying. It comes off invoices that nobody has paid towards; an invoice with a receipt keeps it. This can't be undone, but a new discount can be added.",
-        "withdrawn": "{name} withdrawn. {count, plural, =0 {No unpaid invoices changed.} one {# unpaid invoice put back to its full amount.} other {# unpaid invoices put back to their full amount.}}"
+        "withdrawn": "{name} withdrawn. {count, plural, =0 {No unpaid invoices changed.} one {# unpaid invoice put back to its full amount.} other {# unpaid invoices put back to their full amount.}}",
+        "searchPlaceholder": "Search by student, admission no., discount or reason"
       },
       "errors": {
         "notFound": "We couldn't find that discount.",
@@ -2003,7 +2008,8 @@
       "until": "Shown until {date}",
       "expired": "Ended {date}",
       "download": "Download",
-      "filesFailed": "{count, plural, one {# file} other {# files}} could not be attached. The announcement went out without {count, plural, one {it} other {them}}."
+      "filesFailed": "{count, plural, one {# file} other {# files}} could not be attached. The announcement went out without {count, plural, one {it} other {them}}.",
+      "searchPlaceholder": "Search by title, author or text"
     },
     "notifications": {
       "title": "Notifications",
@@ -2042,6 +2048,7 @@
   },
   "hr": {
     "title": "Staff",
+    "searchPlaceholder": "Search by name, employee no., designation or phone",
     "add": "Add staff member",
     "cancel": "Cancel",
     "dismiss": "Dismiss message",
@@ -2215,7 +2222,8 @@
       },
       "halfDay": "Half day",
       "balance": "{left} of {quota} days left",
-      "pendingDays": "{count} waiting"
+      "pendingDays": "{count} waiting",
+      "searchPlaceholder": "Search by staff name or reason"
     },
     "attendance": {
       "title": "Staff attendance",
@@ -2250,7 +2258,8 @@
         "roster": "The list doesn't match the staff of this school. Reload the page and try again."
       },
       "qr": "Check-in code",
-      "register": "Monthly register"
+      "register": "Monthly register",
+      "searchPlaceholder": "Search by employee no. or name"
     },
     "profile": {
       "edit": "Edit",
@@ -2331,7 +2340,8 @@
       "empty": {
         "heading": "No staff yet",
         "body": "Add staff members to see their attendance here."
-      }
+      },
+      "searchPlaceholder": "Search by employee no. or name"
     }
   },
   "homework": {
@@ -2403,7 +2413,8 @@
       "download": "Downloads the file",
       "tooBig": "The file must be 5 MB or smaller",
       "failed": "The upload didn't finish. Check your connection and try again."
-    }
+    },
+    "searchPlaceholder": "Search by title or instructions"
   },
   "admissions": {
     "title": "Admissions",
@@ -2514,7 +2525,8 @@
       "verifyFirst": "Verify all required documents first ({count} remaining)",
       "missingTitle": "{count, plural, one {# required document is} other {# required documents are}} not verified yet",
       "missingBody": "Upload and verify these before admitting the applicant: {list}."
-    }
+    },
+    "searchPlaceholder": "Search by application no. or applicant name"
   },
   "users": {
     "title": "Users",
@@ -2618,7 +2630,8 @@
     "removeRole": {
       "role": "Role to remove",
       "hint": "They are signed out of anything open under this role. Their other roles stay."
-    }
+    },
+    "searchPlaceholder": "Search by name or email"
   },
   "promotion": {
     "title": "Promotion",
@@ -2689,7 +2702,8 @@
       "overlap": "The next year must start after this year ends.",
       "noNext": "Plan the next academic year first.",
       "remaining": "{count, plural, one {# student is} other {# students are}} still enrolled in this year. Move everyone before closing it."
-    }
+    },
+    "searchPlaceholder": "Search by roll number or name"
   },
   "portal": {
     "child": "Child",
@@ -2711,7 +2725,8 @@
       "empty": {
         "heading": "Nothing to pay",
         "body": "Installments appear here when they are issued. Pay at the school fee counter."
-      }
+      },
+      "searchPlaceholder": "Search by installment or due date"
     },
     "homework": {
       "label": "Homework due",
@@ -2725,7 +2740,8 @@
       "empty": {
         "heading": "No homework due",
         "body": "Homework set by teachers appears here."
-      }
+      },
+      "searchPlaceholder": "Search by title or subject"
     },
     "today": {
       "title": "Today's classes",
@@ -2758,7 +2774,12 @@
       "createBody": "They get a temporary password, shown to you once, and can see this student's attendance, homework, timetable and fees.",
       "email": "Sign-in email",
       "emailHint": "They sign in with this email.",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "searchPlaceholder": "Search by name or email",
+      "empty": {
+        "heading": "No people to give sign-ins to",
+        "body": "Add the student and a parent first."
+      }
     },
     "errors": {
       "email": "Enter an email address like name@example.com",
@@ -2774,7 +2795,24 @@
       "receiptNo": "Receipt no.",
       "date": "Date",
       "amount": "Amount",
-      "opens": "Opens the receipt as a PDF in a new tab"
+      "opens": "Opens the receipt as a PDF in a new tab",
+      "searchPlaceholder": "Search by receipt number",
+      "empty": {
+        "heading": "No receipts yet",
+        "body": "Receipts appear here after a payment."
+      }
+    }
+  },
+  "table": {
+    "loading": "Loading",
+    "searchPlaceholder": "Search",
+    "pageSize": "{count} per page",
+    "matches": "{count, plural, one {# match} other {# matches}}",
+    "range": "Showing rows {first} to {last}",
+    "noMatches": {
+      "heading": "No matches",
+      "body": "Nothing fits your search or filters. Try different words, or clear them.",
+      "clear": "Clear search and filters"
     }
   },
   "export": {
@@ -3018,7 +3056,8 @@
       "empty": {
         "heading": "No papers yet",
         "body": "A paper is one subject for one class, with a date and maximum marks."
-      }
+      },
+      "searchPlaceholder": "Search by subject or class"
     },
     "marks": {
       "title": "Marks: {subject}",
@@ -3079,8 +3118,10 @@
           "exams_mark_update": "Saved marks",
           "exams_mark_lock": "Locked the paper",
           "exams_mark_unlock": "Unlocked the paper"
-        }
-      }
+        },
+        "searchPlaceholder": "Search by person or action"
+      },
+      "searchPlaceholder": "Search by roll number or name"
     },
     "results": {
       "subject": "Subject",
@@ -3183,9 +3224,11 @@
         "published": "This card is published, so its remarks can't be changed.",
         "noResults": "No student in this section has published exam results yet. Publish an exam's results first.",
         "nothingToPublish": "There are no draft cards to publish. Generate them first."
-      }
+      },
+      "searchPlaceholder": "Search by roll number or name"
     },
-    "noTerm": "No term"
+    "noTerm": "No term",
+    "searchPlaceholder": "Search by exam name, term or class"
   },
   "marketing": {
     "brand": "Sanchalix",
@@ -3506,7 +3549,8 @@
         "date": "Choose a date",
         "body": "Start with a section heading like \"## Heading\", and give every section at least one paragraph",
         "notFound": "We couldn't find that post."
-      }
+      },
+      "searchPlaceholder": "Search by title or slug"
     },
     "schools": {
       "title": "Schools",
@@ -3535,7 +3579,8 @@
       "empty": {
         "heading": "No schools yet",
         "body": "Add the first school to get started."
-      }
+      },
+      "searchPlaceholder": "Search by school name, code or city"
     },
     "form": {
       "title": "Add a school",
@@ -3637,7 +3682,8 @@
       "empty": {
         "heading": "Nothing yet",
         "body": "Platform activity shows up here."
-      }
+      },
+      "searchPlaceholder": "Search by action code or reason"
     },
     "errors": {
       "name": "Enter the school name, 2 to 120 characters",

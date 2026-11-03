@@ -4,18 +4,17 @@ import Alert from '@cloudscape-design/components/alert';
 import Checkbox from '@cloudscape-design/components/checkbox';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
 import Multiselect from '@cloudscape-design/components/multiselect';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { type Column, DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { setClassSubjects } from '@/server/modules/academics/actions';
@@ -26,7 +25,6 @@ type Option = { id: string; name: string };
 type Failure = { message: string; fieldErrors?: Record<string, string> };
 const DAYS = [1, 2, 3, 4, 5, 6];
 const TYPES = ['scholastic', 'co_scholastic'];
-const PAGE_SIZES = [10, 25, 50, 100];
 
 export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[]; canCreate: boolean }) {
   const t = useTranslations('academics.subjects');
@@ -36,19 +34,7 @@ export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[];
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Failure | null>(null);
   const [added, setAdded] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const typeOptions = TYPES.map((value) => ({ value, label: t(`type.${value}`) }));
-
-  const filteredSubjects = subjects.filter(
-    (subject) =>
-      subject.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      subject.code.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const paginatedSubjects = filteredSubjects.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalPages = Math.ceil(filteredSubjects.length / pageSize);
 
   const addButton = (primary: boolean) => (
     <Button {...(primary && { variant: 'primary' as const })} onClick={() => setOpen(true)}>
@@ -68,72 +54,31 @@ export function SubjectsTable({ subjects, canCreate }: { subjects: SubjectRow[];
     router.refresh();
   }
 
+  const columns: Column<SubjectRow>[] = [
+    { id: 'name', header: t('name'), cell: (subject) => subject.name, isRowHeader: true, sortBy: (subject) => subject.name },
+    { id: 'code', header: t('code'), cell: (subject) => subject.code, sortBy: (subject) => subject.code },
+    { id: 'type', header: t('typeLabel'), cell: (subject) => t(`type.${subject.type}`) },
+    { id: 'optional', header: t('optional.column'), cell: (subject) => t(subject.isOptional ? 'optional.yes' : 'optional.no') },
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        trackBy="id"
-        items={paginatedSubjects}
-        header={
-          <SpaceBetween size="m">
-            <Header variant="h2" counter={`(${filteredSubjects.length})`} actions={canCreate && addButton(true)}>
-              {t('title')}
-            </Header>
-            {added && (
-              <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setAdded(null)}>
-                {t('added', { name: added })}
-              </Alert>
-            )}
-          </SpaceBetween>
-        }
-        filter={
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={searchText}
-            onChange={({ detail }) => {
-              setSearchText(detail.value);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        pagination={
-          <Pagination
-            currentPageIndex={currentPage}
-            pagesCount={totalPages}
-            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
-          />
-        }
-        preferences={
-          <CollectionPreferences
-            preferences={{ pageSize }}
-            pageSizePreference={{
-              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-            }}
-            onConfirm={({ detail }) => {
-              setPageSize(detail.pageSize ?? pageSize);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        empty={
-          searchText ? (
-            <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
-          ) : (
-            <EmptyState
-              icon="subjects"
-              heading={t('empty.heading')}
-              body={t('empty.body')}
-              action={canCreate && addButton(false)}
-            />
+      <DataTable
+        id="academics-subjects"
+        title={t('title')}
+        actions={canCreate && addButton(true)}
+        above={
+          added && (
+            <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setAdded(null)}>
+              {t('added', { name: added })}
+            </Alert>
           )
         }
-        columnDefinitions={[
-          { id: 'name', header: t('name'), cell: (subject) => subject.name, isRowHeader: true },
-          { id: 'code', header: t('code'), cell: (subject) => subject.code },
-          { id: 'type', header: t('typeLabel'), cell: (subject) => t(`type.${subject.type}`) },
-          { id: 'optional', header: t('optional.column'), cell: (subject) => t(subject.isOptional ? 'optional.yes' : 'optional.no') },
-        ]}
+        items={subjects}
+        columns={columns}
+        search={(subject) => `${subject.name} ${subject.code}`}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'subjects', heading: t('empty.heading'), body: t('empty.body'), action: canCreate && addButton(false) }}
       />
       <Modal
         visible={open}
@@ -403,15 +348,8 @@ export function ClassSubjects({ classes, subjects, canEdit }: { classes: ClassRo
   const [chosen, setChosen] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [searchText, setSearchText] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const subjectOptions = subjects.map(({ id, name }) => ({ value: id, label: name }));
   const nameOf = new Map(subjects.map(({ id, name }) => [id, name]));
-
-  const filteredClasses = classes.filter((cls) => cls.name.toLowerCase().includes(searchText.toLowerCase()));
-  const paginatedClasses = filteredClasses.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalPages = Math.ceil(filteredClasses.length / pageSize);
 
   async function save() {
     if (!editing) return;
@@ -427,93 +365,54 @@ export function ClassSubjects({ classes, subjects, canEdit }: { classes: ClassRo
     router.refresh();
   }
 
+  const columns: Column<ClassRow>[] = [
+    { id: 'name', header: t('class'), cell: (row) => row.name, isRowHeader: true, sortBy: (row) => row.name },
+    {
+      id: 'subjects',
+      header: t('subjects'),
+      cell: (row) =>
+        row.subjectIds.length ? row.subjectIds.map((id) => nameOf.get(id)).filter(Boolean).join(', ') : t('all'),
+    },
+    ...(canEdit
+      ? [
+          {
+            id: 'actions',
+            header: t('actions'),
+            cell: (row: ClassRow) => (
+              <Button
+                variant="inline-link"
+                ariaLabel={t('editLabel', { name: row.name })}
+                onClick={() => {
+                  setChosen(row.subjectIds);
+                  setEditing(row);
+                }}
+              >
+                {t('edit')}
+              </Button>
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        trackBy="id"
-        wrapLines
-        items={paginatedClasses}
-        header={
-          <SpaceBetween size="m">
-            <Header variant="h2" counter={`(${filteredClasses.length})`} description={t('description')}>
-              {t('title')}
-            </Header>
-            {feedback && (
-              <Alert type={feedback.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setFeedback(null)}>
-                {feedback.text}
-              </Alert>
-            )}
-          </SpaceBetween>
-        }
-        filter={
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={searchText}
-            onChange={({ detail }) => {
-              setSearchText(detail.value);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        pagination={
-          <Pagination
-            currentPageIndex={currentPage}
-            pagesCount={totalPages}
-            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
-          />
-        }
-        preferences={
-          <CollectionPreferences
-            preferences={{ pageSize }}
-            pageSizePreference={{
-              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-            }}
-            onConfirm={({ detail }) => {
-              setPageSize(detail.pageSize ?? pageSize);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        empty={
-          searchText ? (
-            <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
-          ) : (
-            <EmptyState icon="classes" heading={t('empty.heading')} body={t('empty.body')} />
+      <DataTable
+        id="academics-class-subjects"
+        title={t('title')}
+        description={t('description')}
+        above={
+          feedback && (
+            <Alert type={feedback.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setFeedback(null)}>
+              {feedback.text}
+            </Alert>
           )
         }
-        columnDefinitions={[
-          { id: 'name', header: t('class'), cell: (row) => row.name, isRowHeader: true, width: 160 },
-          {
-            id: 'subjects',
-            header: t('subjects'),
-            cell: (row) =>
-              row.subjectIds.length
-                ? row.subjectIds.map((id) => nameOf.get(id)).filter(Boolean).join(', ')
-                : t('all'),
-          },
-          ...(canEdit
-            ? [
-                {
-                  id: 'actions',
-                  header: t('actions'),
-                  width: 120,
-                  cell: (row: ClassRow) => (
-                    <Button
-                      variant="inline-link"
-                      ariaLabel={t('editLabel', { name: row.name })}
-                      onClick={() => {
-                        setChosen(row.subjectIds);
-                        setEditing(row);
-                      }}
-                    >
-                      {t('edit')}
-                    </Button>
-                  ),
-                },
-              ]
-            : []),
-        ]}
+        items={classes}
+        columns={columns}
+        search={(row) => row.name}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'classes', heading: t('empty.heading'), body: t('empty.body') }}
       />
       <Modal
         visible={editing !== null}

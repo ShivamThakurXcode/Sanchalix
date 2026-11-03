@@ -1,4 +1,5 @@
 import 'server-only';
+import { DEFAULT_PAGE_SIZE } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import { todayIn } from '@/lib/dates';
 import { randomUUID } from 'node:crypto';
@@ -8,7 +9,7 @@ import { can } from '@/server/auth/permissions';
 import { Enrollment } from '@/server/models/enrollment';
 import { ownStudentIds } from '@/server/modules/portal/own';
 import { detectFileKind, getFile, putFile, safeFileName } from '@/server/storage/store';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { Homework } from '@/server/models/homework';
 import { School } from '@/server/models/school';
 import { Section } from '@/server/models/section';
@@ -66,11 +67,15 @@ export async function listHomework(ctx: RequestContext, query: ListHomework) {
   const { schoolId } = ctx;
   const { rows, ...page } = await paginate(
     Homework,
-    { schoolId, ...(ctx.scope === 'assigned' && { teacherId: ctx.staffId ?? null }) },
+    {
+      schoolId,
+      ...(ctx.scope === 'assigned' && { teacherId: ctx.staffId ?? null }),
+      ...textMatch(query.q, ['title', 'instructions']),
+    },
     {
       sortField: 'dueOn',
       select: ['title', 'instructions', 'subjectId', 'sectionIds', 'teacherId', 'assignedOn', 'dueOn', 'attachments'],
-      limit: 25,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
       descending: true,
     },

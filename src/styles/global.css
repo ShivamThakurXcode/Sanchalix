@@ -65,6 +65,11 @@
   transform: scale(1.25);
 }
 
+/* ADR-020: the header's icon-only buttons (notifications, theme) get the same 20px glyph as the menu toggle. */
+.vw-top-nav [class*='awsui_button-no-text_'] [class*='awsui_icon_'] {
+  transform: scale(1.25);
+}
+
 /* ADR-020: navigation icons stay 20px when the navigation collapses. Cloudscape centres a 16px icon in the
    rail's 30px circle, so the inset is recalculated for 20px to keep the icon in the middle. */
 [class*='awsui_link--collapsed_']:has([class*='awsui_item-icon_']) {
@@ -527,5 +532,55 @@ body {
   [class*='awsui_navigation_'],
   [class*='awsui_toolbar-container_'] {
     display: none !important;
+  }
+}
+
+/* ADR-028: the month view of the school calendar. A week is a row of seven square days, joined by hairlines. */
+.vw-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--border-divider-section-width-dlkb8v, 1px);
+  max-inline-size: 1240px;
+  margin-inline: auto;
+  overflow: hidden;
+  background: var(--color-border-divider-default-diwd4w);
+  border: var(--border-divider-section-width-dlkb8v, 1px) solid var(--color-border-divider-default-diwd4w);
+  border-radius: var(--border-radius-container-33hhdh, 16px);
+}
+
+.vw-month-row {
+  display: contents;
+}
+
+.vw-month-head,
+.vw-month-day {
+  min-inline-size: 0;
+  padding: var(--space-xs-m9b7jf, 8px);
+  overflow-wrap: anywhere;
+  background: var(--color-background-container-content-mjfil9);
+}
+
+.vw-month-head {
+  background: var(--color-background-input-disabled-pyvhb1);
+}
+
+.vw-month-day {
+  aspect-ratio: 1;
+}
+
+.vw-month-day[data-weekend],
+.vw-month-day[data-blank] {
+  background: var(--color-background-input-disabled-pyvhb1);
+}
+
+.vw-month-day[data-today] {
+  background: color-mix(in srgb, var(--color-border-item-focused-sewkzn) 14%, var(--color-background-container-content-mjfil9));
+}
+
+@media (max-width: 800px) {
+  .vw-month-day {
+    aspect-ratio: auto;
+    min-block-size: 72px;
+    padding: var(--space-xxs, 4px);
   }
 }

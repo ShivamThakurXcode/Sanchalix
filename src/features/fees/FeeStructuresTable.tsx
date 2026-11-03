@@ -3,17 +3,12 @@
 import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
-import Header from '@cloudscape-design/components/header';
-import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { formatMoney } from '@/lib/money';
 import { approveFeeStructure, deleteFeeStructure } from '@/server/modules/fees/actions';
@@ -21,7 +16,6 @@ import type { FeeStructureRow } from '@/server/modules/fees/schemas';
 
 const NEW = '/fees/structures/new';
 const HEADS = '/fees/heads';
-const PAGE_SIZES = [10, 25, 50, 100];
 const STATUS_TYPE: Record<FeeStructureRow['status'], StatusIndicatorProps.Type> = {
   draft: 'pending',
   approved: 'info',
@@ -50,24 +44,12 @@ export function FeeStructuresTable({
   const [removing, setRemoving] = useState<FeeStructureRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Feedback | null>(null);
-  const [searchText, setSearchText] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const saved = created ?? updated;
   const feedback =
     result ??
     (saved
       ? { type: 'success' as const, text: t(created ? 'structures.created' : 'structures.updated', { name: saved }) }
       : null);
-
-  const filteredStructures = structures.filter(
-    (structure) =>
-      structure.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      structure.classes.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const paginatedStructures = filteredStructures.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalPages = Math.ceil(filteredStructures.length / pageSize);
 
   const link = (href: string, label: string, primary = false) => (
     <Button
@@ -115,142 +97,86 @@ export function FeeStructuresTable({
     router.refresh();
   }
 
+  const columns: Column<FeeStructureRow>[] = [
+    { id: 'name', header: t('structures.columns.name'), cell: (row) => row.name, isRowHeader: true, sortBy: (row) => row.name },
+    { id: 'classes', header: t('structures.columns.classes'), cell: (row) => row.classes },
+    { id: 'total', header: t('structures.columns.total'), cell: (row) => formatMoney(row.totalMinor), sortBy: (row) => row.totalMinor },
+    { id: 'installments', header: t('structures.columns.installments'), cell: (row) => row.installments },
+    {
+      id: 'status',
+      header: t('structures.columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`structures.status.${row.status}`)}</StatusIndicator>,
+    },
+    ...(canApprove || canEdit
+      ? [
+          {
+            id: 'actions',
+            header: t('structures.columns.actions'),
+            cell: (row: FeeStructureRow) =>
+              row.status === 'draft' && (
+                <SpaceBetween direction="horizontal" size="s">
+                  {canApprove && (
+                    <Button variant="inline-link" ariaLabel={t('structures.approveLabel', { name: row.name })} onClick={() => setPending(row)}>
+                      {t('structures.approve')}
+                    </Button>
+                  )}
+                  {canEdit && (
+                    <Button
+                      variant="inline-link"
+                      ariaLabel={t('structures.editLabel', { name: row.name })}
+                      href={`/fees/structures/${row.id}/edit`}
+                      onFollow={(event) => {
+                        event.preventDefault();
+                        router.push(`/fees/structures/${row.id}/edit`);
+                      }}
+                    >
+                      {t('structures.edit')}
+                    </Button>
+                  )}
+                  {canEdit && (
+                    <Button variant="inline-link" ariaLabel={t('structures.deleteLabel', { name: row.name })} onClick={() => setRemoving(row)}>
+                      {t('structures.delete')}
+                    </Button>
+                  )}
+                </SpaceBetween>
+              ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        enableKeyboardNavigation
-        trackBy="id"
-        items={paginatedStructures}
-        header={
-          <SpaceBetween size="m">
-            <Header
-              variant="h2"
-              counter={`(${filteredStructures.length})`}
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  {link(HEADS, t('structures.feeHeads'))}
-                  {canEdit && link('/fees/invoices/import', t('openingBalances.action'))}
-                  {canEdit && link(NEW, t('structures.add'), true)}
-                </SpaceBetween>
-              }
-            >
-              {t('structures.title')}
-            </Header>
-            {feedback && (
-              <Alert
-                type={feedback.type}
-                dismissible
-                dismissAriaLabel={t('dismiss')}
-                onDismiss={() => {
-                  setResult(null);
-                  router.replace(pathname);
-                }}
-              >
-                {feedback.text}
-              </Alert>
-            )}
+      <DataTable
+        id="fees-structures"
+        title={t('structures.title')}
+        actions={
+          <SpaceBetween direction="horizontal" size="xs">
+            {link(HEADS, t('structures.feeHeads'))}
+            {canEdit && link('/fees/invoices/import', t('openingBalances.action'))}
+            {canEdit && link(NEW, t('structures.add'), true)}
           </SpaceBetween>
         }
-        filter={
-          <Input
-            placeholder={t('structures.searchPlaceholder')}
-            value={searchText}
-            onChange={({ detail }) => {
-              setSearchText(detail.value);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        pagination={
-          <Pagination
-            currentPageIndex={currentPage}
-            pagesCount={totalPages}
-            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
-          />
-        }
-        preferences={
-          <CollectionPreferences
-            preferences={{ pageSize }}
-            pageSizePreference={{
-              options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-            }}
-            onConfirm={({ detail }) => {
-              setPageSize(detail.pageSize ?? pageSize);
-              setCurrentPage(1);
-            }}
-          />
-        }
-        empty={
-          searchText ? (
-            <EmptyState icon="search" heading={t('structures.noMatches.heading')} body={t('structures.noMatches.body')} />
-          ) : (
-            <EmptyState
-              icon="fees"
-              heading={t('structures.empty.heading')}
-              body={t('structures.empty.body')}
-              action={canEdit && link(NEW, t('structures.add'))}
-            />
+        above={
+          feedback && (
+            <Alert
+              type={feedback.type}
+              dismissible
+              dismissAriaLabel={t('dismiss')}
+              onDismiss={() => {
+                setResult(null);
+                router.replace(pathname);
+              }}
+            >
+              {feedback.text}
+            </Alert>
           )
         }
-        columnDefinitions={[
-          { id: 'name', header: t('structures.columns.name'), cell: (row) => row.name, isRowHeader: true },
-          { id: 'classes', header: t('structures.columns.classes'), cell: (row) => row.classes },
-          { id: 'total', header: t('structures.columns.total'), cell: (row) => formatMoney(row.totalMinor) },
-          { id: 'installments', header: t('structures.columns.installments'), cell: (row) => row.installments },
-          {
-            id: 'status',
-            header: t('structures.columns.status'),
-            cell: (row) => (
-              <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`structures.status.${row.status}`)}</StatusIndicator>
-            ),
-          },
-          ...(canApprove || canEdit
-            ? [
-                {
-                  id: 'actions',
-                  header: t('structures.columns.actions'),
-                  cell: (row: FeeStructureRow) =>
-                    row.status === 'draft' && (
-                      <SpaceBetween direction="horizontal" size="s">
-                        {canApprove && (
-                          <Button
-                            variant="inline-link"
-                            ariaLabel={t('structures.approveLabel', { name: row.name })}
-                            onClick={() => setPending(row)}
-                          >
-                            {t('structures.approve')}
-                          </Button>
-                        )}
-                        {canEdit && (
-                          <Button
-                            variant="inline-link"
-                            ariaLabel={t('structures.editLabel', { name: row.name })}
-                            href={`/fees/structures/${row.id}/edit`}
-                            onFollow={(event) => {
-                              event.preventDefault();
-                              router.push(`/fees/structures/${row.id}/edit`);
-                            }}
-                          >
-                            {t('structures.edit')}
-                          </Button>
-                        )}
-                        {canEdit && (
-                          <Button
-                            variant="inline-link"
-                            ariaLabel={t('structures.deleteLabel', { name: row.name })}
-                            onClick={() => setRemoving(row)}
-                          >
-                            {t('structures.delete')}
-                          </Button>
-                        )}
-                      </SpaceBetween>
-                    ),
-                },
-              ]
-            : []),
-        ]}
+        items={structures}
+        columns={columns}
+        search={(structure) => `${structure.name} ${structure.classes}`}
+        searchPlaceholder={t('structures.searchPlaceholder')}
+        empty={{ icon: 'fees', heading: t('structures.empty.heading'), body: t('structures.empty.body'), action: canEdit && link(NEW, t('structures.add')) }}
       />
       <Modal
         visible={Boolean(pending)}

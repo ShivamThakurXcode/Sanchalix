@@ -13,7 +13,6 @@ import Header from '@cloudscape-design/components/header';
 import Input, { type InputProps } from '@cloudscape-design/components/input';
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
@@ -22,10 +21,10 @@ import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { AppLink } from '@/components/AppLink';
+import { type Column, DataTable, useSetParams } from '@/components/DataTable';
 import { useCrumb } from '@/components/Crumb';
-import { EmptyState } from '@/components/EmptyState';
 import { StudentDocuments } from '@/features/sis/StudentDocuments';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { formatPhone } from '@/lib/phone';
 import { acceptAdmission, createAdmission, moveAdmission } from '@/server/modules/admissions/actions';
 import type { AdmissionDetail, AdmissionRow, AdmissionStatus } from '@/server/modules/admissions/schemas';
@@ -64,8 +63,7 @@ export function AdmissionsTable({
 }) {
   const t = useTranslations('admissions');
   const router = useRouter();
-  const pathname = usePathname();
-  const page = data?.page ?? 1;
+  const setParams = useSetParams();
   const filterOptions = FILTERS.map((value) => ({ value, label: t(`filter.${value}`) }));
   const addButton = (primary: boolean) => (
     <Button
@@ -79,87 +77,53 @@ export function AdmissionsTable({
       {t('add')}
     </Button>
   );
-  const go = (cursor: string | null, next = status) => {
-    const params = new URLSearchParams({ ...(next !== 'open' && { status: next }), ...(cursor && { cursor }) });
-    router.replace(params.size ? `${pathname}?${params}` : pathname);
-  };
+
+  const columns: Column<AdmissionRow>[] = [
+    {
+      id: 'applicationNo',
+      header: t('columns.applicationNo'),
+      isRowHeader: true,
+      cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.applicationNo}</AppLink>,
+    },
+    { id: 'name', header: t('columns.name'), cell: (row) => row.name },
+    { id: 'classSought', header: t('columns.classSought'), cell: (row) => row.classSought },
+    { id: 'guardian', header: t('columns.guardian'), cell: (row) => row.guardianName },
+    { id: 'phone', header: t('columns.phone'), cell: (row) => formatPhone(row.guardianPhone) },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    { id: 'appliedOn', header: t('columns.appliedOn'), cell: (row) => date.format(new Date(row.appliedOn)) },
+  ];
 
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      trackBy="id"
-      items={data?.rows ?? []}
-      loading={!data}
-      loadingText={t('loading')}
-      header={
-        <SpaceBetween size="m">
-          <Header variant="h2" actions={canEdit && addButton(true)}>
-            {t('title')}
-          </Header>
-          {created && (
-            <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => go(null)}>
-              {t('created', { applicationNo: created })}
-            </Alert>
-          )}
-        </SpaceBetween>
+    <DataTable
+      id="admissions"
+      title={t('title')}
+      actions={canEdit && addButton(true)}
+      above={
+        created && (
+          <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setParams({ created: null })}>
+            {t('created', { applicationNo: created })}
+          </Alert>
+        )
       }
-      filter={
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      filters={
         <Select
           ariaLabel={t('filter.label')}
           selectedOption={filterOptions.find((option) => option.value === status) ?? null}
           options={filterOptions}
-          onChange={({ detail }) => go(null, detail.selectedOption.value ?? 'open')}
+          onChange={({ detail }) => setParams({ status: detail.selectedOption.value === 'open' ? null : (detail.selectedOption.value ?? null), cursor: null })}
         />
       }
-      pagination={
-        <Pagination
-          currentPageIndex={page}
-          pagesCount={data?.nextCursor ? page + 1 : page}
-          openEnd={Boolean(data?.nextCursor)}
-          disabled={!data}
-          onChange={({ detail }) => {
-            if (!data) return;
-            go(detail.currentPageIndex === 1 ? null : detail.currentPageIndex > page ? data.nextCursor : data.prevCursor);
-          }}
-        />
-      }
-      empty={
-        status === 'open' ? (
-          <EmptyState
-            icon="admissions"
-            heading={t('empty.heading')}
-            body={t('empty.body')}
-            action={canEdit && addButton(false)}
-          />
-        ) : (
-          <EmptyState
-            icon="search"
-            heading={t('noMatches.heading')}
-            body={t('noMatches.body')}
-            action={<Button onClick={() => go(null, 'open')}>{t('noMatches.clear')}</Button>}
-          />
-        )
-      }
-      columnDefinitions={[
-        {
-          id: 'applicationNo',
-          header: t('columns.applicationNo'),
-          isRowHeader: true,
-          cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.applicationNo}</AppLink>,
-        },
-        { id: 'name', header: t('columns.name'), cell: (row) => row.name },
-        { id: 'classSought', header: t('columns.classSought'), cell: (row) => row.classSought },
-        { id: 'guardian', header: t('columns.guardian'), cell: (row) => row.guardianName },
-        { id: 'phone', header: t('columns.phone'), cell: (row) => formatPhone(row.guardianPhone) },
-        {
-          id: 'status',
-          header: t('columns.status'),
-          cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
-        },
-        { id: 'appliedOn', header: t('columns.appliedOn'), cell: (row) => date.format(new Date(row.appliedOn)) },
-      ]}
+      filtered={status !== 'open'}
+      clearParams={['status']}
+      empty={{ icon: 'admissions', heading: t('empty.heading'), body: t('empty.body'), action: canEdit && addButton(false) }}
     />
   );
 }

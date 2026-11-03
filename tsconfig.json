@@ -29,9 +29,7 @@
     },
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    // Speed up TypeScript compilation
-    "assumeChangesOnlyAffectDirectDependencies": true
+    "noImplicitOverride": true
   },
   "include": [
     "next-env.d.ts",

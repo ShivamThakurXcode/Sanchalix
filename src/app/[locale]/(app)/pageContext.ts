@@ -8,7 +8,7 @@ export async function pageContext(permission?: Permission) {
   const ctx = await getContext();
   if (!ctx) {
     // Platform staff have no school, so every school page sends them to their own console.
-    return redirect({ href: (await getPlatformContext()) ? '/platform' : '/signin', locale: await getLocale() });
+    return redirect({ href: (await getPlatformContext()) ? '/console' : '/signin', locale: await getLocale() });
   }
   if (permission && !can(ctx.role, permission)) forbidden();
   return ctx;

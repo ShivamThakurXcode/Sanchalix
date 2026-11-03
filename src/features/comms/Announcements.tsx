@@ -17,14 +17,13 @@ import Input from '@cloudscape-design/components/input';
 import Multiselect from '@cloudscape-design/components/multiselect';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import Tiles from '@cloudscape-design/components/tiles';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import type { RoleKey } from '@/server/auth/permissions';
@@ -82,19 +81,52 @@ export function AnnouncementsTable({
     </Button>
   );
 
+  const columns: Column<AnnouncementRow>[] = [
+    {
+      id: 'title',
+      header: t('announcements.columns.title'),
+      isRowHeader: true,
+      cell: (row) => (
+        <SpaceBetween size="xxxs">
+          <AppLink href={`${LIST}/${row.id}`}>{row.title}</AppLink>
+          <Box color="text-body-secondary">{row.excerpt}</Box>
+        </SpaceBetween>
+      ),
+      sortBy: (row) => row.title,
+    },
+    { id: 'audience', header: t('announcements.columns.audience'), cell: (row) => audienceLabel(row.audience) },
+    { id: 'author', header: t('announcements.columns.author'), cell: (row) => row.author, sortBy: (row) => row.author },
+    {
+      id: 'published',
+      header: t('announcements.columns.published'),
+      sortBy: (row) => row.publishedAt,
+      cell: (row) =>
+        row.scheduled ? (
+          <StatusIndicator type="pending">
+            {t('announcements.scheduledFor', { date: day.format(new Date(row.publishedAt)) })}
+          </StatusIndicator>
+        ) : (
+          <SpaceBetween size="xxxs">
+            <span>{dateTime.format(new Date(row.publishedAt))}</span>
+            {row.expiresOn && (
+              <Box color="text-body-secondary" fontSize="body-s">
+                {t(new Date(row.expiresOn) < new Date() ? 'announcements.expired' : 'announcements.until', {
+                  date: day.format(new Date(row.expiresOn)),
+                })}
+              </Box>
+            )}
+          </SpaceBetween>
+        ),
+    },
+  ];
+
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      wrapLines
-      trackBy="id"
-      items={announcements}
-      header={
-        <SpaceBetween size="m">
-          <Header variant="h2" counter={`(${announcements.length})`} actions={canCreate && addButton(true)}>
-            {t('announcements.title')}
-          </Header>
+    <DataTable
+      id="comms-announcements"
+      title={t('announcements.title')}
+      actions={canCreate && addButton(true)}
+      above={
+        <>
           {published && (
             <Alert type="success" dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => router.replace(pathname)}>
               {t(scheduled ? 'announcements.scheduledNotice' : 'announcements.published', { title: published, count: recipients })}
@@ -105,52 +137,13 @@ export function AnnouncementsTable({
               {t('announcements.filesFailed', { count: filesFailed })}
             </Alert>
           )}
-        </SpaceBetween>
+        </>
       }
-      empty={
-        <EmptyState
-          icon="announcements"
-          heading={t('announcements.empty.heading')}
-          body={t('announcements.empty.body')}
-          action={canCreate && addButton(false)}
-        />
-      }
-      columnDefinitions={[
-        {
-          id: 'title',
-          header: t('announcements.columns.title'),
-          isRowHeader: true,
-          cell: (row) => (
-            <SpaceBetween size="xxxs">
-              <AppLink href={`${LIST}/${row.id}`}>{row.title}</AppLink>
-              <Box color="text-body-secondary">{row.excerpt}</Box>
-            </SpaceBetween>
-          ),
-        },
-        { id: 'audience', header: t('announcements.columns.audience'), cell: (row) => audienceLabel(row.audience) },
-        { id: 'author', header: t('announcements.columns.author'), cell: (row) => row.author },
-        {
-          id: 'published',
-          header: t('announcements.columns.published'),
-          cell: (row) =>
-            row.scheduled ? (
-              <StatusIndicator type="pending">
-                {t('announcements.scheduledFor', { date: day.format(new Date(row.publishedAt)) })}
-              </StatusIndicator>
-            ) : (
-              <SpaceBetween size="xxxs">
-                <span>{dateTime.format(new Date(row.publishedAt))}</span>
-                {row.expiresOn && (
-                  <Box color="text-body-secondary" fontSize="body-s">
-                    {t(new Date(row.expiresOn) < new Date() ? 'announcements.expired' : 'announcements.until', {
-                      date: day.format(new Date(row.expiresOn)),
-                    })}
-                  </Box>
-                )}
-              </SpaceBetween>
-            ),
-        },
-      ]}
+      items={announcements}
+      columns={columns}
+      search={(row) => `${row.title} ${row.excerpt} ${row.author}`}
+      searchPlaceholder={t('announcements.searchPlaceholder')}
+      empty={{ icon: 'announcements', heading: t('announcements.empty.heading'), body: t('announcements.empty.body'), action: canCreate && addButton(false) }}
     />
   );
 }

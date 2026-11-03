@@ -13,6 +13,14 @@ const schema = new Schema(
     cover: { type: String, required: true, enum: COVERS },
     publishedOn: { type: String, required: true, match: DATE_STR },
     status: { type: String, required: true, enum: ['draft', 'published'], default: 'draft' },
+    content: String,
+    coverImage: String,
+    tags: [String],
+    seoTitle: String,
+    seoDescription: String,
+    keywords: [String],
+    jsonLd: String,
+    // Posts written before the rich editor keep their sections until their next save, when content replaces them.
     sections: [
       new Schema({ heading: { type: String, required: true }, paragraphs: [String] }, { _id: false }),
     ],

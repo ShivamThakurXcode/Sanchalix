@@ -281,7 +281,7 @@ Architecture and design decisions for Sanchalix, in a lightweight ADR format. A 
 - ✅ One place draws the banner, so a new navigation page gets it by adding its description string.
 - The page's own heading on those pages is an `h2` (it keeps its counter, filters and buttons), or is removed where it only repeated the title. Forms, records and other pages that are not navigation links keep their plain `h1`.
 - Banner pages get their side padding from `ContentLayout`, because the shell turns off `AppLayout`'s content padding for them.
-- A banner can carry an illustration (`banner.image` on the navigation item). The dashboard and the 22 pages listed in `ILLUSTRATED` in the app layout have one, an SVG in `public/banners/` named after the module key; these are cropped copies of the owner's artwork in `public/dash_page_banner/`. It is a decorative CSS background standing on the band's bottom edge at the right; that banner is taller (140px of title area) and the picture fills the band from top edge to bottom edge.
+- A banner can carry an illustration (`banner.image` on the navigation item). The dashboard and the 28 pages listed in `ILLUSTRATED` in the app layout have one, an SVG in `public/banners/` named after the module key; these are cropped copies of the owner's artwork in `public/dash_page_banner/`. Six of those pages (attendance report, fee discounts, fee reports, reports, outbox, settings) borrow a related page's picture through `SHARED_BANNER`; the platform console pages carry their own `image` (the schools page borrows `academics`). It is a decorative CSS background standing on the band's bottom edge at the right; that banner is taller (140px of title area) and the picture fills the band from top edge to bottom edge.
 - Behind the picture a soft light in the accent colour rises from the band's bottom edge, brightest at the bottom and fading out before the title.
 - Below 1000px wide the picture is left out and the band is plain.
 - The banner is hidden when a page is printed.
@@ -336,10 +336,24 @@ Architecture and design decisions for Sanchalix, in a lightweight ADR format. A 
 
 **Context.** Schools could only be created by the seed script. Platform staff need to set a school up, switch it on, pause it and give its admin a new password, without a developer.
 
-**Decision.** Platform staff (`super_admin`) use the same Next.js app under `/platform`, with a session that has no school. They get their own context (`getPlatformContext`, `requirePlatform`) and their own audit collection (`platformAuditLogs`), so no school query ever runs without a `schoolId` and a school's audit log never shows platform activity. The few cross-school counts (students, staff) read the collections directly and say so.
+**Decision.** Platform staff (`super_admin`) use the same Next.js app under `/console`, with a session that has no school. They get their own context (`getPlatformContext`, `requirePlatform`) and their own audit collection (`platformAuditLogs`), so no school query ever runs without a `schoolId` and a school's audit log never shows platform activity. The few cross-school counts (students, staff) read the collections directly and say so.
 
 **Consequences.**
 - ✅ Nothing extra to deploy, and the same shell, components and tests apply.
 - ✅ The tenant plugin keeps its rule: ordinary code still can't query without a school.
 - Not built yet: platform users, platform notices, backups, settings, "view as" and break-glass access (v1).
 - ⚠️ The first platform admin is created from the command line (`npm run superadmin`).
+
+## ADR-027: One `DataTable` for every list
+
+**Status.** Accepted for the MVP on 2026-11-03.
+
+**Context.** Forty files built their own table. Some had search, some had paging, a few had both and preferences, and none matched: search on the server-paged lists only looked at the rows already on screen, and the preferences held only the page size.
+
+**Decision.** One component, `src/components/DataTable.tsx`, wraps Cloudscape `Table` and `Cards`, `TextFilter`, `Pagination` and `CollectionPreferences`. It runs in two modes. Server mode reads `cursor`, `pageSize` and `q` from the URL, and the service applies `q` through `textMatch` in `src/server/db/paginate.ts` so a search finds rows on every page. Client mode filters, sorts and pages an array already in the browser through `collection-hooks`. Page size, visible columns and wrap lines are remembered per table in `localStorage`. The shared query schema is `TableQuery` in `src/lib/tableQuery.ts`.
+
+**Consequences.**
+- ✅ Every list searches, pages and remembers its columns the same way.
+- ✅ A new list is a column array and a few props.
+- `PropertyFilter` is not used: no list has more than one filterable property besides search, so `TextFilter` plus one control is enough. Revisit if a list needs several.
+- ⚠️ Search on the server is a case-insensitive substring match, which does not use an index. Move to a text index if a school's lists grow past tens of thousands of rows.

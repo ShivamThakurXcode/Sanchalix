@@ -1,6 +1,7 @@
 import 'server-only';
+import { DEFAULT_PAGE_SIZE } from '@/lib/tableQuery';
 import type { RequestContext } from '@/server/auth/context';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { Class } from '@/server/models/class';
 import { FeeHead } from '@/server/models/feeHead';
 import { FeeStructure } from '@/server/models/feeStructure';
@@ -86,11 +87,11 @@ export async function listInvoices(ctx: RequestContext, query: ListInvoices) {
   const { schoolId } = ctx;
   const { rows, ...page } = await paginate(
     Invoice,
-    { schoolId, ...(query.status && { status: query.status }) },
+    { schoolId, ...(query.status && { status: query.status }), ...(await searchFilter(ctx, query.q, 'invoiceNo')) },
     {
       sortField: 'invoiceNo',
       select: ['invoiceNo', 'studentId', 'installmentLabel', 'dueDate', 'totalMinor', 'balanceMinor', 'status'],
-      limit: query.pageSize,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
     },
   );
@@ -121,6 +122,18 @@ const OPEN = ['issued', 'partially_paid', 'overdue'] as const;
 const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const fullName = (student: { firstName: string; lastName?: string | null }) =>
   `${student.firstName} ${student.lastName ?? ''}`.trim();
+
+/** Matches a student by name or admission number, or the document by its own number. */
+async function searchFilter(ctx: RequestContext, q: string | undefined, numberField: 'invoiceNo' | 'receiptNo') {
+  const text = (q ?? '').trim();
+  if (!text) return {};
+  const students = await Student.find({ schoolId: ctx.schoolId, ...textMatch(text, ['firstName', 'lastName', 'admissionNo']) })
+    .setOptions({ withDeleted: true })
+    .select('_id')
+    .limit(500)
+    .lean();
+  return { $or: [{ studentId: { $in: students.map((student) => student._id) } }, { [numberField]: { $regex: escapeRegex(text), $options: 'i' } }] };
+}
 
 async function classSectionOf(ctx: RequestContext, enrollmentIds: unknown[]) {
   const { schoolId } = ctx;
@@ -257,12 +270,12 @@ async function studentsById(ctx: RequestContext, ids: unknown[]) {
 export async function listPayments(ctx: RequestContext, query: ListPayments) {
   const { rows, ...page } = await paginate(
     Payment,
-    { schoolId: ctx.schoolId },
+    { schoolId: ctx.schoolId, ...(await searchFilter(ctx, query.q, 'receiptNo')) },
     {
       sortField: 'receiptNo',
       descending: true,
       select: ['receiptNo', 'studentId', 'method', 'amountMinor', 'createdAt'],
-      limit: query.pageSize,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
     },
   );
@@ -296,13 +309,18 @@ export async function listDues(ctx: RequestContext, query: ListDues) {
     '31-60': { $lt: daysBefore(today, 30), $gte: daysBefore(today, 60) },
     '60+': { $lt: daysBefore(today, 60) },
   };
-  const filter = { schoolId, status: { $in: [...OPEN] }, dueDate: bands[query.ageing] };
+  const filter = {
+    schoolId,
+    status: { $in: [...OPEN] },
+    dueDate: bands[query.ageing],
+    ...(await searchFilter(ctx, query.q, 'invoiceNo')),
+  };
 
   const [{ rows, ...page }, totals] = await Promise.all([
     paginate(Invoice, filter, {
       sortField: 'dueDate',
       select: ['invoiceNo', 'studentId', 'installmentLabel', 'dueDate', 'balanceMinor'],
-      limit: query.pageSize,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
     }),
     Invoice.aggregate<{ outstandingMinor: number; count: number }>([

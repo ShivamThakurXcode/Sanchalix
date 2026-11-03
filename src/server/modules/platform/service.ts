@@ -1,9 +1,10 @@
 import 'server-only';
 import { Types } from 'mongoose';
 import { z } from 'zod';
+import { DEFAULT_PAGE_SIZE, TableQuery } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import { hashPassword } from '@/server/auth/service';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { withTransaction } from '@/server/db/transaction';
 import { AcademicYear } from '@/server/models/academicYear';
 import { Branch } from '@/server/models/branch';
@@ -49,9 +50,10 @@ export const SchoolStatusInput = z.object({
 });
 export type SchoolStatusInput = z.infer<typeof SchoolStatusInput>;
 export const AdminId = z.object({ schoolId: Id, userId: Id });
-export const ListSchools = z.object({ cursor: z.string().optional().catch(undefined) });
+export const ListSchools = TableQuery;
 export type ListSchools = z.infer<typeof ListSchools>;
-export const ListAudit = z.object({ cursor: z.string().optional().catch(undefined) });
+export const ListAudit = TableQuery;
+export type ListAudit = z.infer<typeof ListAudit>;
 
 export type SchoolRow = {
   id: string;
@@ -110,10 +112,10 @@ export async function getPlatformSummary(): Promise<PlatformSummary> {
 }
 
 export async function listSchools(query: ListSchools) {
-  const { rows, ...page } = await paginate(School, {}, {
+  const { rows, ...page } = await paginate(School, textMatch(query.q, ['name', 'code', 'address.city']), {
     sortField: 'name',
     select: ['name', 'code', 'board', 'address', 'status'],
-    limit: 50,
+    limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
     cursor: query.cursor,
   });
   const students = await countBySchool(Student.collection, { status: 'active', schoolId: { $in: rows.map((row) => row._id) } });
@@ -260,17 +262,15 @@ export type AuditRow = {
   reason: string | null;
 };
 
-const AUDIT_PAGE = 50;
-
-/** The newest entries first. `cursor` is the id of the last entry on the page before, so the next page is older. */
-export async function listPlatformAudit(query: z.infer<typeof ListAudit>) {
-  const before = query.cursor && Id.safeParse(query.cursor).success ? { _id: { $lt: query.cursor } } : {};
-  const found = await PlatformAuditLog.find(before)
-    .sort({ _id: -1 })
-    .limit(AUDIT_PAGE + 1)
-    .select('at actorId action targetSchoolId reason')
-    .lean();
-  const rows = found.slice(0, AUDIT_PAGE);
+/** The newest entries first. */
+export async function listPlatformAudit(query: ListAudit) {
+  const { rows, ...page } = await paginate(PlatformAuditLog, textMatch(query.q, ['action', 'reason']), {
+    sortField: '_id',
+    descending: true,
+    select: ['at', 'actorId', 'action', 'targetSchoolId', 'reason'],
+    limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
+    cursor: query.cursor,
+  });
   const [actors, schools] = await Promise.all([
     User.find({ _id: { $in: rows.map((row) => row.actorId) } }).select('name').lean(),
     School.find({ _id: { $in: rows.flatMap((row) => row.targetSchoolId ?? []) } }).select('name').lean(),
@@ -285,5 +285,5 @@ export async function listPlatformAudit(query: z.infer<typeof ListAudit>) {
     school: row.targetSchoolId ? (schoolName.get(String(row.targetSchoolId)) ?? null) : null,
     reason: row.reason ?? null,
   }));
-  return { rows: audit, nextCursor: found.length > AUDIT_PAGE ? String(rows.at(-1)?._id) : null };
+  return { rows: audit, ...page };
 }

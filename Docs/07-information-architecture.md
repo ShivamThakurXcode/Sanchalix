@@ -63,7 +63,7 @@ Items show the icon key in brackets. Items marked *(v1)* or *(v2)* are hidden un
 
 ### super_admin
 
-Built so far (under `/platform`): Platform overview, Schools and Platform audit log. The rest of this list is not built.
+Built so far (under `/console`): Platform overview, Schools and Platform audit log. The rest of this list is not built.
 
 1. Dashboard [`dashboard`]
 2. Organizations [`organization`]

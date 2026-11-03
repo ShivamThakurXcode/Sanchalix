@@ -11,7 +11,7 @@ import { AdminId, createSchool as create, resetAdminPassword as reset, SchoolInp
 
 export async function createSchool(input: unknown) {
   return withAction('platform_school_create', async () => {
-    const ctx = await requirePlatform('platform_school_create');
+    const ctx = await requirePlatform('platform.school.create');
     const data = SchoolInput.parse(input);
     const school = await create(data);
     await platformAudit(ctx.userId, 'platform_school_create', { type: 'school', id: school.id }, {
@@ -31,7 +31,7 @@ export async function createSchool(input: unknown) {
 
 export async function setSchoolStatus(input: unknown) {
   return withAction('platform_school_update', async () => {
-    const ctx = await requirePlatform('platform_school_update');
+    const ctx = await requirePlatform('platform.school.update');
     const data = SchoolStatusInput.parse(input);
     const school = await setStatus(data);
     await platformAudit(ctx.userId, `platform_school_${data.status === 'suspended' ? 'suspend' : 'activate'}`, { type: 'school', id: school.id }, {
@@ -46,7 +46,7 @@ export async function setSchoolStatus(input: unknown) {
 
 export async function resetSchoolAdminPassword(input: unknown) {
   return withAction('platform_school_update', async () => {
-    const ctx = await requirePlatform('platform_school_update');
+    const ctx = await requirePlatform('platform.school.update');
     const { schoolId, userId } = AdminId.parse(input);
     const admin = await reset(schoolId, userId);
     await platformAudit(ctx.userId, 'platform_admin_resetPassword', { type: 'user', id: admin.id }, {

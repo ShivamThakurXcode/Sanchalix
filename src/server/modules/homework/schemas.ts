@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { TableQuery } from '@/lib/tableQuery';
 
 const E = 'homework.errors';
 const Id = (key: string) => z.string().regex(/^[0-9a-f]{24}$/, `${E}.${key}`);
@@ -18,7 +19,7 @@ export type HomeworkInput = z.infer<typeof HomeworkInput>;
 
 export const HomeworkId = Id('notFound');
 
-export const ListHomework = z.object({ cursor: z.string().optional().catch(undefined) });
+export const ListHomework = TableQuery;
 export type ListHomework = z.infer<typeof ListHomework>;
 
 export type HomeworkRow = {

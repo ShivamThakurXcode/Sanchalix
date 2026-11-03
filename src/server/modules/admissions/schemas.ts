@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { TableQuery } from '@/lib/tableQuery';
 import { ADMISSION_SOURCES, ADMISSION_STATUSES } from '@/server/models/admission';
 import type { DocumentRow } from '@/server/modules/sis/documents';
 import { StudentInput } from '@/server/modules/sis/schemas';
@@ -44,10 +45,7 @@ export const AcceptAdmission = z.object({
 });
 export type AcceptAdmission = z.infer<typeof AcceptAdmission>;
 
-export const ListAdmissions = z.object({
-  status: z.enum(['open', ...ADMISSION_STATUSES]).catch('open'),
-  cursor: z.string().optional().catch(undefined),
-});
+export const ListAdmissions = TableQuery.extend({ status: z.enum(['open', ...ADMISSION_STATUSES]).catch('open') });
 export type ListAdmissions = z.infer<typeof ListAdmissions>;
 
 // ponytail: one list for every school and class; move it to school settings when a school needs its own.

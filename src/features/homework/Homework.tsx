@@ -12,16 +12,14 @@ import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
 import Multiselect from '@cloudscape-design/components/multiselect';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { type Column, DataTable, useSetParams } from '@/components/DataTable';
+import { useRouter } from '@/i18n/navigation';
 import { createHomework, deleteHomework } from '@/server/modules/homework/actions';
 import type { HomeworkRow } from '@/server/modules/homework/schemas';
 import { AttachFile, AttachmentLinks } from './Attachments';
@@ -44,12 +42,11 @@ export function HomeworkTable({
 }) {
   const t = useTranslations('homework');
   const router = useRouter();
-  const pathname = usePathname();
+  const setParams = useSetParams();
   const [removing, setRemoving] = useState<HomeworkRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const feedback = result ?? (created ? { type: 'success' as const, text: t('created', { title: created }) } : null);
-  const page = data?.page ?? 1;
   const addButton = (primary: boolean) => (
     <Button
       {...(primary && { variant: 'primary' as const })}
@@ -74,104 +71,81 @@ export function HomeworkTable({
         ? { type: 'success', text: t('deleted', { title: response.data.title }) }
         : { type: 'error', text: response.error.message },
     );
-    router.replace(pathname);
+    setParams({ created: null });
     router.refresh();
   }
 
+  const columns: Column<HomeworkRow>[] = [
+    {
+      id: 'title',
+      header: t('columns.title'),
+      isRowHeader: true,
+      cell: (row) => (
+        <>
+          <Box fontWeight="bold">{row.title}</Box>
+          {row.instructions && <Box color="text-body-secondary">{row.instructions}</Box>}
+          <AttachmentLinks homeworkId={row.id} files={row.attachments} />
+        </>
+      ),
+    },
+    { id: 'subject', header: t('columns.subject'), cell: (row) => row.subject },
+    { id: 'sections', header: t('columns.sections'), cell: (row) => row.sections },
+    { id: 'teacher', header: t('columns.teacher'), cell: (row) => row.teacher },
+    {
+      id: 'dueOn',
+      header: t('columns.dueOn'),
+      cell: (row) => (
+        <StatusIndicator type={row.isPastDue ? 'stopped' : 'pending'}>
+          {t(row.isPastDue ? 'wasDue' : 'due', { date: day(row.dueOn) })}
+        </StatusIndicator>
+      ),
+    },
+    {
+      id: 'actions',
+      header: t('columns.actions'),
+      cell: (row) =>
+        row.isMine && (
+          <SpaceBetween direction="horizontal" size="s">
+            {row.attachments.length < 3 && <AttachFile homeworkId={row.id} title={row.title} />}
+            <Button variant="inline-link" ariaLabel={t('deleteLabel', { title: row.title })} onClick={() => setRemoving(row)}>
+              {t('delete')}
+            </Button>
+          </SpaceBetween>
+        ),
+    },
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        enableKeyboardNavigation
-        trackBy="id"
-        items={data?.rows ?? []}
-        loading={!data}
-        loadingText={t('loading')}
-        header={
-          <SpaceBetween size="m">
-            <Header variant="h2" actions={canCreate && addButton(true)}>
-              {t('title')}
-            </Header>
-            {feedback && (
-              <Alert
-                type={feedback.type}
-                dismissible
-                dismissAriaLabel={t('dismiss')}
-                onDismiss={() => {
-                  setResult(null);
-                  router.replace(pathname);
-                }}
-              >
-                {feedback.text}
-              </Alert>
-            )}
-          </SpaceBetween>
+      <DataTable
+        id="homework"
+        title={t('title')}
+        actions={canCreate && addButton(true)}
+        above={
+          feedback && (
+            <Alert
+              type={feedback.type}
+              dismissible
+              dismissAriaLabel={t('dismiss')}
+              onDismiss={() => {
+                setResult(null);
+                setParams({ created: null });
+              }}
+            >
+              {feedback.text}
+            </Alert>
+          )
         }
-        pagination={
-          <Pagination
-            currentPageIndex={page}
-            pagesCount={data?.nextCursor ? page + 1 : page}
-            openEnd={Boolean(data?.nextCursor)}
-            disabled={!data}
-            onChange={({ detail }) => {
-              if (!data) return;
-              const cursor = detail.currentPageIndex > page ? data.nextCursor : data.prevCursor;
-              router.replace(detail.currentPageIndex === 1 || !cursor ? pathname : `${pathname}?cursor=${cursor}`);
-            }}
-          />
-        }
-        empty={
-          <EmptyState
-            icon="homework"
-            heading={t('empty.heading')}
-            body={t(canCreate ? 'empty.bodyTeacher' : 'empty.body')}
-            action={canCreate && addButton(false)}
-          />
-        }
-        columnDefinitions={[
-          {
-            id: 'title',
-            header: t('columns.title'),
-            isRowHeader: true,
-            cell: (row) => (
-              <>
-                <Box fontWeight="bold">{row.title}</Box>
-                {row.instructions && <Box color="text-body-secondary">{row.instructions}</Box>}
-                <AttachmentLinks homeworkId={row.id} files={row.attachments} />
-              </>
-            ),
-          },
-          { id: 'subject', header: t('columns.subject'), cell: (row) => row.subject },
-          { id: 'sections', header: t('columns.sections'), cell: (row) => row.sections },
-          { id: 'teacher', header: t('columns.teacher'), cell: (row) => row.teacher },
-          {
-            id: 'dueOn',
-            header: t('columns.dueOn'),
-            cell: (row) => (
-              <StatusIndicator type={row.isPastDue ? 'stopped' : 'pending'}>
-                {t(row.isPastDue ? 'wasDue' : 'due', { date: day(row.dueOn) })}
-              </StatusIndicator>
-            ),
-          },
-          {
-            id: 'actions',
-            header: t('columns.actions'),
-            cell: (row) =>
-              row.isMine && (
-                <SpaceBetween direction="horizontal" size="s">
-                  {row.attachments.length < 3 && <AttachFile homeworkId={row.id} title={row.title} />}
-                  <Button
-                    variant="inline-link"
-                    ariaLabel={t('deleteLabel', { title: row.title })}
-                    onClick={() => setRemoving(row)}
-                  >
-                    {t('delete')}
-                  </Button>
-                </SpaceBetween>
-              ),
-          },
-        ]}
+        items={data?.rows ?? null}
+        columns={columns}
+        server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{
+          icon: 'homework',
+          heading: t('empty.heading'),
+          body: t(canCreate ? 'empty.bodyTeacher' : 'empty.body'),
+          action: canCreate && addButton(false),
+        }}
       />
       <Modal
         visible={Boolean(removing)}

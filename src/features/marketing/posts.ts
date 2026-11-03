@@ -7,22 +7,15 @@ export type PostSection = { heading: string; paragraphs: string[] };
 const day = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'UTC' });
 export const postDate = (date: string) => day.format(new Date(`${date}T00:00:00Z`));
 
-export const readingMinutes = (sections: PostSection[]) => {
-  const words = sections.reduce((sum, { heading, paragraphs }) => sum + `${heading} ${paragraphs.join(' ')}`.split(/\s+/).length, 0);
-  return Math.max(1, Math.round(words / 200));
-};
+const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** The editor's text: a line starting `## ` opens a section, and a blank line separates paragraphs. */
-export function bodyToSections(body: string): PostSection[] {
-  const sections: PostSection[] = [];
-  for (const block of body.split(/\n\s*\n/)) {
-    const [first = '', ...rest] = block.trim().split('\n');
-    const text = (first.startsWith('## ') ? rest : [first, ...rest]).join(' ').replace(/\s+/g, ' ').trim();
-    if (first.startsWith('## ')) sections.push({ heading: first.slice(3).trim(), paragraphs: [] });
-    if (text) sections.at(-1)?.paragraphs.push(text);
-  }
-  return sections;
-}
+export const sectionsToHtml = (sections: PostSection[]) =>
+  sections
+    .map(({ heading, paragraphs }) => `<h2>${escapeHtml(heading)}</h2>${paragraphs.map((text) => `<p>${escapeHtml(text)}</p>`).join('')}`)
+    .join('');
 
-export const sectionsToBody = (sections: PostSection[]) =>
-  sections.map(({ heading, paragraphs }) => `## ${heading}\n\n${paragraphs.join('\n\n')}`).join('\n\n');
+export const textOf = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+
+export const readingMinutes = (html: string) => Math.max(1, Math.round(textOf(html).split(' ').length / 200));
+
+export const IMAGE_PATH = /^\/api\/v1\/blog\/images\/[0-9a-f-]{36}\.(jpg|png|webp)$/;

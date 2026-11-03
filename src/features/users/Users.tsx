@@ -12,15 +12,13 @@ import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { type Column, DataTable } from '@/components/DataTable';
+import { useRouter } from '@/i18n/navigation';
 import { addUserRole, createUser, removeUserRole, resetUserPassword, setUserStatus } from '@/server/modules/users/actions';
 import type { UserRow } from '@/server/modules/users/service';
 
@@ -73,13 +71,11 @@ export function UsersTable({ data, canEdit }: { data: Data | null; canEdit: bool
   const t = useTranslations('users');
   const tRole = useTranslations('shell.roles');
   const router = useRouter();
-  const pathname = usePathname();
   const [pending, setPending] = useState<Pending | null>(null);
   const [busy, setBusy] = useState(false);
   const [newRole, setNewRole] = useState('');
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const page = data?.page ?? 1;
   const addButton = (primary: boolean) => (
     <Button
       {...(primary && { variant: 'primary' as const })}
@@ -136,76 +132,62 @@ export function UsersTable({ data, canEdit }: { data: Data | null; canEdit: bool
     </Button>
   );
 
+  const columns: Column<UserRow>[] = [
+    { id: 'name', header: t('columns.name'), cell: (row) => row.name, isRowHeader: true },
+    { id: 'email', header: t('columns.email'), cell: (row) => row.email ?? NONE },
+    { id: 'role', header: t('columns.role'), cell: (row) => row.roles.map((role) => tRole(role)).join(', ') },
+    { id: 'staff', header: t('columns.staff'), cell: (row) => row.staffName ?? NONE },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    {
+      id: 'lastLogin',
+      header: t('columns.lastLogin'),
+      cell: (row) => (row.lastLoginAt ? dateTime.format(new Date(row.lastLoginAt)) : t('never')),
+    },
+    ...(canEdit
+      ? [
+          {
+            id: 'actions',
+            header: t('columns.actions'),
+            cell: (row: UserRow) =>
+              !row.isSelf && (
+                <SpaceBetween direction="horizontal" size="s">
+                  {row.status !== 'disabled' && action(row, 'reset')}
+                  {row.status !== 'disabled' && ROLES.some((role) => !row.roles.includes(role)) && action(row, 'addRole')}
+                  {row.roles.length > 1 && action(row, 'removeRole')}
+                  {action(row, row.status === 'disabled' ? 'enable' : 'disable')}
+                </SpaceBetween>
+              ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        enableKeyboardNavigation
-        trackBy="id"
-        items={data?.rows ?? []}
-        loading={!data}
-        loadingText={t('loading')}
-        header={
-          <SpaceBetween size="m">
-            <Header variant="h2" description={t('description')} actions={canEdit && addButton(true)}>
-              {t('title')}
-            </Header>
+      <DataTable
+        id="users"
+        title={t('title')}
+        description={t('description')}
+        actions={canEdit && addButton(true)}
+        above={
+          <>
             {credentials && <TemporaryPassword {...credentials} />}
             {result && (
               <Alert type={result.type} dismissible dismissAriaLabel={t('dismiss')} onDismiss={() => setResult(null)}>
                 {result.text}
               </Alert>
             )}
-          </SpaceBetween>
+          </>
         }
-        pagination={
-          <Pagination
-            currentPageIndex={page}
-            pagesCount={data?.nextCursor ? page + 1 : page}
-            openEnd={Boolean(data?.nextCursor)}
-            disabled={!data}
-            onChange={({ detail }) => {
-              if (!data) return;
-              const cursor = detail.currentPageIndex > page ? data.nextCursor : data.prevCursor;
-              router.replace(detail.currentPageIndex === 1 || !cursor ? pathname : `${pathname}?cursor=${cursor}`);
-            }}
-          />
-        }
-        empty={<EmptyState icon="users" heading={t('empty.heading')} body={t('empty.body')} />}
-        columnDefinitions={[
-          { id: 'name', header: t('columns.name'), cell: (row) => row.name, isRowHeader: true },
-          { id: 'email', header: t('columns.email'), cell: (row) => row.email ?? NONE },
-          { id: 'role', header: t('columns.role'), cell: (row) => row.roles.map((role) => tRole(role)).join(', ') },
-          { id: 'staff', header: t('columns.staff'), cell: (row) => row.staffName ?? NONE },
-          {
-            id: 'status',
-            header: t('columns.status'),
-            cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
-          },
-          {
-            id: 'lastLogin',
-            header: t('columns.lastLogin'),
-            cell: (row) => (row.lastLoginAt ? dateTime.format(new Date(row.lastLoginAt)) : t('never')),
-          },
-          ...(canEdit
-            ? [
-                {
-                  id: 'actions',
-                  header: t('columns.actions'),
-                  cell: (row: UserRow) =>
-                    !row.isSelf && (
-                      <SpaceBetween direction="horizontal" size="s">
-                        {row.status !== 'disabled' && action(row, 'reset')}
-                        {row.status !== 'disabled' && ROLES.some((role) => !row.roles.includes(role)) && action(row, 'addRole')}
-                        {row.roles.length > 1 && action(row, 'removeRole')}
-                        {action(row, row.status === 'disabled' ? 'enable' : 'disable')}
-                      </SpaceBetween>
-                    ),
-                },
-              ]
-            : []),
-        ]}
+        items={data?.rows ?? null}
+        columns={columns}
+        server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'users', heading: t('empty.heading'), body: t('empty.body') }}
       />
       <Modal
         visible={Boolean(pending)}

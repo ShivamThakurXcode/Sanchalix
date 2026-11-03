@@ -1,7 +1,8 @@
 import 'server-only';
+import { DEFAULT_PAGE_SIZE } from '@/lib/tableQuery';
 import { AppError } from '@/lib/appError';
 import type { RequestContext } from '@/server/auth/context';
-import { paginate } from '@/server/db/paginate';
+import { paginate, textMatch } from '@/server/db/paginate';
 import { Branch } from '@/server/models/branch';
 import { Counter } from '@/server/models/counter';
 import { AcademicYear } from '@/server/models/academicYear';
@@ -148,11 +149,11 @@ export async function createStaff(ctx: RequestContext, input: StaffInput) {
 export async function listStaff(ctx: RequestContext, query: ListStaff) {
   const { rows, ...page } = await paginate(
     Staff,
-    scopeOf(ctx),
+    { ...scopeOf(ctx), ...textMatch(query.q, ['name', 'employeeNo', 'designation', 'phone']) },
     {
       sortField: 'name',
       select: ['name', 'employeeNo', 'designation', 'type', 'phone', 'status'],
-      limit: query.pageSize,
+      limit: query.pageSize ?? DEFAULT_PAGE_SIZE,
       cursor: query.cursor,
     },
   );

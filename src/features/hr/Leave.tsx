@@ -13,16 +13,14 @@ import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { type Column, DataTable, useSetParams } from '@/components/DataTable';
+import { useRouter } from '@/i18n/navigation';
 import { applyLeave, cancelLeave, decideLeave } from '@/server/modules/hr/actions';
 import type { LeaveBalance, LeaveRow } from '@/server/modules/hr/leave';
 
@@ -59,18 +57,13 @@ export function LeaveTable({
 }) {
   const t = useTranslations('hr.leave');
   const router = useRouter();
-  const pathname = usePathname();
+  const setParams = useSetParams();
   const [pending, setPending] = useState<Pending | null>(null);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const feedback = result ?? (applied ? { type: 'success' as const, text: t('applied') } : null);
-  const page = data?.page ?? 1;
   const filterOptions = FILTERS.map((value) => ({ value, label: t(`filter.${value}`) }));
-  const go = (cursor: string | null, next = status) => {
-    const params = new URLSearchParams({ ...(next !== 'all' && { status: next }), ...(cursor && { cursor }) });
-    router.replace(params.size ? `${pathname}?${params}` : pathname);
-  };
   const applyButton = (primary: boolean) => (
     <Button
       {...(primary && { variant: 'primary' as const })}
@@ -111,21 +104,45 @@ export function LeaveTable({
     </Button>
   );
 
+  const columns: Column<LeaveRow>[] = [
+    { id: 'staff', header: t('columns.staff'), cell: (row) => row.staffName, isRowHeader: true },
+    { id: 'type', header: t('columns.type'), cell: (row) => t(`type.${row.type}`) },
+    {
+      id: 'dates',
+      header: t('columns.dates'),
+      cell: (row) => (row.from === row.to ? day(row.from) : `${day(row.from)} – ${day(row.to)}`),
+    },
+    { id: 'days', header: t('columns.days'), cell: (row) => (row.halfDay ? t('halfDay') : t('days', { count: row.days })) },
+    { id: 'reason', header: t('columns.reason'), cell: (row) => row.reason },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    { id: 'comment', header: t('columns.comment'), cell: (row) => row.comment ?? NONE },
+    {
+      id: 'actions',
+      header: t('columns.actions'),
+      cell: (row) =>
+        row.status === 'pending' && (
+          <SpaceBetween direction="horizontal" size="s">
+            {canApprove && !row.isMine && action(row, 'approved')}
+            {canApprove && !row.isMine && action(row, 'rejected')}
+            {row.isMine && action(row, 'cancel')}
+          </SpaceBetween>
+        ),
+    },
+  ];
+
   return (
     <>
-      <Table
-        variant="container"
-        stickyHeader
-        enableKeyboardNavigation
-        trackBy="id"
-        items={data?.rows ?? []}
-        loading={!data}
-        loadingText={t('loading')}
-        header={
-          <SpaceBetween size="m">
-            <Header variant="h2" description={t(canApprove ? 'descriptionApprover' : 'description')} actions={canApply && applyButton(true)}>
-              {t('title')}
-            </Header>
+      <DataTable
+        id="leave"
+        title={t('title')}
+        description={t(canApprove ? 'descriptionApprover' : 'description')}
+        actions={canApply && applyButton(true)}
+        above={
+          <>
             {balances.length > 0 && (
               <KeyValuePairs
                 columns={3}
@@ -143,80 +160,29 @@ export function LeaveTable({
                 dismissAriaLabel={t('dismiss')}
                 onDismiss={() => {
                   setResult(null);
-                  go(null);
+                  setParams({ applied: null });
                 }}
               >
                 {feedback.text}
               </Alert>
             )}
-          </SpaceBetween>
+          </>
         }
-        filter={
+        items={data?.rows ?? null}
+        columns={columns}
+        server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+        searchPlaceholder={t('searchPlaceholder')}
+        filters={
           <Select
             ariaLabel={t('filter.label')}
             selectedOption={filterOptions.find((option) => option.value === status) ?? null}
             options={filterOptions}
-            onChange={({ detail }) => go(null, detail.selectedOption.value ?? 'all')}
+            onChange={({ detail }) => setParams({ status: detail.selectedOption.value === 'all' ? null : (detail.selectedOption.value ?? null), cursor: null })}
           />
         }
-        pagination={
-          <Pagination
-            currentPageIndex={page}
-            pagesCount={data?.nextCursor ? page + 1 : page}
-            openEnd={Boolean(data?.nextCursor)}
-            disabled={!data}
-            onChange={({ detail }) => {
-              if (!data) return;
-              go(detail.currentPageIndex === 1 ? null : detail.currentPageIndex > page ? data.nextCursor : data.prevCursor);
-            }}
-          />
-        }
-        empty={
-          status === 'all' ? (
-            <EmptyState
-              icon="leave"
-              heading={t('empty.heading')}
-              body={t(canApply ? 'empty.bodyStaff' : 'empty.body')}
-              action={canApply && applyButton(false)}
-            />
-          ) : (
-            <EmptyState
-              icon="search"
-              heading={t('noMatches.heading')}
-              body={t('noMatches.body')}
-              action={<Button onClick={() => go(null, 'all')}>{t('noMatches.clear')}</Button>}
-            />
-          )
-        }
-        columnDefinitions={[
-          { id: 'staff', header: t('columns.staff'), cell: (row) => row.staffName, isRowHeader: true },
-          { id: 'type', header: t('columns.type'), cell: (row) => t(`type.${row.type}`) },
-          {
-            id: 'dates',
-            header: t('columns.dates'),
-            cell: (row) => (row.from === row.to ? day(row.from) : `${day(row.from)} – ${day(row.to)}`),
-          },
-          { id: 'days', header: t('columns.days'), cell: (row) => (row.halfDay ? t('halfDay') : t('days', { count: row.days })) },
-          { id: 'reason', header: t('columns.reason'), cell: (row) => row.reason },
-          {
-            id: 'status',
-            header: t('columns.status'),
-            cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
-          },
-          { id: 'comment', header: t('columns.comment'), cell: (row) => row.comment ?? NONE },
-          {
-            id: 'actions',
-            header: t('columns.actions'),
-            cell: (row) =>
-              row.status === 'pending' && (
-                <SpaceBetween direction="horizontal" size="s">
-                  {canApprove && !row.isMine && action(row, 'approved')}
-                  {canApprove && !row.isMine && action(row, 'rejected')}
-                  {row.isMine && action(row, 'cancel')}
-                </SpaceBetween>
-              ),
-          },
-        ]}
+        filtered={status !== 'all'}
+        clearParams={['status']}
+        empty={{ icon: 'leave', heading: t('empty.heading'), body: t(canApply ? 'empty.bodyStaff' : 'empty.body'), action: canApply && applyButton(false) }}
       />
       <Modal
         visible={Boolean(pending)}

@@ -11,89 +11,63 @@ import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { COVERS, postDate, TOPICS } from '@/features/marketing/posts';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { createPost, deletePost, updatePost } from '@/server/modules/blog/actions';
 import type { PostRow } from '@/server/modules/blog/service';
 
-const LIST = '/platform/blog';
+const LIST = '/console/blog';
 type Data = { rows: PostRow[]; page: number; nextCursor: string | null; prevCursor: string | null };
 
 export function BlogTable({ data }: { data: Data | null }) {
   const t = useTranslations('platform.blog');
   const router = useRouter();
-  const pathname = usePathname();
-  const page = data?.page ?? 1;
+
+  const columns: Column<PostRow>[] = [
+    { id: 'title', header: t('columns.title'), cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.title}</AppLink>, isRowHeader: true },
+    { id: 'topic', header: t('columns.topic'), cell: (row) => t(`topics.${row.topic}`) },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={row.status === 'published' ? 'success' : 'pending'}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    { id: 'date', header: t('columns.date'), cell: (row) => postDate(row.publishedOn) },
+  ];
 
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      trackBy="id"
-      items={data?.rows ?? []}
-      loading={!data}
-      loadingText={t('loading')}
-      header={
-        <Header
-          variant="h2"
-          counter={data ? `(${data.rows.length}${data.nextCursor ? '+' : ''})` : undefined}
-          description={t('description')}
-          actions={
-            <Button
-              variant="primary"
-              iconSvg={svg('add')}
-              href={`${LIST}/new`}
-              onFollow={(event) => {
-                event.preventDefault();
-                router.push(`${LIST}/new`);
-              }}
-            >
-              {t('add')}
-            </Button>
-          }
-        >
-          {t('title')}
-        </Header>
-      }
-      pagination={
-        <Pagination
-          currentPageIndex={page}
-          pagesCount={data?.nextCursor ? page + 1 : page}
-          openEnd={Boolean(data?.nextCursor)}
-          disabled={!data}
-          onChange={({ detail }) => {
-            if (!data) return;
-            const cursor = detail.currentPageIndex > page ? data.nextCursor : data.prevCursor;
-            router.replace(detail.currentPageIndex === 1 || !cursor ? pathname : `${pathname}?cursor=${cursor}`);
+    <DataTable
+      id="platform-blog"
+      title={t('title')}
+      counter={data ? `(${data.rows.length}${data.nextCursor ? '+' : ''})` : ''}
+      description={t('description')}
+      actions={
+        <Button
+          variant="primary"
+          iconSvg={svg('add')}
+          href={`${LIST}/new`}
+          onFollow={(event) => {
+            event.preventDefault();
+            router.push(`${LIST}/new`);
           }}
-        />
+        >
+          {t('add')}
+        </Button>
       }
-      empty={<EmptyState icon="blog" heading={t('empty.heading')} body={t('empty.body')} />}
-      columnDefinitions={[
-        { id: 'title', header: t('columns.title'), cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.title}</AppLink>, isRowHeader: true },
-        { id: 'topic', header: t('columns.topic'), cell: (row) => t(`topics.${row.topic}`) },
-        {
-          id: 'status',
-          header: t('columns.status'),
-          cell: (row) => (
-            <StatusIndicator type={row.status === 'published' ? 'success' : 'pending'}>{t(`status.${row.status}`)}</StatusIndicator>
-          ),
-        },
-        { id: 'date', header: t('columns.date'), cell: (row) => postDate(row.publishedOn) },
-      ]}
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      empty={{ icon: 'blog', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

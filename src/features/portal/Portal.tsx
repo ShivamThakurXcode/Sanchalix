@@ -14,9 +14,9 @@ import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { Results } from '@/features/exams/Results';
 import { PayOnlineButton } from '@/features/fees/OnlinePayment';
@@ -125,13 +125,11 @@ export function PortalHome({
           )}
         </Container>
 
-        <Table
-          variant="container"
-          trackBy="id"
+        <DataTable
+          id="portal-homework"
+          title={t('homework.title')}
           items={home.homework}
-          header={<Header variant="h2">{t('homework.title')}</Header>}
-          empty={<EmptyState icon="homework" heading={t('homework.empty.heading')} body={t('homework.empty.body')} />}
-          columnDefinitions={[
+          columns={[
             {
               id: 'title',
               header: t('homework.columns.title'),
@@ -143,59 +141,54 @@ export function PortalHome({
                   <AttachmentLinks homeworkId={item.id} files={item.attachments} />
                 </>
               ),
+              sortBy: (item) => item.title,
             },
-            { id: 'subject', header: t('homework.columns.subject'), cell: (item) => item.subject },
-            { id: 'dueOn', header: t('homework.columns.dueOn'), cell: (item) => day(item.dueOn) },
+            { id: 'subject', header: t('homework.columns.subject'), cell: (item) => item.subject, sortBy: (item) => item.subject },
+            { id: 'dueOn', header: t('homework.columns.dueOn'), cell: (item) => day(item.dueOn), sortBy: (item) => item.dueOn },
           ]}
+          search={(item) => `${item.title} ${item.subject} ${item.instructions ?? ''}`}
+          searchPlaceholder={t('homework.searchPlaceholder')}
+          empty={{ icon: 'homework', heading: t('homework.empty.heading'), body: t('homework.empty.body') }}
         />
 
-        <Table
-          variant="container"
-          trackBy="id"
+        <DataTable
+          id="portal-fees"
+          title={t('fees.title')}
+          actions={canPay && open.length > 0 && <PayOnlineButton studentId={selected.id} invoiceIds={open.map(({ id }) => id)} />}
           items={open}
-          header={
-            <Header
-              variant="h2"
-              actions={
-                canPay &&
-                open.length > 0 && <PayOnlineButton studentId={selected.id} invoiceIds={open.map(({ id }) => id)} />
-              }
-            >
-              {t('fees.title')}
-            </Header>
-          }
-          empty={<EmptyState icon="fees" heading={t('fees.empty.heading')} body={t('fees.empty.body')} />}
-          columnDefinitions={[
-            { id: 'installment', header: t('fees.installment'), cell: (invoice) => invoice.installment, isRowHeader: true },
-            { id: 'dueDate', header: tInvoice('columns.dueDate'), cell: (invoice) => day(invoice.dueDate) },
-            { id: 'balance', header: tInvoice('columns.balance'), cell: (invoice) => formatMoney(invoice.balanceMinor) },
+          columns={[
+            { id: 'installment', header: t('fees.installment'), cell: (invoice) => invoice.installment, isRowHeader: true, sortBy: (invoice) => invoice.installment },
+            { id: 'dueDate', header: tInvoice('columns.dueDate'), cell: (invoice) => day(invoice.dueDate), sortBy: (invoice) => invoice.dueDate },
+            { id: 'balance', header: tInvoice('columns.balance'), cell: (invoice) => formatMoney(invoice.balanceMinor), sortBy: (invoice) => invoice.balanceMinor },
           ]}
+          search={(invoice) => `${invoice.installment} ${invoice.dueDate}`}
+          searchPlaceholder={t('fees.searchPlaceholder')}
+          empty={{ icon: 'fees', heading: t('fees.empty.heading'), body: t('fees.empty.body') }}
         />
 
         {fees.payments.length > 0 && (
-          <Table
-            variant="container"
-            trackBy="id"
+          <DataTable
+            id="portal-receipts"
+            title={t('receipts.title')}
             items={fees.payments}
-            header={<Header variant="h2">{t('receipts.title')}</Header>}
-            columnDefinitions={[
+            columns={[
               {
                 id: 'receiptNo',
                 header: t('receipts.receiptNo'),
                 isRowHeader: true,
                 cell: (payment) => (
-                  <Link
-                    href={`/api/v1/payments/${payment.id}/receipt`}
-                    external
-                    externalIconAriaLabel={t('receipts.opens')}
-                  >
+                  <Link href={`/api/v1/payments/${payment.id}/receipt`} external externalIconAriaLabel={t('receipts.opens')}>
                     {payment.receiptNo}
                   </Link>
                 ),
+                sortBy: (payment) => payment.receiptNo,
               },
-              { id: 'date', header: t('receipts.date'), cell: (payment) => day(payment.collectedAt.slice(0, 10)) },
-              { id: 'amount', header: t('receipts.amount'), cell: (payment) => formatMoney(payment.amountMinor) },
+              { id: 'date', header: t('receipts.date'), cell: (payment) => day(payment.collectedAt.slice(0, 10)), sortBy: (payment) => payment.collectedAt },
+              { id: 'amount', header: t('receipts.amount'), cell: (payment) => formatMoney(payment.amountMinor), sortBy: (payment) => payment.amountMinor },
             ]}
+            search={(payment) => payment.receiptNo}
+            searchPlaceholder={t('receipts.searchPlaceholder')}
+            empty={{ icon: 'receipt', heading: t('receipts.empty.heading'), body: t('receipts.empty.body') }}
           />
         )}
 
@@ -269,12 +262,13 @@ export function PortalAccounts({ studentId, accounts }: { studentId: string; acc
   return (
     <SpaceBetween size="l">
       {created && <TemporaryPassword {...created} />}
-      <Table
-        trackBy={(row) => row.guardianId ?? 'student'}
-        items={accounts}
-        header={<Header variant="h2" description={t('description')}>{t('title')}</Header>}
-        columnDefinitions={[
-          { id: 'name', header: t('name'), cell: (row) => row.name, isRowHeader: true },
+      <DataTable
+        id="portal-accounts"
+        title={t('title')}
+        description={t('description')}
+        items={accounts.map((row) => ({ ...row, id: row.guardianId ?? 'student' }))}
+        columns={[
+          { id: 'name', header: t('name'), cell: (row) => row.name, isRowHeader: true, sortBy: (row) => row.name },
           { id: 'kind', header: t('kind'), cell: (row) => t(row.guardianId ? 'parent' : 'student') },
           {
             id: 'account',
@@ -305,6 +299,9 @@ export function PortalAccounts({ studentId, accounts }: { studentId: string; acc
               ),
           },
         ]}
+        search={(row) => `${row.name} ${row.accountEmail ?? ''}`}
+        searchPlaceholder={t('searchPlaceholder')}
+        empty={{ icon: 'users', heading: t('empty.heading'), body: t('empty.body') }}
       />
       <Modal
         visible={Boolean(target)}

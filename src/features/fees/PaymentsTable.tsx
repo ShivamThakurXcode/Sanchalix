@@ -1,136 +1,49 @@
 'use client';
 
-import Cards from '@cloudscape-design/components/cards';
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
-import Header from '@cloudscape-design/components/header';
-import Input from '@cloudscape-design/components/input';
-import Pagination from '@cloudscape-design/components/pagination';
-import Table from '@cloudscape-design/components/table';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { AppLink } from '@/components/AppLink';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { ExportButton } from '@/components/ExportButton';
-import { usePathname, useRouter } from '@/i18n/navigation';
 import { formatMoney } from '@/lib/money';
-import { useIsMobile } from '@/lib/useIsMobile';
 import type { CounterMethod, PaymentRow } from '@/server/modules/fees/schemas';
 
-const PAGE_SIZES = [10, 25, 50, 100];
 const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
 
 type Data = { rows: PaymentRow[]; page: number; nextCursor: string | null; prevCursor: string | null };
 
-export function PaymentsTable({ pageSize, data }: { pageSize: number; data: Data | null }) {
+export function PaymentsTable({ data }: { data: Data | null }) {
   const t = useTranslations('fees.payments');
   const tExport = useTranslations('export');
   const tMethod = useTranslations('fees.counter.methods');
-  const router = useRouter();
-  const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const [searchText, setSearchText] = useState('');
 
-  const setParams = (changes: Record<string, string | null>) => {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === null) params.delete(key);
-      else params.set(key, value);
-    }
-    router.replace(`${pathname}?${params}`);
-  };
-
-  const rows = data?.rows ?? [];
-  const page = data?.page ?? 1;
-
-  const filteredRows = rows.filter(
-    (payment) =>
-      payment.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
-      payment.admissionNo.toLowerCase().includes(searchText.toLowerCase()) ||
-      payment.receiptNo.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const receiptLink = (payment: PaymentRow) => (
-    <AppLink href={`/fees/payments/${payment.id}`}>{payment.receiptNo}</AppLink>
-  );
-
-  const fields: { id: string; header: string; content: (payment: PaymentRow) => ReactNode }[] = [
-    { id: 'receiptNo', header: t('columns.receiptNo'), content: receiptLink },
-    { id: 'date', header: t('columns.date'), content: (payment) => dateTime.format(new Date(payment.collectedAt)) },
-    { id: 'student', header: t('columns.student'), content: (payment) => payment.studentName },
-    { id: 'admissionNo', header: t('columns.admissionNo'), content: (payment) => payment.admissionNo },
+  const columns: Column<PaymentRow>[] = [
+    {
+      id: 'receiptNo',
+      header: t('columns.receiptNo'),
+      cell: (payment) => <AppLink href={`/fees/payments/${payment.id}`}>{payment.receiptNo}</AppLink>,
+      isRowHeader: true,
+    },
+    { id: 'date', header: t('columns.date'), cell: (payment) => dateTime.format(new Date(payment.collectedAt)) },
+    { id: 'student', header: t('columns.student'), cell: (payment) => payment.studentName },
+    { id: 'admissionNo', header: t('columns.admissionNo'), cell: (payment) => payment.admissionNo },
     {
       id: 'method',
       header: t('columns.method'),
-      content: (payment) => (tMethod.has(payment.method) ? tMethod(payment.method as CounterMethod) : payment.method),
+      cell: (payment) => (tMethod.has(payment.method) ? tMethod(payment.method as CounterMethod) : payment.method),
     },
-    { id: 'amount', header: t('columns.amount'), content: (payment) => formatMoney(payment.amountMinor) },
+    { id: 'amount', header: t('columns.amount'), cell: (payment) => formatMoney(payment.amountMinor) },
   ];
 
-  const shared = {
-    trackBy: 'id',
-    items: filteredRows,
-    loading: !data,
-    loadingText: t('loading'),
-    stickyHeader: true,
-    header: (
-      <Header variant="h2" actions={<ExportButton href="/api/v1/export/payments" label={tExport('label.payments')} />}>
-        {t('title')}
-      </Header>
-    ),
-    filter: (
-      <Input
-        placeholder={t('searchPlaceholder')}
-        value={searchText}
-        onChange={({ detail }) => setSearchText(detail.value)}
-      />
-    ),
-    pagination: (
-      <Pagination
-        currentPageIndex={page}
-        pagesCount={data?.nextCursor ? page + 1 : page}
-        openEnd={Boolean(data?.nextCursor)}
-        disabled={!data}
-        onChange={({ detail }) => {
-          if (!data) return;
-          // Cursors only step one page at a time, so any earlier page other than the first steps back by one.
-          const target = detail.currentPageIndex;
-          setParams({ cursor: target === 1 ? null : target > page ? data.nextCursor : data.prevCursor });
-        }}
-      />
-    ),
-    preferences: (
-      <CollectionPreferences
-        preferences={{ pageSize }}
-        pageSizePreference={{
-          options: PAGE_SIZES.map((value) => ({ value, label: t('pageSize', { count: value }) })),
-        }}
-        onConfirm={({ detail }) => setParams({ pageSize: String(detail.pageSize ?? pageSize), cursor: null })}
-      />
-    ),
-    empty: searchText ? (
-      <EmptyState icon="search" heading={t('noMatches.heading')} body={t('noMatches.body')} />
-    ) : (
-      <EmptyState icon="receipt" heading={t('empty.heading')} body={t('empty.body')} />
-    ),
-  };
-
-  if (isMobile) {
-    return <Cards {...shared} variant="container" cardDefinition={{ header: receiptLink, sections: fields.slice(1) }} />;
-  }
   return (
-    <Table
-      {...shared}
-      variant="container"
-      resizableColumns
-      enableKeyboardNavigation
-      renderAriaLive={() => t('showing', { count: rows.length })}
-      columnDefinitions={fields.map(({ id, header, content }) => ({
-        id,
-        header,
-        cell: content,
-        isRowHeader: id === 'receiptNo',
-      }))}
+    <DataTable
+      id="fees-payments"
+      title={t('title')}
+      actions={<ExportButton href="/api/v1/export/payments" label={tExport('label.payments')} />}
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      empty={{ icon: 'receipt', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

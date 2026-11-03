@@ -19,12 +19,12 @@ export default async function PaymentsPage({
   const ctx = await pageContext('fees.payment.read');
   const query = ListPayments.parse(await searchParams);
   return (
-    <Suspense key={JSON.stringify(query)} fallback={<PaymentsTable pageSize={query.pageSize} data={null} />}>
+    <Suspense key={JSON.stringify(query)} fallback={<PaymentsTable data={null} />}>
       <Payments ctx={ctx} query={query} />
     </Suspense>
   );
 }
 
 async function Payments({ ctx, query }: { ctx: RequestContext; query: ListPayments }) {
-  return <PaymentsTable pageSize={query.pageSize} data={await listPayments(ctx, query)} />;
+  return <PaymentsTable data={await listPayments(ctx, query)} />;
 }

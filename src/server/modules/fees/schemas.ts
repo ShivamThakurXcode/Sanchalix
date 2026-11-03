@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { toMinor } from '@/lib/money';
+import { TableQuery } from '@/lib/tableQuery';
 import { INVOICE_STATUSES } from '@/server/models/invoice';
 
 const Id = (message: string) => z.string().regex(/^[0-9a-f]{24}$/, message);
@@ -52,14 +53,7 @@ export const FeeStructureId = Id(`${E}.structureNotFound`);
 
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 
-export const ListInvoices = z.object({
-  status: z.enum(INVOICE_STATUSES).optional().catch(undefined),
-  cursor: z.string().optional().catch(undefined),
-  pageSize: z.coerce
-    .number()
-    .refine((size) => [10, 25, 50, 100].includes(size))
-    .catch(25),
-});
+export const ListInvoices = TableQuery.extend({ status: z.enum(INVOICE_STATUSES).optional().catch(undefined) });
 export type ListInvoices = z.infer<typeof ListInvoices>;
 
 export const COUNTER_METHODS = ['cash', 'upi', 'card', 'cheque', 'bank_transfer'] as const;
@@ -142,13 +136,7 @@ export type InvoiceRow = {
   status: InvoiceStatus;
 };
 
-export const ListPayments = z.object({
-  cursor: z.string().optional().catch(undefined),
-  pageSize: z.coerce
-    .number()
-    .refine((size) => [10, 25, 50, 100].includes(size))
-    .catch(25),
-});
+export const ListPayments = TableQuery;
 export type ListPayments = z.infer<typeof ListPayments>;
 
 export type PaymentRow = {
@@ -164,14 +152,7 @@ export type PaymentRow = {
 export const AGEING = ['all', '1-15', '16-30', '31-60', '60+'] as const;
 export type Ageing = (typeof AGEING)[number];
 
-export const ListDues = z.object({
-  ageing: z.enum(AGEING).catch('all'),
-  cursor: z.string().optional().catch(undefined),
-  pageSize: z.coerce
-    .number()
-    .refine((size) => [10, 25, 50, 100].includes(size))
-    .catch(25),
-});
+export const ListDues = TableQuery.extend({ ageing: z.enum(AGEING).catch('all') });
 export type ListDues = z.infer<typeof ListDues>;
 
 export type DueRow = {

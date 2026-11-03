@@ -12,22 +12,15 @@ import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { EmptyState } from '@/components/EmptyState';
+import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { useRouter } from '@/i18n/navigation';
 import { formatMoney } from '@/lib/money';
 import type { ActionResult } from '@/lib/appError';
-import {
-  decideStudentDiscount,
-  requestStudentDiscount,
-  saveAutomaticDiscounts,
-  saveLateFeeRule,
-  withdrawStudentDiscount,
-} from '@/server/modules/fees/actions';
+import { decideStudentDiscount, requestStudentDiscount, saveAutomaticDiscounts, saveLateFeeRule, withdrawStudentDiscount } from '@/server/modules/fees/actions';
 import type { DiscountRules } from '@/server/modules/fees/discounts';
 
 type Row = DiscountRules['students'][number];
@@ -122,6 +115,50 @@ export function FeeDiscounts({ rules, canEdit, canApprove }: { rules: DiscountRu
     </Button>
   );
 
+  const studentColumns: Column<Row>[] = [
+    { id: 'student', header: t('students.columns.student'), cell: (row) => `${row.student} (${row.admissionNo})`, isRowHeader: true, sortBy: (row) => row.student },
+    { id: 'name', header: t('students.columns.name'), cell: (row) => row.name },
+    {
+      id: 'value',
+      header: t('students.columns.value'),
+      cell: (row) =>
+        row.type === 'percent'
+          ? t('students.percentOff', { value: row.value })
+          : t('students.amountOff', { amount: formatMoney(row.value) }),
+    },
+    { id: 'reason', header: t('students.columns.reason'), cell: (row) => row.reason },
+    {
+      id: 'status',
+      header: t('students.columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`students.status.${row.status}`)}</StatusIndicator>,
+    },
+    ...(canApprove
+      ? [
+          {
+            id: 'actions',
+            header: t('students.columns.actions'),
+            cell: (row: Row) =>
+              row.status === 'pending' ? (
+                <SpaceBetween direction="horizontal" size="s">
+                  {decide(row, 'approved')}
+                  {decide(row, 'rejected')}
+                </SpaceBetween>
+              ) : (
+                row.status === 'approved' && (
+                  <Button
+                    variant="inline-link"
+                    ariaLabel={t('students.withdrawLabel', { name: row.name, student: row.student })}
+                    onClick={() => setWithdrawing(row)}
+                  >
+                    {t('students.withdraw')}
+                  </Button>
+                )
+              ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <SpaceBetween size="l">
       {feedback && (
@@ -181,82 +218,29 @@ export function FeeDiscounts({ rules, canEdit, canApprove }: { rules: DiscountRu
           )}
         </ColumnLayout>
       </Container>
-      <Table
-        variant="container"
-        trackBy="id"
-        items={rules.students}
-        header={
-          <Header
-            variant="h2"
-            counter={`(${rules.students.length})`}
-            description={t('students.description')}
-            actions={
-              canEdit && (
-                <Button
-                  variant="primary"
-                  iconSvg={svg('concession')}
-                  onClick={() => {
-                    setErrors({});
-                    setDraft(BLANK);
-                  }}
-                >
-                  {t('students.add')}
-                </Button>
-              )
-            }
-          >
-            {t('students.title')}
-          </Header>
+      <DataTable
+        id="fees-discounts"
+        title={t('students.title')}
+        description={t('students.description')}
+        actions={
+          canEdit && (
+            <Button
+              variant="primary"
+              iconSvg={svg('concession')}
+              onClick={() => {
+                setErrors({});
+                setDraft(BLANK);
+              }}
+            >
+              {t('students.add')}
+            </Button>
+          )
         }
-        empty={<EmptyState icon="concession" heading={t('students.empty.heading')} body={t('students.empty.body')} />}
-        columnDefinitions={[
-          {
-            id: 'student',
-            header: t('students.columns.student'),
-            cell: (row) => `${row.student} (${row.admissionNo})`,
-            isRowHeader: true,
-          },
-          { id: 'name', header: t('students.columns.name'), cell: (row) => row.name },
-          {
-            id: 'value',
-            header: t('students.columns.value'),
-            cell: (row) =>
-              row.type === 'percent'
-                ? t('students.percentOff', { value: row.value })
-                : t('students.amountOff', { amount: formatMoney(row.value) }),
-          },
-          { id: 'reason', header: t('students.columns.reason'), cell: (row) => row.reason },
-          {
-            id: 'status',
-            header: t('students.columns.status'),
-            cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`students.status.${row.status}`)}</StatusIndicator>,
-          },
-          ...(canApprove
-            ? [
-                {
-                  id: 'actions',
-                  header: t('students.columns.actions'),
-                  cell: (row: Row) =>
-                    row.status === 'pending' ? (
-                      <SpaceBetween direction="horizontal" size="s">
-                        {decide(row, 'approved')}
-                        {decide(row, 'rejected')}
-                      </SpaceBetween>
-                    ) : (
-                      row.status === 'approved' && (
-                        <Button
-                          variant="inline-link"
-                          ariaLabel={t('students.withdrawLabel', { name: row.name, student: row.student })}
-                          onClick={() => setWithdrawing(row)}
-                        >
-                          {t('students.withdraw')}
-                        </Button>
-                      )
-                    ),
-                },
-              ]
-            : []),
-        ]}
+        items={rules.students}
+        columns={studentColumns}
+        search={(row) => `${row.student} ${row.admissionNo} ${row.name} ${row.reason}`}
+        searchPlaceholder={t('students.searchPlaceholder')}
+        empty={{ icon: 'concession', heading: t('students.empty.heading'), body: t('students.empty.body') }}
       />
       <Modal
         visible={withdrawing !== null}

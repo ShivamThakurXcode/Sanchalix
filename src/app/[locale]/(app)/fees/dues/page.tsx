@@ -23,7 +23,7 @@ export default async function DuesPage({
   return (
     <Suspense
       key={JSON.stringify(query)}
-      fallback={<DuesTable ageing={query.ageing} pageSize={query.pageSize} canCollect={canCollect} data={null} />}
+      fallback={<DuesTable ageing={query.ageing} canCollect={canCollect} data={null} />}
     >
       <Dues ctx={ctx} query={query} canCollect={canCollect} />
     </Suspense>
@@ -34,7 +34,7 @@ async function Dues({ ctx, query, canCollect }: { ctx: RequestContext; query: Li
   return (
     <DuesTable
       ageing={query.ageing}
-      pageSize={query.pageSize}
+     
       canCollect={canCollect}
       data={await listDues(ctx, query)}
     />

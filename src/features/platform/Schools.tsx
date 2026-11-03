@@ -12,7 +12,6 @@ import Header from '@cloudscape-design/components/header';
 import Input from '@cloudscape-design/components/input';
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
 import Modal from '@cloudscape-design/components/modal';
-import Pagination from '@cloudscape-design/components/pagination';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/components/status-indicator';
@@ -22,14 +21,15 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { AppLink } from '@/components/AppLink';
 import { useCrumb } from '@/components/Crumb';
+import { type Column, DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { svg } from '@/components/icons';
 import { TemporaryPassword } from '@/features/users/Users';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { createSchool, resetSchoolAdminPassword, setSchoolStatus } from '@/server/modules/platform/actions';
 import type { SchoolDetail, SchoolRow } from '@/server/modules/platform/service';
 
-const LIST = '/platform/schools';
+const LIST = '/console/schools';
 const NEW = `${LIST}/new`;
 const BOARDS = ['CBSE', 'ICSE', 'STATE', 'IB', 'IGCSE', 'OTHER'];
 const PLANS = ['starter', 'growth', 'enterprise'];
@@ -45,72 +45,45 @@ const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeSty
 export function SchoolsTable({ data }: { data: Data | null }) {
   const t = useTranslations('platform.schools');
   const router = useRouter();
-  const pathname = usePathname();
-  const page = data?.page ?? 1;
+
+  const columns: Column<SchoolRow>[] = [
+    { id: 'name', header: t('columns.name'), cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.name}</AppLink>, isRowHeader: true },
+    { id: 'code', header: t('columns.code'), cell: (row) => row.code },
+    { id: 'board', header: t('columns.board'), cell: (row) => row.board },
+    { id: 'city', header: t('columns.city'), cell: (row) => row.city },
+    {
+      id: 'status',
+      header: t('columns.status'),
+      cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
+    },
+    { id: 'students', header: t('columns.students'), cell: (row) => row.students },
+    { id: 'created', header: t('columns.created'), cell: (row) => date.format(new Date(row.createdAt)) },
+  ];
 
   return (
-    <Table
-      variant="container"
-      stickyHeader
-      enableKeyboardNavigation
-      trackBy="id"
-      items={data?.rows ?? []}
-      loading={!data}
-      loadingText={t('loading')}
-      header={
-        <Header
-          variant="h2"
-          counter={data ? `(${data.rows.length}${data.nextCursor ? '+' : ''})` : undefined}
-          description={t('description')}
-          actions={
-            <Button
-              variant="primary"
-              iconSvg={svg('add')}
-              href={NEW}
-              onFollow={(event) => {
-                event.preventDefault();
-                router.push(NEW);
-              }}
-            >
-              {t('add')}
-            </Button>
-          }
-        >
-          {t('title')}
-        </Header>
-      }
-      pagination={
-        <Pagination
-          currentPageIndex={page}
-          pagesCount={data?.nextCursor ? page + 1 : page}
-          openEnd={Boolean(data?.nextCursor)}
-          disabled={!data}
-          onChange={({ detail }) => {
-            if (!data) return;
-            const cursor = detail.currentPageIndex > page ? data.nextCursor : data.prevCursor;
-            router.replace(detail.currentPageIndex === 1 || !cursor ? pathname : `${pathname}?cursor=${cursor}`);
+    <DataTable
+      id="platform-schools"
+      title={t('title')}
+      counter={data ? `(${data.rows.length}${data.nextCursor ? '+' : ''})` : ''}
+      description={t('description')}
+      actions={
+        <Button
+          variant="primary"
+          iconSvg={svg('add')}
+          href={NEW}
+          onFollow={(event) => {
+            event.preventDefault();
+            router.push(NEW);
           }}
-        />
+        >
+          {t('add')}
+        </Button>
       }
-      empty={<EmptyState icon="school" heading={t('empty.heading')} body={t('empty.body')} />}
-      columnDefinitions={[
-        {
-          id: 'name',
-          header: t('columns.name'),
-          cell: (row) => <AppLink href={`${LIST}/${row.id}`}>{row.name}</AppLink>,
-          isRowHeader: true,
-        },
-        { id: 'code', header: t('columns.code'), cell: (row) => row.code },
-        { id: 'board', header: t('columns.board'), cell: (row) => row.board },
-        { id: 'city', header: t('columns.city'), cell: (row) => row.city },
-        {
-          id: 'status',
-          header: t('columns.status'),
-          cell: (row) => <StatusIndicator type={STATUS_TYPE[row.status]}>{t(`status.${row.status}`)}</StatusIndicator>,
-        },
-        { id: 'students', header: t('columns.students'), cell: (row) => row.students },
-        { id: 'created', header: t('columns.created'), cell: (row) => date.format(new Date(row.createdAt)) },
-      ]}
+      items={data?.rows ?? null}
+      columns={columns}
+      server={{ page: data?.page ?? 1, nextCursor: data?.nextCursor ?? null, prevCursor: data?.prevCursor ?? null }}
+      searchPlaceholder={t('searchPlaceholder')}
+      empty={{ icon: 'school', heading: t('empty.heading'), body: t('empty.body') }}
     />
   );
 }

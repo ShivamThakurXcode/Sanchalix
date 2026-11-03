@@ -28,9 +28,9 @@ export const detectFileKind = (bytes: Uint8Array) =>
 /** A name that is safe to show and to offer on download. */
 export const safeFileName = (name: string, ext: string) => name.replace(/[^\w.\- ]+/g, '_').slice(-100) || `file.${ext}`;
 
-/** Keys are made by the server (`school/student/uuid.ext`), never taken from a file name, so a path can't escape the root. */
+/** Keys are made by the server (`school/student/uuid.ext`, or `blog/uuid.ext` for the platform blog's pictures), never taken from a file name, so a path can't escape the root. */
 function locate(key: string) {
-  if (!/^[0-9a-f]{24}\/[0-9a-f]{24}\/[0-9a-f-]{36}\.(pdf|jpg|png|webp)$/.test(key)) throw new Error('Invalid storage key');
+  if (!/^([0-9a-f]{24}\/[0-9a-f]{24}|blog)\/[0-9a-f-]{36}\.(pdf|jpg|png|webp)$/.test(key)) throw new Error('Invalid storage key');
   return path.join(ROOT, key);
 }
 

@@ -20,7 +20,7 @@ Sanchalix's UI is built entirely from the **AWS Cloudscape Design System** (`@cl
 |---|---|---|
 | App shell | `AppLayoutToolbar` (`navigation`, `breadcrumbs`, `notifications`, `drawers`, `content`) plus `TopNavigation` above it. The toolbar variant gives a fixed breadcrumb row across the content area with the navigation toggle in it, and `navigationCloseBehavior="collapse"` with `SideNavigation collapsed` turns the closed navigation into an icon-only rail | Every authenticated page |
 | Dashboard | `ContentLayout` + `Header` + `Board` (from board-components) with `BoardItem`s. Staff can rearrange; students and parents get a fixed `Grid` | Role dashboards |
-| Collection | `ContentLayout` → `Table` (or `Cards` on mobile) with `Header` (counter + actions), `PropertyFilter`, `Pagination` and `CollectionPreferences` | Students, invoices, staff, books, homework |
+| Collection | `DataTable` (`src/components/DataTable.tsx`): `Table` (or `Cards` on mobile) with `Header` (counter + actions), `TextFilter` (with a `Select` or `SegmentedControl` beside it for a status filter), `Pagination` and `CollectionPreferences` (page size, visible columns, wrap lines; remembered per user per table in `localStorage`) | Every list: students, invoices, staff, homework, registers, the platform console |
 | Detail | `ContentLayout` → `Header` (actions) → `Container` with `KeyValuePairs` for the summary → `Tabs` for sub-areas | Student profile, invoice, staff profile |
 | Create/edit (short) | `Form` + `Container` + `FormField`s, with a single column on mobile | Announcement, homework, event |
 | Create (multi-step) | `Wizard` | Admission application, promotion, fee structure, import, report card generation, payroll run |
@@ -151,7 +151,7 @@ Density is a per-user preference (Profile → Density). Marks entry and attendan
 
 | Do | Don't |
 |---|---|
-| Use `Table` + `PropertyFilter` + `Pagination` + `CollectionPreferences` for every collection | Build a custom data grid, or use a third-party table |
+| Use `DataTable` for every collection, so search, pagination and preferences behave the same everywhere | Build a custom data grid, wire `Table` + `Pagination` by hand, or use a third-party table |
 | Use `Header` actions with exactly one `variant="primary"` button | Put two primary buttons on one screen |
 | Use `KeyValuePairs` for read-only details | Build detail views out of disabled inputs |
 | Use `StatusIndicator` for state | Show state with a coloured `Badge` or coloured text |

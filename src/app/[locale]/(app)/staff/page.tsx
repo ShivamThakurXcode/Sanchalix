@@ -21,7 +21,6 @@ export default async function StaffPage({
   const params = await searchParams;
   const query = ListStaff.parse(params);
   const shared = {
-    pageSize: query.pageSize,
     canCreate: can(ctx.role, 'hr.staff.create'),
     created: typeof params.created === 'string' ? params.created.slice(0, 120) : null,
     updated: typeof params.updated === 'string' ? params.updated.slice(0, 120) : null,
@@ -40,7 +39,7 @@ async function StaffList({
 }: {
   ctx: RequestContext;
   query: ListStaff;
-  shared: { pageSize: number; canCreate: boolean; created: string | null; updated: string | null };
+  shared: { canCreate: boolean; created: string | null; updated: string | null };
 }) {
   return <StaffTable {...shared} data={await listStaff(ctx, query)} />;
 }

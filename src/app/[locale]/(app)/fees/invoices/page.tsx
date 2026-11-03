@@ -23,7 +23,7 @@ export default async function InvoicesPage({
   return (
     <Suspense
       key={JSON.stringify(query)}
-      fallback={<InvoicesTable status={status} pageSize={query.pageSize} data={null} />}
+      fallback={<InvoicesTable status={status} data={null} />}
     >
       <Invoices ctx={ctx} query={query} />
     </Suspense>
@@ -32,6 +32,6 @@ export default async function InvoicesPage({
 
 async function Invoices({ ctx, query }: { ctx: RequestContext; query: ListInvoices }) {
   return (
-    <InvoicesTable status={query.status ?? null} pageSize={query.pageSize} data={await listInvoices(ctx, query)} />
+    <InvoicesTable status={query.status ?? null} data={await listInvoices(ctx, query)} />
   );
 }

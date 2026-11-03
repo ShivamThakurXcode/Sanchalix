@@ -552,6 +552,8 @@ Key = the key in `icons.tsx`. Component = the Reicon component. Default size is 
 | Roles and permissions | `roles` | `ShieldCheck` | Settings → Roles; the permission matrix view |
 | Audit log | `auditLog` | `History` | Settings → Audit log; the "History" tab on records |
 | Blog | `blog` | `Document` | Platform panel: Blog |
+| Blog editor toolbar | `bold` `italic` `underline` `strikethrough` `bulletList` `numberedList` `quote` `link` `unlink` `image` `table` `alignLeft` `alignCenter` `alignRight` `undo` `redo` `clearFormatting` | `Bold` `Italic` `Underline` `UnderlineX` `List` `List3` `QuoteDown` `Link` `LinkOff` `Image` `Grid` `TextalignLeft` `TextalignCenter` `TextalignRight` `Undo` `Redo` `Eraser` | Platform blog editor: formatting buttons, always with an `ariaLabel` |
+| Back / Save / Hide | `back` / `save` / `hide` | `ArrowLeft` / `Save` / `EyeOff` | Platform blog editor: "Back to blog", "Save", "Unpublish" |
 | Import / Export | `import` / `export` | `Import` / `Export` | Settings → Data import; the "Export" button on every table |
 | Download / Upload | `download` / `upload` | `Download` / `Upload` | File downloads (PDF, CSV) and uploads |
 | Backups | `backups` | `Database` | Super Admin → Backups |
