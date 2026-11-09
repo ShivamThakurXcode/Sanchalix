@@ -1,11 +1,9 @@
 import Box from '@cloudscape-design/components/box';
-import Button from '@cloudscape-design/components/button';
 import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-import { svg } from '@/components/icons';
 import { MODE_COOKIE, parseVisualMode } from '@/lib/visualMode';
 import { getContext } from '@/server/auth/context';
 import { PublicHeader } from './PublicHeader';
@@ -44,54 +42,49 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
       />
       {children}
       <footer className="vw-public-footer awsui-context-top-navigation">
-        <div className="vw-public-footer-inner">
-          <Box padding={{ vertical: 'xxl', horizontal: 'xl' }}>
-            <SpaceBetween size="xl">
-              <div className="vw-public-footer-grid">
-                <SpaceBetween size="s">
-                  <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
-                  <Box fontWeight="bold" fontSize="heading-s">
-                    {t('tagline')}
-                  </Box>
-                  <div className="vw-public-footer-about">
-                    <Box color="text-body-secondary">{t('footer.tagline')}</Box>
-                  </div>
-                  <Button href={enter.href} variant="primary" iconSvg={svg('signIn')}>
-                    {enter.text}
-                  </Button>
+        <Box padding={{ vertical: 'xxl', horizontal: 'xl' }}>
+          <SpaceBetween size="xl">
+            <div className="vw-public-footer-grid">
+              <SpaceBetween size="s">
+                <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
+                <Box fontWeight="bold" fontSize="heading-s">
+                  {t('tagline')}
+                </Box>
+                <div className="vw-public-footer-about">
+                  <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+                </div>
+              </SpaceBetween>
+              <nav aria-label={t('footer.product')}>
+                <SpaceBetween size="xs">
+                  <Box variant="awsui-key-label">{t('footer.product')}</Box>
+                  {links.map(({ href, text }) => (
+                    <Link key={href} href={href}>
+                      {text}
+                    </Link>
+                  ))}
                 </SpaceBetween>
-                <nav aria-label={t('footer.product')}>
-                  <SpaceBetween size="xs">
-                    <Box variant="awsui-key-label">{t('footer.product')}</Box>
-                    {links.map(({ href, text }) => (
-                      <Link key={href} href={href}>
-                        {text}
-                      </Link>
-                    ))}
-                  </SpaceBetween>
-                </nav>
-                <nav aria-label={t('footer.account')}>
-                  <SpaceBetween size="xs">
-                    <Box variant="awsui-key-label">{t('footer.account')}</Box>
-                    <Link href={enter.href}>{enter.text}</Link>
-                    {!enter.signedIn && <Link href="/forgot-password">{t('footer.forgotPassword')}</Link>}
-                  </SpaceBetween>
-                </nav>
-              </div>
-              <div className="vw-public-footer-legal">
-                <Box color="text-body-secondary" fontSize="body-s">
-                  {t('footer.copyright', { year: new Date().getFullYear() })}
-                </Box>
-                <Box color="text-body-secondary" fontSize="body-s">
-                  {t('footer.credit')}
-                </Box>
-                <Link href="#top" variant="secondary" fontSize="body-s">
-                  {t('footer.backToTop')}
-                </Link>
-              </div>
-            </SpaceBetween>
-          </Box>
-        </div>
+              </nav>
+              <nav aria-label={t('footer.account')}>
+                <SpaceBetween size="xs">
+                  <Box variant="awsui-key-label">{t('footer.account')}</Box>
+                  <Link href={enter.href}>{enter.text}</Link>
+                  {!enter.signedIn && <Link href="/forgot-password">{t('footer.forgotPassword')}</Link>}
+                </SpaceBetween>
+              </nav>
+            </div>
+            <div className="vw-public-footer-legal">
+              <Box color="text-body-secondary" fontSize="body-s">
+                {t('footer.copyright', { year: new Date().getFullYear() })}
+              </Box>
+              <Box color="text-body-secondary" fontSize="body-s">
+                {t('footer.credit')}
+              </Box>
+              <Link href="#top" variant="secondary" fontSize="body-s">
+                {t('footer.backToTop')}
+              </Link>
+            </div>
+          </SpaceBetween>
+        </Box>
       </footer>
     </>
   );

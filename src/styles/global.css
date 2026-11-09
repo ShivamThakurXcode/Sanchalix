@@ -241,11 +241,6 @@ body {
   background: var(--vw-blog-cover-image) center bottom / auto 88% no-repeat #ffedd5;
 }
 
-.vw-public-footer-inner {
-  max-inline-size: 1040px;
-  margin-inline: auto;
-}
-
 .vw-public-footer-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
