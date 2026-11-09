@@ -120,6 +120,7 @@ applyTheme({
 - Settings → Branding runs a contrast check against `colorTextButtonPrimaryDefault` and the backgrounds, and **rejects** colours below 4.5:1 with a suggested accessible shade. Branding never breaks WCAG ([11-accessibility.md](11-accessibility.md#contrast)).
 - Status colours, typography, spacing and radius are never themed. Red must always mean error in every school.
 - The logo appears in `TopNavigation.identity`, and on PDFs (receipts, report cards, TCs).
+- `public/logo/sanchalix-white-animated.svg` and `sanchalix-dark-animated.svg` are animated copies of the logo (the cap drops in, the letters rise one after another, then the dot pops, once). The animation lives in the SVG and is off under `prefers-reduced-motion`. The static files are what the app uses; point a `background-image` at an animated copy to use it.
 
 ## 6. Visual modes (dark mode)
 

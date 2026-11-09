@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { BlogForm } from '@/features/platform/Blog';
+import { BlogForm } from '@/features/platform/BlogForm';
 import { todayIn } from '@/lib/dates';
 import { platformContext } from '../../platformContext';
 

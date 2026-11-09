@@ -1,10 +1,12 @@
 import Box from '@cloudscape-design/components/box';
+import Button from '@cloudscape-design/components/button';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { svg } from '@/components/icons';
 import { MODE_COOKIE, parseVisualMode } from '@/lib/visualMode';
 import { getContext } from '@/server/auth/context';
 import { PublicHeader } from './PublicHeader';
@@ -45,12 +47,13 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
           <Box padding={{ vertical: 'xxl', horizontal: 'xl' }}>
             <SpaceBetween size="xl">
               <ColumnLayout columns={3} minColumnWidth={200}>
-                <SpaceBetween size="xs">
-                  <Box fontSize="heading-l" fontWeight="bold">
-                    {t('brand')}
-                  </Box>
+                <SpaceBetween size="s">
+                  <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
                   <Box fontWeight="bold">{t('tagline')}</Box>
                   <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+                  <Button href={enter.href} variant="primary" iconSvg={svg('signIn')}>
+                    {enter.text}
+                  </Button>
                 </SpaceBetween>
                 <nav aria-label={t('footer.product')}>
                   <SpaceBetween size="xs">
@@ -77,6 +80,9 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
                 <Box color="text-body-secondary" fontSize="body-s">
                   {t('footer.credit')}
                 </Box>
+                <Link href="#top" variant="secondary" fontSize="body-s">
+                  {t('footer.backToTop')}
+                </Link>
               </div>
             </SpaceBetween>
           </Box>

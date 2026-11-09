@@ -43,13 +43,13 @@ export default async function ProfilePage() {
       density={parseDensity(user?.density ?? undefined)}
       feeTexts={
         guardian
-          ? !guardian.notificationPrefs.some((pref) => pref.channel === 'sms' && pref.category === 'fees' && !pref.enabled)
+          ? !guardian.notificationPrefs?.some((pref) => pref.channel === 'sms' && pref.category === 'fees' && !pref.enabled)
           : null
       }
       announcementCopy={(['email', 'sms'] as const).map((channel) => ({
         channel,
         reachable: Boolean(channel === 'email' ? user?.email : user?.phone),
-        enabled: !user?.notificationPrefs.some((pref) => pref.channel === channel && pref.category === 'announcements' && !pref.enabled),
+        enabled: !user?.notificationPrefs?.some((pref) => pref.channel === channel && pref.category === 'announcements' && !pref.enabled),
       }))}
       sessions={sessions.map((session) => ({
         id: String(session._id),

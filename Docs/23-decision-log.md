@@ -357,3 +357,18 @@ Architecture and design decisions for Sanchalix, in a lightweight ADR format. A 
 - ✅ A new list is a column array and a few props.
 - `PropertyFilter` is not used: no list has more than one filterable property besides search, so `TextFilter` plus one control is enough. Revisit if a list needs several.
 - ⚠️ Search on the server is a case-insensitive substring match, which does not use an index. Move to a text index if a school's lists grow past tens of thousands of rows.
+
+## ADR-028: A rich text editor for the blog, built on TipTap
+
+**Status.** Accepted for the MVP on 2026-11-04, at the project owner's request.
+
+**Context.** The blog post was plain text where `## ` opened a section. The owner wants a real editing page: formatting, links, tables, pictures, a cover image, tags and SEO fields. Cloudscape has no rich text editor, which is the missing pattern that `CLAUDE.md` says needs an ADR.
+
+**Decision.** `@tiptap/react` with the StarterKit, image, table and text-align extensions edits the post. TipTap is headless, so it brings no styling or UI of its own: the toolbar is a Cloudscape `ButtonGroup` and `Select` with Reicon icons, the link dialog is a Cloudscape `Modal`, and the only custom CSS is `.vw-editor` and `.vw-prose` in `global.css`, built from design tokens. `sanitize-html` cleans the HTML on the server before it is stored, because the editor's output crosses a trust boundary and is shown on the public site. Pictures are stored through the existing file store under `blog/` and served from a public route with random names.
+
+**Consequences.**
+- ✅ Authors format, link, add tables and pictures without markup.
+- ✅ Nothing the browser sends is trusted: scripts, event handlers, foreign pictures and non-web links are removed on save.
+- The post is stored as HTML, not as sections; older posts are converted on read and replaced on their next save.
+- ⚠️ Pictures that a post stops using stay in storage. Add a clean-up job if that grows.
+- ⚠️ The editor's HTML is shown on the public page with `dangerouslySetInnerHTML`; it is safe only because every write goes through `PostInput`.

@@ -41,7 +41,7 @@ export default async function BlogPage() {
         <Box padding={{ vertical: 'xl' }}>
           {posts.length === 0 && <Box color="text-body-secondary">{t('empty')}</Box>}
           <ColumnLayout columns={3} minColumnWidth={280}>
-            {posts.map(({ slug, title, summary, date, minutes, topic, cover }) => (
+            {posts.map(({ slug, title, summary, date, minutes, topic, cover, coverImage }) => (
               <Container
                 key={slug}
                 fitHeight
@@ -49,10 +49,12 @@ export default async function BlogPage() {
                   position: 'top',
                   height: 180,
                   content: (
-                    <div
-                      className="vw-blog-cover"
-                      style={{ '--vw-blog-cover-image': `url(/banners/${cover}.svg)` } as CSSProperties}
-                    />
+                    coverImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="vw-blog-photo" src={coverImage} alt="" />
+                    ) : (
+                      <div className="vw-blog-cover" style={{ '--vw-blog-cover-image': `url(/banners/${cover}.svg)` } as CSSProperties} />
+                    )
                   ),
                 }}
               >

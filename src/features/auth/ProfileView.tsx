@@ -13,13 +13,17 @@ import RadioGroup from '@cloudscape-design/components/radio-group';
 import Toggle from '@cloudscape-design/components/toggle';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
-import Table from '@cloudscape-design/components/table';
+import type TableType from '@cloudscape-design/components/table';
+import dynamic from 'next/dynamic';
 import { applyDensity, Density as CloudscapeDensity } from '@cloudscape-design/global-styles';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { DENSITIES, type Density } from '@/lib/visualMode';
 import { useRouter } from '@/i18n/navigation';
 import { changePassword, setAnnouncementCopy, setDensity, setFeeTexts, signOutOtherSessions, signOutSession } from '@/server/auth/actions';
+
+// The table's sticky scrollbar is sized from the app layout in the browser, so a server-rendered one never matches on hydration.
+const Table = dynamic(() => import('@cloudscape-design/components/table'), { ssr: false }) as typeof TableType;
 
 const BLANK = { current: '', next: '', confirm: '' };
 const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' });

@@ -15,7 +15,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const post = await getPublishedPost((await params).slug);
-  return post ? { title: post.title, description: post.summary } : {};
+  return post ? { title: post.seoTitle, description: post.seoDescription, ...(post.keywords.length > 0 && { keywords: post.keywords }) } : {};
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -31,6 +31,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <PublicPage>
+      {post.jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: post.jsonLd.replace(/</g, '\\u003c') }} />}
       <ContentLayout
         defaultPadding
         disableOverlap
@@ -61,19 +62,18 @@ export default async function BlogPostPage({ params }: Props) {
         <Box padding={{ vertical: 'xl' }}>
           <SpaceBetween size="xxl">
             <article>
-              <SpaceBetween size="xl">
-                {post.sections.map(({ heading, paragraphs }) => (
-                  <section key={heading}>
-                    <SpaceBetween size="s">
-                      <Box variant="h2">{heading}</Box>
-                      {paragraphs.map((paragraph) => (
-                        <Box key={paragraph} variant="p" fontSize="heading-s" fontWeight="normal">
-                          {paragraph}
-                        </Box>
-                      ))}
-                    </SpaceBetween>
-                  </section>
-                ))}
+              <SpaceBetween size="l">
+                {post.coverImage && (
+                  <div key="cover" className="vw-prose">
+                    <img src={post.coverImage} alt="" />
+                  </div>
+                )}
+                <div key="content" className="vw-prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                {post.tags.length > 0 && (
+                  <Box key="tags" color="text-body-secondary">
+                    {post.tags.map((tag) => `#${tag}`).join('  ')}
+                  </Box>
+                )}
               </SpaceBetween>
             </article>
 

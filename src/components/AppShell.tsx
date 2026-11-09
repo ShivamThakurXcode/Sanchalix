@@ -73,6 +73,7 @@ export function AppShell({
   const isActive = (href: string) => href === active?.href;
   // The pages in the navigation open with a banner. Forms and records under them keep their own plain heading.
   const banner = nav.find((item) => item.href === pathname);
+  const composing = /^\/console\/blog\/(new|[0-9a-f]{24})$/.test(pathname);
   const [mode, setMode] = useState(visualMode);
   const isDark = useIsDark(mode);
   // Until the user toggles it, the navigation is open on desktop and closed on phones, where it is an overlay.
@@ -237,7 +238,7 @@ export function AppShell({
       <AppLayoutToolbar
         headerSelector="#top-nav"
         toolsHide
-        disableContentPaddings={Boolean(banner)}
+        disableContentPaddings={Boolean(banner) || composing}
         navigationWidth={240}
         navigationCloseBehavior="collapse"
         navigationOpen={navigationOpen}

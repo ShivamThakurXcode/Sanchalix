@@ -126,7 +126,6 @@ import Wallet from 'reicon-react/icons/Wallet';
 import Warehouse from 'reicon-react/icons/Warehouse';
 import WifiOff from 'reicon-react/icons/WifiOff';
 import XCircle from 'reicon-react/icons/XCircle';
-import ArrowLeft from 'reicon-react/icons/ArrowLeft';
 import Bold from 'reicon-react/icons/Bold';
 import Eraser from 'reicon-react/icons/Eraser';
 import EyeOff from 'reicon-react/icons/EyeOff';
@@ -263,7 +262,6 @@ export const icons = {
   copy: Copy,
   link: Link,
   unlink: LinkOff,
-  back: ArrowLeft,
   hide: EyeOff,
   save: Save,
   bold: Bold,

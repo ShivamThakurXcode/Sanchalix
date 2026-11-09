@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { BlogForm } from '@/features/platform/Blog';
+import { BlogForm } from '@/features/platform/BlogForm';
 import { todayIn } from '@/lib/dates';
 import { getPost } from '@/server/modules/blog/service';
 import { platformContext } from '../../platformContext';
