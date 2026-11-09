@@ -1,6 +1,5 @@
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
-import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { cookies } from 'next/headers';
@@ -14,6 +13,7 @@ import { PublicHeader } from './PublicHeader';
 export const SECTIONS = ['features', 'roles', 'steps'];
 const HOME = '/welcome';
 const BLOG = '/blog';
+const GUIDE = '/guide';
 
 /** Where "Sign in" leads. Someone already signed in gets a way back into the app, not a second sign-in. */
 export async function getEntry() {
@@ -29,6 +29,7 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
   const [t, enter] = await Promise.all([getTranslations('marketing'), getEntry()]);
   const links = [
     ...SECTIONS.map((key) => ({ href: `${home ? '' : HOME}#${key}`, text: t(`nav.${key}`) })),
+    { href: GUIDE, text: t('nav.guide') },
     { href: BLOG, text: t('nav.blog') },
   ];
 
@@ -46,11 +47,15 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
         <div className="vw-public-footer-inner">
           <Box padding={{ vertical: 'xxl', horizontal: 'xl' }}>
             <SpaceBetween size="xl">
-              <ColumnLayout columns={3} minColumnWidth={200}>
+              <div className="vw-public-footer-grid">
                 <SpaceBetween size="s">
                   <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
-                  <Box fontWeight="bold">{t('tagline')}</Box>
-                  <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+                  <Box fontWeight="bold" fontSize="heading-s">
+                    {t('tagline')}
+                  </Box>
+                  <div className="vw-public-footer-about">
+                    <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+                  </div>
                   <Button href={enter.href} variant="primary" iconSvg={svg('signIn')}>
                     {enter.text}
                   </Button>
@@ -72,7 +77,7 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
                     {!enter.signedIn && <Link href="/forgot-password">{t('footer.forgotPassword')}</Link>}
                   </SpaceBetween>
                 </nav>
-              </ColumnLayout>
+              </div>
               <div className="vw-public-footer-legal">
                 <Box color="text-body-secondary" fontSize="body-s">
                   {t('footer.copyright', { year: new Date().getFullYear() })}

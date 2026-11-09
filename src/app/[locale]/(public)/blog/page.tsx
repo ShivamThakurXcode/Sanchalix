@@ -1,13 +1,10 @@
 import Box from '@cloudscape-design/components/box';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
-import Container from '@cloudscape-design/components/container';
 import ContentLayout from '@cloudscape-design/components/content-layout';
-import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { getTranslations } from 'next-intl/server';
-import type { CSSProperties } from 'react';
+import { BlogCard } from '@/features/marketing/BlogCard';
 import { PublicPage } from '@/features/marketing/PublicPage';
-import { postDate } from '@/features/marketing/posts';
 import { listPublishedPosts } from '@/server/modules/blog/service';
 
 export async function generateMetadata() {
@@ -41,36 +38,8 @@ export default async function BlogPage() {
         <Box padding={{ vertical: 'xl' }}>
           {posts.length === 0 && <Box color="text-body-secondary">{t('empty')}</Box>}
           <ColumnLayout columns={3} minColumnWidth={280}>
-            {posts.map(({ slug, title, summary, date, minutes, topic, cover, coverImage }) => (
-              <Container
-                key={slug}
-                fitHeight
-                media={{
-                  position: 'top',
-                  height: 180,
-                  content: (
-                    coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="vw-blog-photo" src={coverImage} alt="" />
-                    ) : (
-                      <div className="vw-blog-cover" style={{ '--vw-blog-cover-image': `url(/banners/${cover}.svg)` } as CSSProperties} />
-                    )
-                  ),
-                }}
-              >
-                <SpaceBetween size="xs">
-                  <Box variant="awsui-key-label">{t(`topics.${topic}`)}</Box>
-                  <Box variant="h2" fontSize="heading-m">
-                    <Link href={`/blog/${slug}`} fontSize="heading-m">
-                      {title}
-                    </Link>
-                  </Box>
-                  <Box color="text-body-secondary">{summary}</Box>
-                  <Box color="text-body-secondary" fontSize="body-s">
-                    {t('meta', { date: postDate(date), minutes })}
-                  </Box>
-                </SpaceBetween>
-              </Container>
+            {posts.map((post) => (
+              <BlogCard key={post.slug} {...post} />
             ))}
           </ColumnLayout>
         </Box>

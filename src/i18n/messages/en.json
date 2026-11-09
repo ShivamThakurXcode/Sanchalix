@@ -3239,7 +3239,8 @@
       "features": "Features",
       "roles": "Who it's for",
       "steps": "Getting started",
-      "blog": "Blog"
+      "blog": "Blog",
+      "guide": "Guide"
     },
     "hero": {
       "title": "Run your whole school from one place",
@@ -3334,6 +3335,7 @@
       "title": "The Sanchalix blog",
       "description": "Practical notes on running a school office: fees, attendance, admissions, exams and getting off paper.",
       "meta": "{date} · {minutes} min read",
+      "readTime": "{minutes} min read",
       "back": "All posts",
       "empty": "No posts yet. Check back soon.",
       "more": "More from the blog",
@@ -3344,6 +3346,299 @@
         "exams": "Exams",
         "gettingStarted": "Getting started",
         "timetable": "Timetable"
+      }
+    },
+    "guide": {
+      "title": "Guide to Sanchalix",
+      "description": "What Sanchalix is, who uses it and what every part does. Pick a topic on the left.",
+      "onThisPage": "On this page",
+      "usedBy": "Used by",
+      "groups": {
+        "platform": "Platform",
+        "roles": "By role",
+        "modules": "By module",
+        "more": "Good to know"
+      },
+      "sections": {
+        "overview": {
+          "title": "What Sanchalix is",
+          "body": "Sanchalix is a school management system. Students, staff, classes, attendance, exams, fees and notices all live in one place, and each person sees only what their role needs.",
+          "points": [
+            "A school is the unit. Everything you see belongs to your school, and no school can see another school’s data.",
+            "People hold roles: school admin, principal, teacher, accountant, student or parent. The role decides the menu, the screens and what you can change.",
+            "Work is grouped into modules: People, Academics, Fees, Communication and Administration. They appear as sections in the left menu."
+          ],
+          "image": "Five people at the top connect to one school in the middle, which connects to the modules below: students, classes, fees, calendar and notices."
+        },
+        "signin": {
+          "title": "Signing in",
+          "body": "Use the account your school gave you. If you do not have one yet, ask your school office to create it.",
+          "points": [
+            "Choose Sign in at the top of this site and enter your details.",
+            "Forgot your password? Use Forgot password on the sign-in page and follow the link you receive.",
+            "Some accounts ask for a second step, such as a code, after the password.",
+            "If you hold more than one role, a role switcher in the top bar changes which one you are using."
+          ],
+          "image": "Three steps: enter your details on the sign-in page, enter the code sent to your phone if asked, then arrive at your dashboard."
+        },
+        "shell": {
+          "title": "Finding your way around",
+          "body": "Every signed-in screen has the same layout, so once you know it you know it everywhere.",
+          "points": [
+            "Left menu: the screens your role can use, grouped as People, Academics, Fees, Communication and Administration. It can collapse to icons.",
+            "Top bar: your school’s name and logo, notifications, your profile menu and Sign out.",
+            "Each page opens with a banner that says in one line what the page is for.",
+            "Tables can be filtered, sorted and exported. Your filters stay in the address, so you can bookmark or share a view.",
+            "Light and dark appearance can be switched from the profile menu."
+          ],
+          "image": "The signed-in screen. 1: the left menu with your role’s screens. 2: the top bar with notifications and your profile. 3: the banner that says what the page is for. 4: the table of records below it."
+        },
+        "start": {
+          "title": "Getting started",
+          "body": "A school is usually set up in this order.",
+          "points": [
+            "Set up your school: add classes and sections, subjects, staff and the bell schedule, then import your students from a spreadsheet.",
+            "Run the day: take attendance, collect fees, set homework and enter marks as the day goes on.",
+            "Keep families informed: parents and students sign in to see attendance, dues, results and notices."
+          ],
+          "image": "Three steps: set up classes and staff, run the day with checklists, and keep families informed with notifications on their phones."
+        },
+        "privacy": {
+          "title": "Privacy and safety",
+          "body": "Children’s data is handled with care.",
+          "points": [
+            "Each role sees only the data it needs. Teachers see their own sections. Parents and students see their own child or themselves.",
+            "Sensitive details such as medical notes and ID numbers stay hidden unless a role needs them, and looking at them is recorded.",
+            "Fee receipts are numbered and cannot be changed. A mistake is put right with a refund and a new receipt.",
+            "What platform staff do across schools is kept in an audit log."
+          ],
+          "image": "A shield with a lock in the middle protects a student record on one side and a numbered fee receipt on the other."
+        },
+        "schoolAdmin": {
+          "title": "School admin",
+          "body": "Runs the school office: admissions, records, staff, timetable and settings.",
+          "points": [
+            "Admit students from the Admissions desk and keep their records in Students.",
+            "Add staff, record staff attendance and handle leave.",
+            "Set up classes, subjects and the timetable. At year end, run Promotion.",
+            "Create sign-in accounts and choose roles in Users. Keep the school profile up to date in Settings."
+          ]
+        },
+        "principal": {
+          "title": "Principal",
+          "body": "Sees the whole school and makes the decisions that need a principal.",
+          "points": [
+            "The dashboard opens with what needs your attention today.",
+            "Read students, staff, attendance and fee reports for every section.",
+            "Decide leave requests, lock marks and publish report cards.",
+            "Post notices to staff, students and parents."
+          ]
+        },
+        "teacher": {
+          "title": "Teacher",
+          "body": "Works on the sections they teach, with a few taps between periods.",
+          "points": [
+            "Take attendance: everyone starts as present, change only those who are not, then submit.",
+            "Set homework for your sections and keep track of what is due.",
+            "Enter marks for your subjects until the principal locks them.",
+            "Check your timetable and apply for leave."
+          ]
+        },
+        "accountant": {
+          "title": "Accountant",
+          "body": "Collects fees and keeps the money side clean.",
+          "points": [
+            "Collect at the Fee counter and print a numbered receipt.",
+            "Set fee plans, discounts and late fees.",
+            "Follow Invoices, the Receipt book and the Overdue list, and send reminders.",
+            "See each day’s collection by payment method in the Collection report."
+          ]
+        },
+        "student": {
+          "title": "Student",
+          "body": "A simple view of the school day, limited to your own records.",
+          "points": [
+            "See today’s timetable, homework and notices.",
+            "Check your attendance and, once published, your results.",
+            "See your fees. This view is read only."
+          ]
+        },
+        "parent": {
+          "title": "Parent",
+          "body": "One account for the whole family.",
+          "points": [
+            "If you have more than one child at the school, switch between them from the top of the page.",
+            "See attendance, homework, results and report cards for your child.",
+            "See fees due and receipts.",
+            "Read the school’s notices."
+          ]
+        },
+        "superAdmin": {
+          "title": "Platform team",
+          "body": "Sanchalix staff set up and look after schools from a separate console. They do not browse student records by default.",
+          "points": [
+            "Schools: set up a school, switch it on or pause it.",
+            "Blog: write and publish the posts on this site.",
+            "Platform audit log: see what platform staff have done across schools."
+          ]
+        },
+        "students": {
+          "title": "Students and admissions",
+          "body": "Every student’s record and every application.",
+          "points": [
+            "Student directory: find any student, open their record or admit someone new.",
+            "Admissions desk: follow an application from the first enquiry to a confirmed seat.",
+            "Import many students at once from a spreadsheet."
+          ],
+          "who": "School admin and principal. Teachers see their own sections. Accountants see name, class and fees."
+        },
+        "promotion": {
+          "title": "Year-end promotion",
+          "body": "Moves everyone to the next year in one pass.",
+          "points": [
+            "Move each section to the next academic year.",
+            "Close the current year once everyone has been moved."
+          ],
+          "who": "School admin, with the principal’s approval."
+        },
+        "staff": {
+          "title": "Staff, staff attendance and leave",
+          "body": "Your teachers and office staff in one place.",
+          "points": [
+            "Staff directory: how to reach each person.",
+            "Staff register: record who is in, who is on leave and who is absent today.",
+            "Leave desk: apply for leave, decide requests and see the days each person has left."
+          ],
+          "who": "School admin and principal manage it. Every staff member can apply for their own leave."
+        },
+        "academics": {
+          "title": "Classes, subjects and timetable",
+          "body": "How the school is organised this year.",
+          "points": [
+            "Classes and sections, and who looks after each one.",
+            "Subject list, which feeds the timetable, exams and homework.",
+            "Weekly timetable for each section that never double-books a teacher."
+          ],
+          "who": "School admin sets it up. Principals, teachers, students and parents read it."
+        },
+        "attendance": {
+          "title": "Attendance",
+          "body": "Daily attendance in seconds.",
+          "points": [
+            "Today’s attendance: everyone starts as present, so you only change the exceptions.",
+            "Register: the month at a glance for any section.",
+            "Attendance report: how each section is attending and which students are falling behind.",
+            "No attendance is taken on a school holiday."
+          ],
+          "who": "Teachers for their sections, school admin and principal.",
+          "image": "A class list where each student is marked present with a tick, one student is marked absent with a cross, and a submit button sits at the bottom."
+        },
+        "exams": {
+          "title": "Exams and report cards",
+          "body": "From the first paper to the published report card.",
+          "points": [
+            "Set up exams and papers.",
+            "Subject teachers enter marks. The principal locks them when they are final.",
+            "Generate each section’s report cards, add remarks and publish them to parents."
+          ],
+          "who": "Teachers, principal and school admin. Students and parents see results once published.",
+          "image": "Marks are entered in a grid, then locked, then turned into report cards that parents see on their phones."
+        },
+        "homework": {
+          "title": "Homework",
+          "body": "A diary of what is set and what is due.",
+          "points": [
+            "Teachers set work for the sections they teach.",
+            "Everyone can see what is due.",
+            "Students and parents read it on their own side."
+          ],
+          "who": "Teachers set it. Students and parents read it."
+        },
+        "calendar": {
+          "title": "Calendar",
+          "body": "Holidays and events on one shared calendar.",
+          "points": [
+            "Holidays: the days the school is closed.",
+            "Events: exams, events and holidays through the year."
+          ],
+          "who": "School admin and principal edit it. Everyone can see it."
+        },
+        "fees": {
+          "title": "Fees",
+          "body": "From the fee plan to the receipt.",
+          "points": [
+            "Fee plans: what each class pays in a year and when each installment falls due.",
+            "Discounts and late fees: who pays less, by how much, and what a late payment costs.",
+            "Fee counter: find a student, collect what is due and print the receipt.",
+            "Billing ledger and Receipt book: every installment and every payment.",
+            "Overdue fees, oldest first, with a reminder ready to send.",
+            "Collection report: how much came in, by day and payment method."
+          ],
+          "who": "Accountant. School admin and principal can read. Students and parents see their own.",
+          "image": "Three steps: a fee plan lists the installments, the fee counter collects the payment, and a numbered receipt is printed."
+        },
+        "communication": {
+          "title": "Announcements and messages",
+          "body": "Tell people what they need to know.",
+          "points": [
+            "Notice board: post a notice to the whole school or chosen roles.",
+            "Message log: every SMS and email the school has sent, and whether it went through."
+          ],
+          "who": "School admin and principal. Teachers can post to their own sections."
+        },
+        "reports": {
+          "title": "Reports",
+          "body": "The school at a glance.",
+          "points": [
+            "School reports: admissions and staff, with the way to the other reports.",
+            "Attendance and fee collection reports sit inside their own modules."
+          ],
+          "who": "School admin and principal."
+        },
+        "users": {
+          "title": "Users and roles",
+          "body": "Who can sign in and what they can do.",
+          "points": [
+            "Sign-in accounts: who can sign in to this school and which roles they hold.",
+            "A person can hold more than one role, for example teacher and parent."
+          ],
+          "who": "School admin."
+        },
+        "settings": {
+          "title": "Settings",
+          "body": "The basics of your school.",
+          "points": [
+            "School profile.",
+            "Working days and the bell schedule."
+          ],
+          "who": "School admin."
+        },
+        "access": {
+          "title": "Keyboard and accessibility",
+          "body": "Sanchalix is built to work for everyone.",
+          "points": [
+            "Every screen can be used with the keyboard, and the focus is always visible.",
+            "Status is shown with an icon and words, never colour alone.",
+            "Light and dark appearance are both supported."
+          ]
+        },
+        "phone": {
+          "title": "Using a phone",
+          "body": "Pages adapt to small screens.",
+          "points": [
+            "The left menu opens as an overlay on a phone.",
+            "Tables scroll sideways inside their own area instead of breaking the page."
+          ]
+        },
+        "help": {
+          "title": "Getting help",
+          "body": "Start with your school office.",
+          "points": [
+            "Your school office manages your account and your role.",
+            "Lost your password? Use Forgot password on the sign-in page.",
+            "Wondering whether Sanchalix suits your school? Read the Features and the blog on this site."
+          ]
+        }
       }
     }
   },

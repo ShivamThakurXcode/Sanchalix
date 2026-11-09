@@ -168,6 +168,7 @@ Pattern: `/{locale}/{module}/{resource}/{id?}/{subview?}?{query}`
 |---|---|---|
 | `/` | Role dashboard | all |
 | `/signin`, `/signin/otp` | Sign in (password, Google, OTP) | all |
+| `/guide` | Guide to the platform, with a left side navigation and one section per topic (`/guide#fees` opens a section) | public |
 | `/apply/{schoolCode}` | Public online admission form | public |
 | `/verify/receipt/{receiptNo}` | Receipt authenticity check (shows no PII) | public |
 | `/students` | Student list | school_admin, principal, teacher |

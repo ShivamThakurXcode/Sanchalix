@@ -246,6 +246,32 @@ body {
   margin-inline: auto;
 }
 
+.vw-public-footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-xl-gtl6hi, 32px) var(--space-xxxl-pjngik, 40px);
+}
+
+.vw-public-footer-about {
+  max-inline-size: 38ch;
+}
+
+@media (max-width: 900px) {
+  .vw-public-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vw-public-footer-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .vw-public-footer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .vw-public-footer-logo {
   inline-size: 160px;
   block-size: 48px;
@@ -501,6 +527,46 @@ body {
 
 [class*='awsui_content-inner_'][class*='awsui_with-paddings_'][class*='awsui_with-header_'] {
   padding-block-start: var(--space-scaled-m-lfeh3i, 16px) !important;
+}
+
+[class*='awsui_content-wrapper_'] > [class*='awsui_header_']:has(.vw-blog-topic) {
+  padding-block: var(--space-xs-m9b7jf, 8px) !important;
+}
+
+.vw-blog-card {
+  cursor: pointer !important;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* The title link stretches over the whole card, so the card is one target and one tab stop. */
+.vw-blog-card a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.vw-blog-card:hover,
+.vw-blog-card:focus-within {
+  background-color: var(--color-background-dropdown-item-hover-pvfsrg, #f3f3f7) !important;
+  border-color: var(--color-border-item-focused-sewkzn, currentColor) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vw-blog-card {
+    transition: none;
+  }
+}
+
+.vw-blog-topic {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs-m9b7jf, 8px);
+}
+
+.vw-blog-topic > * {
+  font-size: var(--font-size-body-s-89y7qg, 12px) !important;
+  line-height: var(--line-height-body-s-gako33, 16px) !important;
 }
 
 /* ADR-020: on desktop only the content area scrolls, so the scrollbar starts under the breadcrumb row instead of
@@ -761,6 +827,76 @@ body {
 .vw-editor .ProseMirror:focus-visible {
   outline: 2px solid var(--color-border-item-focused-sewkzn);
   outline-offset: 4px;
+}
+
+.vw-guide {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: var(--space-xxxl-pjngik, 40px);
+  align-items: start;
+}
+
+.vw-guide-nav {
+  position: sticky;
+  inset-block-start: calc(var(--space-xxxl-pjngik, 40px) + var(--space-m-dsumyt, 16px));
+  max-block-size: calc(100vh - var(--space-xxxl-pjngik, 40px) - var(--space-xl-gtl6hi, 32px));
+  overflow-y: auto;
+}
+
+.vw-guide-nav-narrow {
+  display: none;
+}
+
+.vw-guide-content {
+  max-inline-size: 760px;
+}
+
+/* A guide diagram. It carries its own warm backdrop in both modes, like the blog covers, because the shapes are
+   drawn for a light ground. */
+.vw-guide-figure {
+  aspect-ratio: 8 / 3;
+  background: var(--vw-guide-image) center / contain no-repeat #ffedd5;
+  border-radius: var(--border-radius-container-33hhdh, 16px);
+}
+
+.vw-guide-list {
+  margin: 0;
+  padding-inline-start: var(--space-l-dpyxli, 20px);
+  display: grid;
+  gap: var(--space-xs-m9b7jf, 8px);
+}
+
+@media (max-width: 900px) {
+  .vw-guide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-l-dpyxli, 20px);
+  }
+
+  .vw-guide-nav {
+    position: static;
+    max-block-size: none;
+    overflow-y: visible;
+  }
+
+  .vw-guide-nav-wide {
+    display: none;
+  }
+
+  .vw-guide-nav-narrow {
+    display: block;
+  }
+}
+
+.vw-article-column {
+  max-inline-size: 760px;
+  margin-inline: auto;
+}
+
+.vw-article-cover {
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-radius: var(--border-radius-container-33hhdh, 16px);
+  border: var(--border-divider-section-width-dlkb8v, 1px) solid var(--color-border-divider-default-diwd4w);
 }
 
 .vw-blog-photo {

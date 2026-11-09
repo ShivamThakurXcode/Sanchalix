@@ -1,5 +1,7 @@
+import Badge from '@cloudscape-design/components/badge';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
+import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Container from '@cloudscape-design/components/container';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import Header from '@cloudscape-design/components/header';
@@ -7,6 +9,8 @@ import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { svg } from '@/components/icons';
+import { BlogCard, BlogCover } from '@/features/marketing/BlogCard';
 import { getEntry, PublicPage } from '@/features/marketing/PublicPage';
 import { postDate } from '@/features/marketing/posts';
 import { getPublishedPost, listPublishedPosts } from '@/server/modules/blog/service';
@@ -35,63 +39,65 @@ export default async function BlogPostPage({ params }: Props) {
       <ContentLayout
         defaultPadding
         disableOverlap
-        maxContentWidth={760}
+        maxContentWidth={1040}
         headerVariant="high-contrast"
         header={
           <Box padding={{ vertical: 'xl' }}>
-            <SpaceBetween size="s">
-              <Link href="/blog" color="inverted">
-                {t('back')}
-              </Link>
-              <Box variant="awsui-key-label" color="inherit">
-                {t(`topics.${post.topic}`)}
-              </Box>
-              <Box variant="h1" fontSize="display-l" fontWeight="bold">
-                {post.title}
-              </Box>
-              <Box variant="p" fontSize="heading-m" color="inherit">
-                {post.summary}
-              </Box>
-              <Box color="inherit" fontSize="body-s">
-                {t('meta', { date: postDate(post.date), minutes: post.minutes })}
-              </Box>
-            </SpaceBetween>
+            <div className="vw-article-column">
+              <SpaceBetween size="s">
+                <Link href="/blog" color="inverted">
+                  {t('back')}
+                </Link>
+                <Box variant="awsui-key-label" color="inherit">
+                  {t(`topics.${post.topic}`)} · {t('readTime', { minutes: post.minutes })}
+                </Box>
+                <Box variant="h1" fontSize="display-l" fontWeight="bold">
+                  {post.title}
+                </Box>
+                <Box variant="p" fontSize="heading-m" color="inherit">
+                  {post.summary}
+                </Box>
+                <Box color="inherit" fontSize="body-s">
+                  {postDate(post.date)}
+                </Box>
+              </SpaceBetween>
+            </div>
           </Box>
         }
       >
         <Box padding={{ vertical: 'xl' }}>
           <SpaceBetween size="xxl">
-            <article>
-              <SpaceBetween size="l">
-                {post.coverImage && (
-                  <div key="cover" className="vw-prose">
-                    <img src={post.coverImage} alt="" />
-                  </div>
-                )}
-                <div key="content" className="vw-prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+            <article className="vw-article-column">
+              <SpaceBetween size="xl">
+                <div className="vw-article-cover">
+                  <BlogCover cover={post.cover} coverImage={post.coverImage} />
+                </div>
+                <div className="vw-prose" dangerouslySetInnerHTML={{ __html: post.content }} />
                 {post.tags.length > 0 && (
-                  <Box key="tags" color="text-body-secondary">
-                    {post.tags.map((tag) => `#${tag}`).join('  ')}
-                  </Box>
+                  <SpaceBetween direction="horizontal" size="xs">
+                    {post.tags.map((tag) => (
+                      <Badge key={tag} color="grey">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </SpaceBetween>
                 )}
               </SpaceBetween>
             </article>
 
             {others.length > 0 && (
-              <Container header={<Header variant="h2">{t('more')}</Header>}>
-                <SpaceBetween size="m">
-                  {others.map(({ slug, title, date, minutes }) => (
-                    <div key={slug}>
-                      <Link href={`/blog/${slug}`} fontSize="heading-s">
-                        {title}
-                      </Link>
-                      <Box color="text-body-secondary" fontSize="body-s">
-                        {t('meta', { date: postDate(date), minutes })}
-                      </Box>
-                    </div>
-                  ))}
+              <section aria-labelledby="more-heading">
+                <SpaceBetween size="l">
+                  <Header variant="h2">
+                    <span id="more-heading">{t('more')}</span>
+                  </Header>
+                  <ColumnLayout columns={3} minColumnWidth={280}>
+                    {others.map((other) => (
+                      <BlogCard key={other.slug} {...other} />
+                    ))}
+                  </ColumnLayout>
                 </SpaceBetween>
-              </Container>
+              </section>
             )}
 
             <Container>
@@ -102,7 +108,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <Box color="text-body-secondary" textAlign="center">
                   {tMarketing('cta.body')}
                 </Box>
-                <Button variant="primary" href={enter.href}>
+                <Button variant="primary" href={enter.href} iconSvg={svg('signIn')}>
                   {enter.text}
                 </Button>
               </SpaceBetween>
