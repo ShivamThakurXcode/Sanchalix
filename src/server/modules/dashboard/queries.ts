@@ -2,11 +2,13 @@ import 'server-only';
 import { Types } from 'mongoose';
 import { daysBefore, startOfDayIn, todayIn } from '@/lib/dates';
 import type { RequestContext } from '@/server/auth/context';
+import { Admission } from '@/server/models/admission';
 import { AttendanceRecord } from '@/server/models/attendanceRecord';
 import { FeeStructure } from '@/server/models/feeStructure';
 import { Invoice } from '@/server/models/invoice';
 import { Payment } from '@/server/models/payment';
 import { School } from '@/server/models/school';
+import { getCurrentYearId } from '@/server/modules/academics/queries';
 import { getDayState, getSchoolCalendar, listAttendanceSections } from '@/server/modules/attendance/queries';
 
 export const AGEING_BANDS = ['1-15', '16-30', '31-60', '60+'] as const;
@@ -140,4 +142,17 @@ export async function getFeesSummary(ctx: RequestContext) {
     overdueInvoices: overdue[0]?.invoices ?? 0,
     draftStructures,
   };
+}
+
+export const FUNNEL_STAGES = ['enquiry', 'applied', 'documents_pending', 'assessment', 'offered', 'accepted'] as const;
+
+export async function getAdmissionsFunnel(ctx: RequestContext) {
+  const academicYearId = await getCurrentYearId(ctx);
+  if (!academicYearId) return FUNNEL_STAGES.map((stage) => ({ stage, count: 0 }));
+  const groups = await Admission.aggregate<{ _id: string; count: number }>([
+    { $match: { schoolId: ctx.schoolId, academicYearId, status: { $in: [...FUNNEL_STAGES] } } },
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+  const counts = new Map(groups.map((group) => [group._id, group.count]));
+  return FUNNEL_STAGES.map((stage) => ({ stage, count: counts.get(stage) ?? 0 }));
 }

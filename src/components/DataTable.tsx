@@ -12,7 +12,7 @@ import TextFilter from '@cloudscape-design/components/text-filter';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import type { IconKey } from '@/components/icons';
@@ -118,6 +118,11 @@ export function DataTable<T>({
   const t = useTranslations('table');
   const setParams = useSetParams();
   const isMobile = useIsMobile();
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const storeKey = `table:${id}`;
   const [stored, setStored] = useState<Stored>({});
   const [clientPageSize, setClientPageSize] = useState(defaultPageSize);
@@ -198,7 +203,7 @@ export function DataTable<T>({
   ].filter(Boolean);
   const filter =
     filterControls.length === 2 ? (
-      <Grid gridDefinition={[{ colspan: { default: 12, xs: 6 } }, { colspan: { default: 12, xs: 6 } }]}>{filterControls}</Grid>
+      <Grid gridDefinition={[{ colspan: { default: 12, xs: 4 } }, { colspan: { default: 12, xs: 8 } }]}>{filterControls}</Grid>
     ) : (
       (filterControls[0] ?? undefined)
     );
@@ -289,6 +294,9 @@ export function DataTable<T>({
       />
     );
   }
+
+  // Table's sticky scrollbar offset is measured in the browser, so server HTML never matches it.
+  if (!hydrated) return null;
 
   return (
     <Table

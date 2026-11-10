@@ -35,6 +35,7 @@ const settings = new Schema(
     aiInsightsEnabled: { type: Boolean, default: false },
     llmSummariesEnabled: { type: Boolean, default: false },
     defaultGradingSchemeId: Schema.Types.ObjectId,
+    onboardingCompletedAt: Date,
   },
   { _id: false },
 );

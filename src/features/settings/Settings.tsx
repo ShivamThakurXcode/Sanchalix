@@ -83,7 +83,7 @@ function SettingsForm({
 
 const MAX_LOGO_BYTES = 5 * 1024 * 1024;
 
-function LogoUpload({ hasLogo }: { hasLogo: boolean }) {
+export function LogoUpload({ hasLogo }: { hasLogo: boolean }) {
   const t = useTranslations('settings.logo');
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);

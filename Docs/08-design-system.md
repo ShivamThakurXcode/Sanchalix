@@ -69,7 +69,7 @@ Sanchalix's UI is built entirely from the **AWS Cloudscape Design System** (`@cl
 | Navigation within a page | `AnchorNavigation` | Long settings pages, the PRD-style help |
 | Copy a value | `CopyToClipboard` | Admission number, invite links, receipt number |
 | Mobile collections | `Cards` | Collections switch from `Table` to `Cards` below 688px (Cloudscape's `xs` breakpoint) |
-| Onboarding | `TutorialPanel` in a drawer | First-run for School Admin: create an academic year → classes → import students → fee structure |
+| Onboarding | `Wizard` inside a `Modal` | First-run for School Admin ([ADR-029](23-decision-log.md#adr-029-first-login-setup-wizard-for-the-school-admin)): school profile → academic year and terms → classes and sections → subjects → review |
 
 ### Status map (StatusIndicator types)
 

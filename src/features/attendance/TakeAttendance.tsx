@@ -1,10 +1,10 @@
 'use client';
 
 import Alert from '@cloudscape-design/components/alert';
-import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import FormField from '@cloudscape-design/components/form-field';
+import Grid from '@cloudscape-design/components/grid';
 import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
@@ -14,8 +14,9 @@ import { useState } from 'react';
 import { type Column, DataTable } from '@/components/DataTable';
 import { svg } from '@/components/icons';
 import { usePathname, useRouter } from '@/i18n/navigation';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { correctAttendance, submitAttendance } from '@/server/modules/attendance/actions';
-import type { AttendanceSheet, AttendanceSummary, MarkableStatus } from '@/server/modules/attendance/schemas';
+import type { AttendanceSheet, MarkableStatus } from '@/server/modules/attendance/schemas';
 
 const STATUSES: MarkableStatus[] = ['present', 'absent', 'late', 'half_day', 'leave'];
 
@@ -33,6 +34,7 @@ export function TakeAttendance({
   const t = useTranslations('attendance.take');
   const router = useRouter();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const [marks, setMarks] = useState(() => new Map(sheet.students.map((student) => [student.id, student.status])));
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
@@ -40,8 +42,6 @@ export function TakeAttendance({
 
   const editable = sheet.state === 'open' && (sheet.correcting || canSubmit);
   const [reason, setReason] = useState('');
-  const summary = Object.fromEntries(STATUSES.map((status) => [status, 0])) as AttendanceSummary;
-  for (const status of marks.values()) summary[status] += 1;
   const registerHref = `/attendance/register?section=${sheet.section.id}&month=${sheet.date.slice(0, 7)}`;
   const open = (section: string, date: string, period: number | null = sheet.period) =>
     router.replace(`${pathname}?section=${section}&date=${date}${period ? `&period=${period}` : ''}`);
@@ -91,19 +91,31 @@ export function TakeAttendance({
   const hidesRoster = ['future', 'nonWorking', 'holiday', 'noPeriod'].includes(sheet.state);
 
   const columns: Column<(typeof sheet.students)[number]>[] = [
-    { id: 'rollNo', header: t('columns.rollNo'), cell: (student) => student.rollNo, width: 110, sortBy: (student) => student.rollNo },
+    { id: 'rollNo', header: t('columns.rollNo'), cell: (student) => student.rollNo, width: 110, card: false, sortBy: (student) => student.rollNo },
     { id: 'name', header: t('columns.name'), cell: (student) => student.name, isRowHeader: true, sortBy: (student) => student.name },
     {
       id: 'status',
-      header: t('columns.status'),
-      cell: (student) => (
-        <SegmentedControl
-          label={t('statusFor', { name: student.name })}
-          selectedId={marks.get(student.id) ?? 'present'}
-          options={STATUSES.map((id) => ({ id, text: t(`status.${id}`), disabled: !editable }))}
-          onChange={({ detail }) => setMarks((current) => new Map(current).set(student.id, detail.selectedId as MarkableStatus))}
-        />
-      ),
+      header: isMobile ? '' : t('columns.status'),
+      cell: (student) => {
+        const current = marks.get(student.id) ?? 'present';
+        const mark = (status: MarkableStatus) => setMarks((marked) => new Map(marked).set(student.id, status));
+        return isMobile ? (
+          <Select
+            ariaLabel={t('statusFor', { name: student.name })}
+            disabled={!editable}
+            selectedOption={{ value: current, label: t(`status.${current}`) }}
+            options={STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
+            onChange={({ detail }) => mark(detail.selectedOption.value as MarkableStatus)}
+          />
+        ) : (
+          <SegmentedControl
+            label={t('statusFor', { name: student.name })}
+            selectedId={current}
+            options={STATUSES.map((id) => ({ id, text: t(`status.${id}`), disabled: !editable }))}
+            onChange={({ detail }) => mark(detail.selectedId as MarkableStatus)}
+          />
+        );
+      },
     },
   ];
 
@@ -112,6 +124,7 @@ export function TakeAttendance({
       id="attendance-take"
       title={t('title')}
       defaultPageSize={100}
+      cardTitle={(student) => `${student.rollNo}. ${student.name}`}
       counter={hidesRoster ? '' : `(${sheet.students.length})`}
       actions={
         <SpaceBetween direction="horizontal" size="xs">
@@ -142,38 +155,37 @@ export function TakeAttendance({
           )}
         </SpaceBetween>
       }
+      filters={
+        <Grid gridDefinition={Array.from({ length: sheet.periods.length > 0 ? 3 : 2 }, () => ({ colspan: { default: 12, xxs: 4 } }))}>
+          <Select
+            ariaLabel={t('section')}
+            selectedOption={{ value: sheet.section.id, label: sheet.section.name }}
+            options={sections.map(({ id, name }) => ({ value: id, label: name }))}
+            onChange={({ detail }) => open(detail.selectedOption.value ?? sheet.section.id, sheet.date, null)}
+          />
+          {sheet.periods.length > 0 && (
+            <Select
+              ariaLabel={t('period')}
+              selectedOption={periodOptions.find((option) => option.value === String(sheet.period ?? '')) ?? null}
+              options={periodOptions}
+              onChange={({ detail }) =>
+                open(sheet.section.id, sheet.date, Number(detail.selectedOption.value) || null)
+              }
+            />
+          )}
+          <DatePicker
+            ariaLabel={t('date')}
+            value={sheet.date}
+            placeholder="YYYY/MM/DD"
+            isDateEnabled={(date) => date <= new Date()}
+            onChange={({ detail }) => {
+              if (/^\d{4}-\d{2}-\d{2}$/.test(detail.value)) open(sheet.section.id, detail.value, null);
+            }}
+          />
+        </Grid>
+      }
       above={
         <>
-        <SpaceBetween direction="horizontal" size="l">
-          <FormField label={t('section')}>
-            <Select
-              selectedOption={{ value: sheet.section.id, label: sheet.section.name }}
-              options={sections.map(({ id, name }) => ({ value: id, label: name }))}
-              onChange={({ detail }) => open(detail.selectedOption.value ?? sheet.section.id, sheet.date, null)}
-            />
-          </FormField>
-          {sheet.periods.length > 0 && (
-            <FormField label={t('period')}>
-              <Select
-                selectedOption={periodOptions.find((option) => option.value === String(sheet.period ?? '')) ?? null}
-                options={periodOptions}
-                onChange={({ detail }) =>
-                  open(sheet.section.id, sheet.date, Number(detail.selectedOption.value) || null)
-                }
-              />
-            </FormField>
-          )}
-          <FormField label={t('date')} constraintText={t('dateConstraint')}>
-            <DatePicker
-              value={sheet.date}
-              placeholder="YYYY/MM/DD"
-              isDateEnabled={(date) => date <= new Date()}
-              onChange={({ detail }) => {
-                if (/^\d{4}-\d{2}-\d{2}$/.test(detail.value)) open(sheet.section.id, detail.value, null);
-              }}
-            />
-          </FormField>
-        </SpaceBetween>
         {sheet.correcting && (
           <FormField label={t('reason')} description={t('reasonHint')}>
             <Textarea value={reason} rows={2} onChange={({ detail }) => setReason(detail.value)} />
@@ -194,11 +206,6 @@ export function TakeAttendance({
             {notice}
             {sheet.edited && ` ${t('edited')}`}
           </Alert>
-        )}
-        {!hidesRoster && sheet.students.length > 0 && (
-          <Box variant="strong">
-            <span aria-live="polite">{t('summary', summary)}</span>
-          </Box>
         )}
         </>
       }

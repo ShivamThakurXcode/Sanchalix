@@ -372,3 +372,16 @@ Architecture and design decisions for Sanchalix, in a lightweight ADR format. A 
 - The post is stored as HTML, not as sections; older posts are converted on read and replaced on their next save.
 - ⚠️ Pictures that a post stops using stay in storage. Add a clean-up job if that grows.
 - ⚠️ The editor's HTML is shown on the public page with `dangerouslySetInnerHTML`; it is safe only because every write goes through `PostInput`.
+
+## ADR-029: First-login setup wizard for the school admin
+
+**Status.** Accepted for the MVP on 2026-11-10, at the project owner's request.
+
+**Context.** A new school starts with an academic year and nothing else. The design system row for onboarding named a `TutorialPanel` in a drawer, which explains but does not collect data.
+
+**Decision.** A Cloudscape `Wizard` in a `Modal` on the school admin dashboard collects the profile, academic year and terms, classes and sections, and subjects, by calling the existing actions. Finishing sets `School.settings.onboardingCompletedAt`. `School.status` stays the platform's lifecycle flag and is not reused. Closing the modal is allowed and leaves a dashboard banner. The wizard does not create fee structures, because the school admin lacks `fees.structure.update`.
+
+**Consequences.**
+- ✅ A new school reaches a usable state in one sitting, and can stop and resume.
+- Schools created before this change show the wizard once until the admin finishes or it is completed for them.
+- ⚠️ Board and contact details are not edited in the wizard: the board is set by the platform at creation and the school has no contact field yet.

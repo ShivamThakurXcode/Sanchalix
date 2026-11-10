@@ -434,6 +434,15 @@
     }
   },
   "dashboard": {
+    "admissions": {
+      "title": "Admissions this year",
+      "description": "Applicants at each stage",
+      "all": "Open admissions",
+      "empty": {
+        "heading": "No applicants yet",
+        "body": "Enquiries and applications for this academic year appear here."
+      }
+    },
     "welcome": "Welcome, {name}",
     "loading": "Loading",
     "students": {
@@ -1149,8 +1158,6 @@
       "title": "Take attendance",
       "section": "Class and section",
       "date": "Date",
-      "dateConstraint": "Use YYYY/MM/DD.",
-      "summary": "{present} present · {absent} absent · {late} late · {half_day} half day · {leave} on leave",
       "markAllPresent": "Mark all present",
       "submit": "Submit attendance",
       "update": "Update attendance",
@@ -2845,6 +2852,85 @@
       "xlsx": "Excel workbook"
     }
   },
+  "onboarding": {
+    "title": "Set up your school",
+    "intro": "Fill in the basics once and your school is ready to use. You can leave at any time and pick up where you stopped, and everything stays editable in Settings and Academics.",
+    "failed": "We couldn't save this step",
+    "step": "Step {number}",
+    "stepOf": "Step {number} of {total}",
+    "steps": "Setup steps",
+    "next": "Save and continue",
+    "previous": "Back",
+    "later": "Finish later",
+    "finish": "Finish setup",
+    "optional": "optional",
+    "remove": "Remove",
+    "banner": {
+      "title": "Your school setup isn't finished",
+      "body": "Add your classes, subjects and academic year so staff can start using Sanchalix.",
+      "resume": "Continue setup"
+    },
+    "profile": {
+      "title": "School profile",
+      "description": "How your school appears on receipts, report cards and messages.",
+      "details": "School details and address",
+      "schedule": "Working week",
+      "brand": "Logo"
+    },
+    "year": {
+      "title": "Academic year and terms",
+      "description": "Set the dates of {year}, then add its terms.",
+      "dates": "Year dates",
+      "label": "Year label",
+      "startDate": "Year starts on",
+      "endDate": "Year ends on"
+    },
+    "classes": {
+      "title": "Classes and sections",
+      "description": "Add each class with its sections, such as Class 1 with A, B and C.",
+      "empty": "No classes yet.",
+      "noneNew": "No new classes. Add one below.",
+      "done": "{name} added with {count, plural, one {# section} other {# sections}}",
+      "add": "Add class",
+      "name": "Class name",
+      "namePlaceholder": "Class 1",
+      "sections": "Sections",
+      "sectionsHint": "Separate with commas",
+      "capacity": "Seats per section",
+      "removeLabel": "Remove {name}",
+      "unnamed": "this class"
+    },
+    "subjects": {
+      "title": "Subjects",
+      "description": "Add the subjects your school teaches. Every class offers all of them until you narrow it in Academics.",
+      "empty": "No subjects yet.",
+      "noneNew": "No new subjects. Add one below.",
+      "done": "{name} ({code}) added",
+      "add": "Add subject",
+      "name": "Subject name",
+      "namePlaceholder": "Mathematics",
+      "code": "Code",
+      "codePlaceholder": "MATH",
+      "typeLabel": "Type",
+      "type": { "scholastic": "Scholastic", "co_scholastic": "Co-scholastic" },
+      "removeLabel": "Remove {name}",
+      "unnamed": "this subject"
+    },
+    "review": {
+      "title": "Review and finish",
+      "description": "Check the summary, then finish to start using your school.",
+      "school": "School",
+      "year": "Academic year",
+      "classes": "Classes",
+      "subjects": "Subjects",
+      "fees": {
+        "title": "Fees are set up by your accountant",
+        "body": "Fee heads and structures need the accountant role.",
+        "link": "Open fee structures"
+      },
+      "later": "Students and staff can be added from their own pages once you finish."
+    }
+  },
   "settings": {
     "title": "Settings",
     "save": "Save changes",
@@ -2937,6 +3023,7 @@
       "termEnd": "A term has to end after it starts",
       "termOverlap": "This term has to start after the one before it ends",
       "termOutsideYear": "Every term has to fall inside the academic year.",
+    "yearEnd": "The year has to end after it starts",
       "noYear": "There is no current academic year.",
       "termInUse": "An exam belongs to a term you removed. Keep the term, or it can only be renamed.",
       "quietSame": "Choose different start and end times",

@@ -4,7 +4,7 @@ import 'server-only';
 import { withAction } from '@/server/action';
 import { audit } from '@/server/audit';
 import { requirePermission } from '@/server/auth/context';
-import { AlertTimeInput, LeaveQuotasInput, saveAlertTime, PeriodsInput, QuietHoursInput, saveLeaveQuotas, saveQuietHours, savePeriods, saveTerms, SchoolInput, TermsInput, updateSchool } from './service';
+import { AlertTimeInput, LeaveQuotasInput, saveAlertTime, PeriodsInput, QuietHoursInput, saveLeaveQuotas, saveQuietHours, savePeriods, saveTerms, saveYear, SchoolInput, TermsInput, updateSchool, YearInput } from './service';
 
 export async function updateSchoolSettings(input: unknown) {
   return withAction('settings.school.update', async () => {
@@ -52,6 +52,16 @@ export async function updateQuietHours(input: unknown) {
       after: quiet,
     });
     return quiet;
+  });
+}
+
+export async function updateAcademicYear(input: unknown) {
+  return withAction('settings.year.update', async () => {
+    const ctx = await requirePermission('settings.school.update');
+    const dates = YearInput.parse(input);
+    const saved = await saveYear(ctx, dates);
+    await audit(ctx, 'settings.year.update', { type: 'academicYear', id: saved.id }, { before: saved.before, after: saved.after });
+    return { label: saved.after.label };
   });
 }
 

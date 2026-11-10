@@ -1,4 +1,5 @@
 import Box from '@cloudscape-design/components/box';
+import Button from '@cloudscape-design/components/button';
 import Link from '@cloudscape-design/components/link';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { cookies } from 'next/headers';
@@ -45,43 +46,60 @@ export async function PublicPage({ home = false, children }: { home?: boolean; c
         <Box padding={{ vertical: 'xxl', horizontal: 'xl' }}>
           <SpaceBetween size="xl">
             <div className="vw-public-footer-grid">
-              <SpaceBetween size="s">
-                <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
-                <Box fontWeight="bold" fontSize="heading-s">
-                  {t('tagline')}
-                </Box>
-                <div className="vw-public-footer-about">
-                  <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+              <div className="vw-public-footer-brand">
+                <SpaceBetween size="s">
+                  <div className="vw-public-footer-logo" role="img" aria-label={t('brand')} />
+                  <Box fontWeight="bold" fontSize="heading-s">
+                    {t('tagline')}
+                  </Box>
+                  <div className="vw-public-footer-about">
+                    <Box color="text-body-secondary">{t('footer.tagline')}</Box>
+                  </div>
+                </SpaceBetween>
+                <div>
+                  <Button href={enter.href}>{enter.text}</Button>
                 </div>
-              </SpaceBetween>
+              </div>
               <nav aria-label={t('footer.product')}>
-                <SpaceBetween size="xs">
-                  <Box variant="awsui-key-label">{t('footer.product')}</Box>
+                <SpaceBetween size="m">
+                  <Box fontWeight="bold" fontSize="heading-s">
+                    {t('footer.product')}
+                  </Box>
                   {links.map(({ href, text }) => (
-                    <Link key={href} href={href}>
+                    <Link key={href} href={href} variant="secondary">
                       {text}
                     </Link>
                   ))}
                 </SpaceBetween>
               </nav>
               <nav aria-label={t('footer.account')}>
-                <SpaceBetween size="xs">
-                  <Box variant="awsui-key-label">{t('footer.account')}</Box>
-                  <Link href={enter.href}>{enter.text}</Link>
-                  {!enter.signedIn && <Link href="/forgot-password">{t('footer.forgotPassword')}</Link>}
+                <SpaceBetween size="m">
+                  <Box fontWeight="bold" fontSize="heading-s">
+                    {t('footer.account')}
+                  </Box>
+                  <Link href={enter.href} variant="secondary">
+                    {enter.text}
+                  </Link>
+                  {!enter.signedIn && (
+                    <Link href="/forgot-password" variant="secondary">
+                      {t('footer.forgotPassword')}
+                    </Link>
+                  )}
                 </SpaceBetween>
               </nav>
             </div>
             <div className="vw-public-footer-legal">
               <Box color="text-body-secondary" fontSize="body-s">
-                {t('footer.copyright', { year: new Date().getFullYear() })}
-              </Box>
-              <Box color="text-body-secondary" fontSize="body-s">
                 {t('footer.credit')}
               </Box>
-              <Link href="#top" variant="secondary" fontSize="body-s">
-                {t('footer.backToTop')}
-              </Link>
+              <div className="vw-public-footer-legal-end">
+                <Link href="#top" variant="secondary" fontSize="body-s">
+                  {t('footer.backToTop')}
+                </Link>
+                <Box color="text-body-secondary" fontSize="body-s">
+                  {t('footer.copyright', { year: new Date().getFullYear() })}
+                </Box>
+              </div>
             </div>
           </SpaceBetween>
         </Box>

@@ -243,8 +243,15 @@ body {
 
 .vw-public-footer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-xl-gtl6hi, 32px) var(--space-xxxl-pjngik, 40px);
+}
+
+.vw-public-footer-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-xl-gtl6hi, 32px);
 }
 
 .vw-public-footer-about {
@@ -274,13 +281,26 @@ body {
 }
 
 .vw-public-footer-legal {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-xs-m9b7jf, 8px) var(--space-m-dsumyt, 16px);
-  padding-block-start: var(--space-m-dsumyt, 16px);
+  padding-block-start: var(--space-l-01uow3, 20px);
   border-block-start: var(--border-divider-section-width-dlkb8v, 1px) solid var(--color-border-divider-default-diwd4w);
+}
+
+.vw-public-footer-legal-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xs-m9b7jf, 8px);
+}
+
+@media (max-width: 480px) {
+  .vw-public-footer-legal-end {
+    align-items: flex-start;
+  }
 }
 
 .vw-auth-page {
@@ -899,4 +919,19 @@ body {
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;
+}
+
+/* The brand orange outlines the setup wizard's modal so it reads as its own surface over the dimmed page. The
+   dialog's direct container is the modal's own box; containers inside it are deeper and keep their look. */
+[class*='awsui_dialog_']:has([data-onboarding]) > [class*='awsui_container_'] {
+  border: 1px solid var(--color-border-button-normal-default-5u0s6m);
+  /* The modal's own rule sets the top border to zero width with a more specific selector. */
+  border-block-start: 1px solid var(--color-border-button-normal-default-5u0s6m) !important;
+}
+
+/* "Finish later" is the wizard's cancel action, which Cloudscape draws as a bare link. Here it is the secondary
+   action beside "Save and continue", so it gets the outline of a normal button. */
+[data-onboarding] [class*='awsui_cancel-button_'] {
+  border: var(--border-width-button-lffd4t, 2px) solid var(--color-border-button-normal-default-5u0s6m) !important;
+  border-radius: var(--border-radius-button-9k0hrl, 20px) !important;
 }

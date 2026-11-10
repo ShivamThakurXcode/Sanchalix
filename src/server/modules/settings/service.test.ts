@@ -2,11 +2,12 @@ import mongoose, { Types } from 'mongoose';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import type { RequestContext } from '@/server/auth/context';
 import { connectDb } from '@/server/db/connect';
+import { AcademicYear } from '@/server/models/academicYear';
 import { PeriodDefinition } from '@/server/models/periodDefinition';
 import { School } from '@/server/models/school';
 import { TimetableSlot } from '@/server/models/timetableSlot';
 import { getPeriods } from '@/server/modules/timetable/service';
-import { getSettings, PeriodsInput, savePeriods, SchoolInput, updateSchool } from './service';
+import { getSettings, PeriodsInput, savePeriods, saveYear, SchoolInput, updateSchool, YearInput } from './service';
 
 const ADDRESS = { line1: '12 School Road', city: 'Bhopal', state: 'Madhya Pradesh', pincode: '462001' };
 let ctx: RequestContext;
@@ -25,7 +26,7 @@ const seed = async (code: string): Promise<RequestContext> => {
 
 beforeAll(async () => {
   await connectDb();
-  await Promise.all([PeriodDefinition, TimetableSlot, School].map((model) => model.init()));
+  await Promise.all([AcademicYear, PeriodDefinition, TimetableSlot, School].map((model) => model.init()));
   const stamp = Date.now().toString(36).slice(-5).toUpperCase();
   ctx = await seed(`L${stamp}`);
   other = await seed(`M${stamp}`);
@@ -74,4 +75,21 @@ it('replaces the default bell schedule, rejects overlaps, and keeps periods the 
   await expect(savePeriods(ctx, three.slice(0, 2))).rejects.toMatchObject({ code: 'BUSINESS_RULE' });
   await expect(savePeriods(ctx, three)).resolves.toMatchObject({ count: 3 });
   expect(await PeriodDefinition.countDocuments({ schoolId: ctx.schoolId })).toBe(1);
+});
+
+it('moves the academic year, relabels it and refuses dates that strand a term', async () => {
+  await AcademicYear.create({
+    schoolId: ctx.schoolId,
+    label: '2026–27',
+    startDate: '2026-04-01',
+    endDate: '2027-03-31',
+    status: 'current',
+    terms: [{ name: 'Term 1', startDate: '2026-04-01', endDate: '2026-09-30' }],
+  });
+  expect(YearInput.safeParse({ startDate: '2026-04-01', endDate: '2026-04-01' }).success).toBe(false);
+
+  await expect(saveYear(ctx, { startDate: '2026-06-01', endDate: '2027-03-31' })).rejects.toThrow();
+  await saveYear(ctx, { startDate: '2026-03-15', endDate: '2027-03-31' });
+  expect((await getSettings(ctx))?.year).toMatchObject({ label: '2026–27', startDate: '2026-03-15' });
+  expect((await getSettings(other))?.year).toBeNull();
 });

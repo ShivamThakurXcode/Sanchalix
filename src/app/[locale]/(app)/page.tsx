@@ -1,6 +1,7 @@
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
+import Grid from '@cloudscape-design/components/grid';
 import Container from '@cloudscape-design/components/container';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import Header from '@cloudscape-design/components/header';
@@ -22,6 +23,7 @@ import { listAnnouncements } from '@/server/modules/comms/service';
 import { getLeaveBalances } from '@/server/modules/hr/leave';
 import { getSchoolCalendar } from '@/server/modules/attendance/queries';
 import {
+  getAdmissionsFunnel,
   getAttendanceToday,
   getAttendanceTrend,
   getDuesAgeing,
@@ -30,7 +32,9 @@ import {
 import { getAttention } from '@/server/modules/dashboard/attention';
 import { getCollectionReport } from '@/server/modules/fees/reports';
 import { countStudents } from '@/server/modules/sis/queries';
+import { OnboardingWizard } from '@/features/onboarding/OnboardingWizard';
 import { PortalHome } from '@/features/portal/Portal';
+import { getOnboarding } from '@/server/modules/onboarding/service';
 import { getPortalHome } from '@/server/modules/portal/service';
 import { getTeacherDay } from '@/server/modules/timetable/service';
 import { homeLabel, pageContext } from './pageContext';
@@ -42,6 +46,7 @@ const shortDay = (value: string) => dayFormat.format(new Date(`${value}T00:00:00
 
 const COLLECTION_DAYS = 14;
 const attendanceToday = cache(getAttendanceToday);
+const FUNNEL_HREF = '/admissions';
 const feesSummary = cache(getFeesSummary);
 const recentCollection = cache(async (ctx: RequestContext) => {
   const { today } = await getSchoolCalendar(ctx);
@@ -87,6 +92,8 @@ export default async function DashboardPage({
     );
   }
 
+  const onboarding = ctx.role === 'school_admin' ? await getOnboarding(ctx) : null;
+
   const loading = (title: string) => (
     <Container fitHeight header={<Header variant="h2">{title}</Header>}>
       <StatusIndicator type="loading">{t('loading')}</StatusIndicator>
@@ -98,6 +105,7 @@ export default async function DashboardPage({
     students: can(ctx.role, 'sis.student.read') && ctx.scope !== 'assigned',
     fees: can(ctx.role, 'fees.invoice.read'),
     collection: can(ctx.role, 'fees.payment.read'),
+    admissions: can(ctx.role, 'sis.admission.read'),
   };
 
   return (
@@ -125,6 +133,7 @@ export default async function DashboardPage({
       }
     >
       <SpaceBetween size="l">
+        {onboarding && !onboarding.completed && <OnboardingWizard data={onboarding} />}
         {(sees.attendance || sees.students || sees.fees) && (
           <ColumnLayout columns={4}>
             {sees.attendance && widget(t('attendance.title'), <AttendanceTile ctx={ctx} />)}
@@ -134,15 +143,30 @@ export default async function DashboardPage({
           </ColumnLayout>
         )}
         {ctx.staffId && can(ctx.role, 'academics.timetable.read') && widget(t('classes.title'), <TodayClasses ctx={ctx} />)}
-        <ColumnLayout columns={2}>
-          {(sees.attendance || sees.fees) &&
-            widget(t('attention.title'), <Attention ctx={ctx} attendance={sees.attendance} fees={sees.fees} />)}
-          {sees.attendance && widget(t('charts.attendance.title'), <AttendanceTrend ctx={ctx} />)}
-          {sees.collection && widget(t('charts.collection.title'), <Collection ctx={ctx} />)}
-          {sees.collection && widget(t('charts.methods.title'), <Methods ctx={ctx} />)}
-          {sees.fees && widget(t('charts.ageing.title'), <Ageing ctx={ctx} />)}
-          {widget(t('announcements.title'), <LatestAnnouncements ctx={ctx} />)}
+        <Grid
+          gridDefinition={[
+            { colspan: { default: 12, m: 8 } },
+            { colspan: { default: 12, m: 4 } },
+          ]}
+        >
+          {widget(t('attention.title'), <Attention ctx={ctx} attendance={sees.attendance} fees={sees.fees} />)}
           {widget(t('upcoming.title'), <UpcomingEvents ctx={ctx} />)}
+        </Grid>
+        {(sees.attendance || sees.collection) && (
+          <ColumnLayout columns={2}>
+            {sees.attendance && widget(t('charts.attendance.title'), <AttendanceTrend ctx={ctx} />)}
+            {sees.collection && widget(t('charts.collection.title'), <Collection ctx={ctx} />)}
+          </ColumnLayout>
+        )}
+        {(sees.admissions || sees.fees) && (
+          <ColumnLayout columns={2}>
+            {sees.admissions && widget(t('admissions.title'), <AdmissionsFunnel ctx={ctx} />)}
+            {sees.fees && widget(t('charts.ageing.title'), <Ageing ctx={ctx} />)}
+          </ColumnLayout>
+        )}
+        <ColumnLayout columns={2}>
+          {widget(t('announcements.title'), <LatestAnnouncements ctx={ctx} />)}
+          {sees.collection && widget(t('charts.methods.title'), <Methods ctx={ctx} />)}
           {ctx.staffId && can(ctx.role, 'hr.leave.create') && widget(t('myLeave.title'), <MyLeave ctx={ctx} />)}
         </ColumnLayout>
       </SpaceBetween>
@@ -274,6 +298,40 @@ async function Attention({ ctx, attendance, fees }: { ctx: RequestContext; atten
             </StatusIndicator>
           ))}
         </SpaceBetween>
+      )}
+    </Container>
+  );
+}
+
+async function AdmissionsFunnel({ ctx }: { ctx: RequestContext }) {
+  const [t, tStatus, funnel] = await Promise.all([
+    getTranslations('dashboard.admissions'),
+    getTranslations('admissions.status'),
+    getAdmissionsFunnel(ctx),
+  ]);
+  const total = funnel.reduce((sum, { count }) => sum + count, 0);
+  return (
+    <Container
+      fitHeight
+      header={
+        <Header variant="h2" description={t('description')} actions={<AppLink href={FUNNEL_HREF}>{t('all')}</AppLink>}>
+          {t('title')}
+        </Header>
+      }
+    >
+      {total === 0 ? (
+        <EmptyState icon="admissions" heading={t('empty.heading')} body={t('empty.body')} />
+      ) : (
+        <ColumnLayout columns={3} variant="text-grid">
+          {funnel.map(({ stage, count }) => (
+            <div key={stage}>
+              <Box variant="awsui-key-label">{tStatus(stage)}</Box>
+              <AppLink href={`${FUNNEL_HREF}?status=${stage}`} fontSize="heading-l">
+                {count}
+              </AppLink>
+            </div>
+          ))}
+        </ColumnLayout>
       )}
     </Container>
   );

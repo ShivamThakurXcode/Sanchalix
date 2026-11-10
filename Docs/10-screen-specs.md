@@ -102,8 +102,11 @@ Built with `Board` (staff, rearrangeable in v1) or `Grid` (student, parent). Eve
 ### S08 · Student "Today"
 - Timetable for today, homework due (with "Submit"), announcements, and the attendance % this month. Bottom tab bar on mobile.
 
+### S09a · School admin first-login setup
+A `Modal` with a `Wizard` opens on the school admin's dashboard until `onboardingCompletedAt` is set. Steps: school profile (name, affiliation, address, working days, logo), academic year dates and terms, classes with sections and seats, subjects, review. Each step saves on "Save and continue" and is prefilled from saved data, so closing and coming back resumes. "Finish later" or the close button hides the modal and leaves an info `Alert` on the dashboard with "Continue setup"; the modal opens again on the next visit. Classes, sections and subjects are optional steps. Fees are not part of the wizard: fee heads and structures need `fees.structure.update`, which the school admin does not hold, so the review step links to fee structures for the accountant. Later changes use Settings and Academics.
+
 ### S09 · School admin, librarian, transport manager and super admin dashboards
-- **School admin:** admissions funnel (enquiry → accepted this month), today's attendance, pending documents, TC requests, import jobs.
+- **School admin**, top to bottom: the setup banner while first-run setup is open (S09a); four tiles (attendance today, active students, collected today, overdue), each linking to its page; "Needs your attention" (two thirds) beside "Upcoming events" (one third); attendance trend beside fee collection; admissions funnel for the current academic year (enquiry → applied → documents pending → assessment → offered → admitted, each count linking to the list filtered by that status) beside dues ageing; latest announcements beside collection by method. The one primary action is "Open fee counter". Each widget has its own loading, empty and error state, and the grid is one column below 688px. Not built: pending documents, TC requests and import jobs.
 - **Librarian:** loans today, overdue count (→ list), primary action "Open circulation".
 - **Transport manager:** routes at capacity, document expiries within 30 days, today's delay notices.
 - **Super admin:** schools by status, onboarding checklist progress per school, platform error rate, SMS credit balance per school.

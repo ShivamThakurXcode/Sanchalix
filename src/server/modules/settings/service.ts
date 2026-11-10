@@ -86,6 +86,11 @@ export const TermsInput = z
   });
 export type TermsInput = z.infer<typeof TermsInput>;
 
+export const YearInput = z
+  .object({ startDate: Day, endDate: Day })
+  .refine(({ startDate, endDate }) => endDate > startDate, { path: ['endDate'], message: `${E}.yearEnd` });
+export type YearInput = z.infer<typeof YearInput>;
+
 export type SchoolSettings = SchoolInput & {
   hasLogo: boolean;
   code: string;
@@ -160,6 +165,19 @@ export async function updateSchool(ctx: RequestContext, input: SchoolInput) {
     name: input.name,
     before: { name: before.name, workingDays: before.settings?.workingDays ?? [], shiftDueDates: before.settings?.shiftDueDates ?? false },
   };
+}
+
+/** Moves the current academic year's dates. Terms already set have to stay inside the new dates. */
+export async function saveYear(ctx: RequestContext, { startDate, endDate }: YearInput) {
+  const { schoolId } = ctx;
+  const year = await AcademicYear.findOne({ schoolId, status: 'current' }).select('label startDate endDate terms').lean();
+  if (!year) throw new AppError('BUSINESS_RULE', `${E}.noYear`);
+  if (year.terms.some((term) => (term.startDate ?? startDate) < startDate || (term.endDate ?? endDate) > endDate)) {
+    throw new AppError('BUSINESS_RULE', `${E}.termOutsideYear`);
+  }
+  const label = `${startDate.slice(0, 4)}–${endDate.slice(2, 4)}`;
+  await AcademicYear.updateOne({ schoolId, _id: year._id }, { label, startDate, endDate, updatedBy: ctx.userId }, { runValidators: true });
+  return { id: year._id, before: { label: year.label, startDate: year.startDate, endDate: year.endDate }, after: { label, startDate, endDate } };
 }
 
 /** Replaces the terms of the current academic year. Every term has to fall inside the year. */
