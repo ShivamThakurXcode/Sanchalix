@@ -1,6 +1,8 @@
 import AlertTriangle from 'reicon-react/icons/AlertTriangle';
 import ArrowDoorOut from 'reicon-react/icons/ArrowDoorOut';
 import ArrowSwapHorizontal from 'reicon-react/icons/ArrowSwapHorizontal';
+import ArrowDown from 'reicon-react/icons/ArrowDown';
+import ArrowUp from 'reicon-react/icons/ArrowUp';
 import ArrowUpCircle from 'reicon-react/icons/ArrowUpCircle';
 import ArrowUpRight from 'reicon-react/icons/ArrowUpRight';
 import Award from 'reicon-react/icons/Award';
@@ -49,6 +51,8 @@ import FileStar from 'reicon-react/icons/FileStar';
 import Filter from 'reicon-react/icons/Filter';
 import Fingerprint from 'reicon-react/icons/Fingerprint';
 import FolderOpen from 'reicon-react/icons/FolderOpen';
+import Gallery from 'reicon-react/icons/Gallery';
+import Globe from 'reicon-react/icons/Globe';
 import GraduationCap from 'reicon-react/icons/GraduationCap';
 import Handshake from 'reicon-react/icons/Handshake';
 import Help from 'reicon-react/icons/Help';
@@ -225,6 +229,10 @@ export const icons = {
   aiInsights: Sparkles,
   atRisk: ShieldAlert,
   settings: Settings2,
+  website: Globe,
+  moveUp: ArrowUp,
+  moveDown: ArrowDown,
+  gallery: Gallery,
   tablePreferences: Setting2,
   users: Users,
   roles: ShieldCheck,

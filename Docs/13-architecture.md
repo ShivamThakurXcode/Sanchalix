@@ -146,7 +146,8 @@ Rules: `features/*` never imports from `server/modules/*/service.ts` directly; i
 | Dashboards, lists, detail pages | **Dynamic RSC** (per-request, personalised, tenant-scoped). Data is fetched in server components through `server/modules/*/queries.ts`. `<Suspense>` streams each region. | Fresh, permission-filtered data; no client waterfalls; fast first paint on slow phones |
 | Reference data (classes, subjects, fee heads, period definitions) | `'use cache'` with `cacheTag('school:{id}:classes')`, invalidated with `updateTag` on mutation | Read on every page, changes rarely |
 | Interactive islands (marks grid, attendance, counter, composer) | Client components (`'use client'`), hydrated with initial data from RSC props | High-frequency interaction and local state |
-| Public pages (sign in, apply, verify receipt) | Static shell + dynamic data where needed | Speed |
+| Public pages (sign in, verify receipt) | Static shell + dynamic data where needed | Speed |
+| A school's public website (`{slug}.sanchalix.app`) | Server-rendered per request through the public service; `src/proxy.ts` maps the host to `/site/{slug}` when `SITE_ROOT_DOMAIN` is set ([ADR-030](23-decision-log.md#adr-030-a-public-website-for-every-school-from-predesigned-templates)) | No session, so the school comes from the address and only whitelisted fields leave the server |
 | PWA offline views | The service worker caches the shell + the last Today payload | Offline-first for the core tasks |
 
 Cloudscape components are client components. RSC pages render them as leaves, passing serialisable props. Icons are passed as elements created with `svg()`, which works across the server/client boundary because Reicon icons are client components ([09-iconography.md](09-iconography.md#2-how-the-integration-works)).

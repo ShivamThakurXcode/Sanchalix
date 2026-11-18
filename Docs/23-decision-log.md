@@ -385,3 +385,27 @@ Architecture and design decisions for Sanchalix, in a lightweight ADR format. A 
 - ✅ A new school reaches a usable state in one sitting, and can stop and resume.
 - Schools created before this change show the wizard once until the admin finishes or it is completed for them.
 - ⚠️ Board and contact details are not edited in the wizard: the board is set by the platform at creation and the school has no contact field yet.
+
+## ADR-030: A public website for every school, from predesigned templates
+
+**Status.** Accepted for the MVP on 2026-11-18, at the project owner's request.
+
+**Context.** Schools need a public website (about, notices, events, staff, gallery, online admission) and most have no designer. Sanchalix already holds the live data such a site shows. Cloudscape is an application UI kit and cannot give each school its own look, which is the missing pattern that `CLAUDE.md` says needs an ADR.
+
+**Decision.**
+- Each school gets `{slug}.sanchalix.app` (`School.slug`, set from the school code at creation). A verified custom domain follows in v2.
+- Templates are code, not data: three layout variants (Classic, Modern, Minimal) of one set of section components, chosen by a class on the page. A school stores only its template, a colour from six that keep white text readable, which sections are on, and their content. There is no page builder and no custom HTML. Section order is fixed and fonts are not chosen yet.
+- The public templates are the one place Cloudscape is not used. They are plain React components in `src/features/website/`, styled by one `website.css` built from design tokens. The screens where staff edit the website stay Cloudscape.
+- The site carries its own small palette (`--vw-site-*`, light and dark) because Cloudscape defines its design tokens only inside its own components, so a page that draws none has none of them. The school's colour is used as a background behind white text, and as text or outline only after being lightened in dark mode.
+- Teachers on the site are picked on the website editor (`Website.staffIds`, active teaching staff only, name and designation only) rather than flagged on each staff record, and events and announcements carry an `isPublic` flag. The admission form posts to a public route handler, not a Server Action, because the rule that every action starts with `requirePermission` can't apply to a family with no account; the route is limited by address and school, needs consent and traps bots, and what it writes is an enquiry.
+- Public pages read only through a public service that returns hand-built objects containing only fields on a whitelist, and only records marked `isPublic`. No session exists there, so `schoolId` is resolved from the host and passed explicitly.
+
+**Consequences.**
+- ✅ A school has a site in minutes and it stays current without double entry.
+- ✅ Limited choices keep every site fast, accessible and safe.
+- ⚠️ The public service is the trust boundary for children's and staff data and needs a test for every field it returns.
+- ⚠️ Schools created before this change have no slug until the platform or the school sets one.
+- Own domains are built behind `SITE_CUSTOM_DOMAINS`: the school adds a CNAME and a TXT record, and the app serves the domain only once the TXT record matches. DNS for the platform's side and certificates on demand are the host's job, not the app's.
+
+
+**Amendment: a site of pages, not a single page.** Each section is its own page with its own URL, so the site reads and ranks like a real school website. The home page only samples the sections. Templates still differ in layout alone (Classic: full-bleed photo hero; Modern: split hero and rounded cards; Minimal: plain ink, no colour bands). Fonts are Source Serif 4 and Public Sans through `next/font`, which self-hosts them.

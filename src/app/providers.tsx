@@ -5,6 +5,7 @@ import enMessages from '@cloudscape-design/components/i18n/messages/all.en';
 import IconProvider from '@cloudscape-design/components/icon-provider';
 import { generateThemeStylesheet } from '@cloudscape-design/components/theming';
 import { applyDensity, applyMode, Density as CloudscapeDensity, Mode } from '@cloudscape-design/global-styles';
+import { useSelectedLayoutSegments } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
 import { svg } from '@/components/icons';
 import { useIsDark } from '@/lib/useIsDark';
@@ -123,12 +124,24 @@ const themeCss = generateThemeStylesheet({
 
 export function Providers({ mode, density, children }: { mode: VisualMode; density: Density; children: ReactNode }) {
   const isDark = useIsDark(mode);
+  // A school's website draws no Cloudscape component. Its providers would still look for Cloudscape's stylesheet,
+  // which that page doesn't load, and report it missing.
+  const isSchoolSite = useSelectedLayoutSegments().includes('(site)');
   useEffect(() => applyMode(isDark ? Mode.Dark : Mode.Light), [isDark]);
   useEffect(() => applyDensity(density === 'compact' ? CloudscapeDensity.Compact : CloudscapeDensity.Comfortable), [density]);
+  const theme = <style dangerouslySetInnerHTML={{ __html: themeCss }} />;
 
+  if (isSchoolSite) {
+    return (
+      <>
+        {theme}
+        {children}
+      </>
+    );
+  }
   return (
     <I18nProvider locale="en" messages={[enMessages]}>
-      <style dangerouslySetInnerHTML={{ __html: themeCss }} />
+      {theme}
       <IconProvider icons={builtInIcons}>{children}</IconProvider>
     </I18nProvider>
   );

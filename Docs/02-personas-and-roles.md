@@ -100,6 +100,7 @@ Legend: **R** read · **C** create · **U** update · **D** delete (soft) · **A
 | Organizations, schools | CRUD | R (own) | R (own) | — | — | — | — | — | — |
 | Branches | CRUD | CRU | R | — | — | — | — | — | — |
 | School settings | RU | RU | R | — | — | — | R (fees) | — | — |
+| School website (`website.manage`) | — | RU | RU | — | — | — | — | — | — |
 | Users and role assignments | CRUD | CRUD (not super_admin) | R | — | — | — | — | — | — |
 | Academic years and terms | R | CRU | R + A (close year) | R | R | R | R | R | R |
 | Audit log | R | R | R | — | — | — | — | — | — |

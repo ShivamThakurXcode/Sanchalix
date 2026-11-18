@@ -169,6 +169,8 @@ Pattern: `/{locale}/{module}/{resource}/{id?}/{subview?}?{query}`
 | `/` | Role dashboard | all |
 | `/signin`, `/signin/otp` | Sign in (password, Google, OTP) | all |
 | `/guide` | Guide to the platform, with a left side navigation and one section per topic (`/guide#fees` opens a section) | public |
+| `{slug}.sanchalix.app` (in development, `/site/{slug}`) | A school's public website home page; shows only what the school published | public |
+| `/about`, `/programmes`, `/facilities`, `/news` (and `/news/{id}`), `/events`, `/teachers`, `/testimonials`, `/gallery`, `/downloads`, `/contact`, `/apply`, `/p/{page}` on that site | One page for each section the school has switched on and filled; a section with nothing to show has no page (404) and no menu link | public |
 | `/apply/{schoolCode}` | Public online admission form | public |
 | `/verify/receipt/{receiptNo}` | Receipt authenticity check (shows no PII) | public |
 | `/students` | Student list | school_admin, principal, teacher |

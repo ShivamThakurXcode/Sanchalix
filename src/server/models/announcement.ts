@@ -25,6 +25,7 @@ const schema = new Schema(
       },
     ],
     requiresAck: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: false },
     acks: [{ _id: false, userId: { type: ObjectId, ref: 'User', required: true }, at: { type: Date, required: true } }],
     publishAt: Date,
     expiresAt: Date,

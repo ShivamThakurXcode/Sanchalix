@@ -243,6 +243,7 @@ export function AnnouncementForm({ sections }: { sections: { id: string; name: s
   const [roles, setRoles] = useState<RoleKey[]>([]);
   const [sectionIds, setSectionIds] = useState<string[]>([]);
   const [requiresAck, setRequiresAck] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [copyBy, setCopyBy] = useState<('email' | 'sms')[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const tooBig = files.some((file) => file.size > MAX_FILE);
@@ -296,6 +297,7 @@ export function AnnouncementForm({ sections }: { sections: { id: string; name: s
       body,
       audience,
       requiresAck,
+      isPublic: isPublic && audience.type === 'school',
       channels: copyBy,
       publishOn,
       expiresOn,
@@ -421,6 +423,15 @@ export function AnnouncementForm({ sections }: { sections: { id: string; name: s
                 >
                   {t('announcements.form.ack')}
                 </Checkbox>
+                {audience.type === 'school' && (
+                  <Checkbox
+                    checked={isPublic}
+                    description={t('announcements.form.publicHint')}
+                    onChange={({ detail }) => setIsPublic(detail.checked)}
+                  >
+                    {t('announcements.form.public')}
+                  </Checkbox>
+                )}
                 <ColumnLayout columns={2}>
                   <FormField
                     label={t('announcements.form.publishOn')}

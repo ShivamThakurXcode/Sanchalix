@@ -280,6 +280,17 @@ A `Modal` with a `Wizard` opens on the school admin's dashboard until `onboardin
 
 ---
 
+## School website (ADR-030, added on 2026-11-18)
+
+- **Website (staff, `/website`, `website.manage`).** A header with the title, a status (Live or Offline), Preview (Open website once live) and Publish website or Take offline. One form, in containers: What visitors read (address, headline, one line, about), Contact details, Our teachers (a multiselect of teaching staff), Programmes, Facilities, What parents say and Extra pages (each an add-and-remove list), Online admission (a checkbox, and the classes taking applications), Look and sections (design, colour, and each section with a checkbox and Move up and Move down buttons), then Save changes as the one primary action. Below the form: Gallery (upload, caption, Move up and down, Remove), Teacher photos, Downloads (PDFs), Your own web address (domain, the two DNS records to add and Verify domain) and Visits in the last 30 days (page views, applications and a 7-day table). Gallery sits below it with its own upload, caption, a table with thumbnails and Remove. States: success alert after saving or publishing, field errors under each field, a form error at the top, an empty gallery message.
+- **Public school website (`/site/{slug}`).** A multi-page site, not one long page. Every page has a skip link, a contact bar, a sticky header (name, logo, Apply button), a menu bar with a link to every page that has something to show (the current one is marked `aria-current`; on a phone it opens from a Menu button) and a footer with the address, quick links and contact details. The home page has a hero (the first gallery photo when there is one), a facts strip (board, city, phone, admissions), the newest notice, a short taste of each section with a link to its own page, and an admissions invitation. Each section has its own page (About, Programmes, Facilities, Notices, Events, Teachers, Parents say, Gallery, Downloads, Contact) opening with a band that shows the breadcrumb and title. A section with nothing to show has no page and no link. The templates differ only in layout: Classic has a colour band, Modern a large headline and cards, Minimal a narrow column of text. A signed-in manager sees a preview notice on a draft.
+- **Notices (`/news`, `/news/{id}`).** Every public notice, newest first, with each title linking to the notice in full. The home page's notices section links to both.
+- **Text page (`/p/{page}`).** One of the school's own plain-text pages.
+- **Apply (`/site/{slug}/apply`).** Child (name, birth date, gender, class, previous school), parent or guardian (name, relation, mobile, email), a consent checkbox and Send application. Each error sits under its field; success shows the application number in a status region; a failed send shows an alert and keeps what was typed.
+- **Setup wizard, School profile step:** a Website address field beside the affiliation number.
+- **Contact section** always shows the school's address with an Open in Maps link (a new tab), then phone and email when set.
+- **Announcement and event forms:** a Show on the school website checkbox (announcements only for the whole school).
+
 ## Built on 2026-10-05
 
 - **Navigation** is grouped: People (Students, Admissions, Staff), Academics (Classes, Subjects, Timetable, Attendance, Homework, Holidays), Fees and Communication. The user menu has Profile and Sign out.

@@ -150,7 +150,11 @@ export async function publishDueAnnouncements(schoolId: Types.ObjectId) {
 
 export async function publishAnnouncement(
   ctx: RequestContext,
-  input: Omit<AnnouncementInput, 'requiresAck' | 'channels'> & { requiresAck?: boolean; channels?: AnnouncementInput['channels'] },
+  input: Omit<AnnouncementInput, 'requiresAck' | 'channels' | 'isPublic'> & {
+    requiresAck?: boolean;
+    isPublic?: boolean;
+    channels?: AnnouncementInput['channels'];
+  },
 ) {
   const { schoolId } = ctx;
   const school = await School.findById(schoolId).select('timezone').lean();
@@ -167,6 +171,7 @@ export async function publishAnnouncement(
     body: input.body,
     kind: input.requiresAck ? 'notice' : 'announcement',
     requiresAck: Boolean(input.requiresAck),
+    isPublic: Boolean(input.isPublic) && input.audience.type === 'school',
     audience:
       input.audience.type === 'role'
         ? input.audience

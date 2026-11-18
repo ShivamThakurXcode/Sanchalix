@@ -77,6 +77,7 @@ export type Permission =
   | 'portal.self.read'
   | 'settings.school.update'
   | 'settings.export'
+  | 'website.manage'
   | 'platform.school.read'
   | 'platform.school.create'
   | 'platform.school.update'
@@ -109,6 +110,7 @@ const ROLE_PERMISSIONS: Record<RoleKey, readonly Permission[]> = {
     'hr.leave.approve',
     'settings.school.update',
     'settings.export',
+    'website.manage',
     'messaging.outbox.read',
     'users.user.read',
     'users.user.create',
@@ -141,6 +143,7 @@ const ROLE_PERMISSIONS: Record<RoleKey, readonly Permission[]> = {
   ],
   principal: [
     ...EVERYONE,
+    'website.manage',
     'exams.reportCard.read',
     'exams.reportCard.update',
     'exams.reportCard.publish',

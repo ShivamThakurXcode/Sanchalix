@@ -15,6 +15,7 @@ import { Section } from '@/server/models/section';
 import { Staff } from '@/server/models/staff';
 import { Student } from '@/server/models/student';
 import { User } from '@/server/models/user';
+import { Website } from '@/server/models/website';
 import { DEMO_TOTP_SECRET } from './demoSecret';
 import { seedGreenValleyDemo } from './seedDemo';
 
@@ -50,11 +51,19 @@ async function seedSchool(options: {
     organizationId: options.organizationId,
     name: options.name,
     code,
+    slug: code.toLowerCase(),
     board: 'CBSE',
     address: ADDRESS,
+    phone: '+911234567890',
     status: 'active',
   });
   const schoolId = school._id;
+  await Website.create({
+    schoolId,
+    status: 'published',
+    hero: { headline: `Welcome to ${options.name}`, subline: 'Learning that grows with every child.' },
+    about: 'We are a CBSE school with caring teachers, small classes and a focus on every child.',
+  });
   const branch = await Branch.create({ schoolId, name: 'Main campus', code: 'MAIN', address: ADDRESS, isDefault: true });
   const year = await AcademicYear.create({
     schoolId,

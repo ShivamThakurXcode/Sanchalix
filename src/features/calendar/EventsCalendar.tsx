@@ -4,6 +4,7 @@ import Alert from '@cloudscape-design/components/alert';
 import Badge from '@cloudscape-design/components/badge';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
+import Checkbox from '@cloudscape-design/components/checkbox';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
@@ -21,7 +22,7 @@ import { deleteEvent, upsertEvent } from '@/server/modules/calendar/actions';
 import type { CalendarItem } from '@/server/modules/calendar/events';
 
 const TYPES = ['academic', 'exam', 'ptm', 'sports', 'cultural', 'other'];
-const BLANK = { title: '', type: 'academic', start: '', end: '' };
+const BLANK = { title: '', type: 'academic', start: '', end: '', isPublic: false };
 const monthName = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const date = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const day = (value: string) => date.format(new Date(`${value}T00:00:00Z`));
@@ -79,7 +80,7 @@ export function EventsCalendar({
   const openEdit = (item: CalendarItem) => {
     setError(null);
     setEditingId(item.id);
-    setValues({ title: item.title, type: item.type, start: item.start, end: item.end });
+    setValues({ title: item.title, type: item.type, start: item.start, end: item.end, isPublic: Boolean(item.isPublic) });
     setAdding(true);
   };
   const addButton = (primary: boolean) => (
@@ -260,7 +261,7 @@ export function EventsCalendar({
                             onClick={() => {
                               setError(null);
                               setEditingId(item.id);
-                              setValues({ title: item.title, type: item.type, start: item.start, end: item.end });
+                              setValues({ title: item.title, type: item.type, start: item.start, end: item.end, isPublic: Boolean(item.isPublic) });
                               setAdding(true);
                             }}
                           >
@@ -317,6 +318,13 @@ export function EventsCalendar({
           </FormField>
           {dateField('start')}
           {dateField('end', t('form.endHint'))}
+          <Checkbox
+            checked={values.isPublic}
+            description={t('form.publicHint')}
+            onChange={({ detail }) => setValues({ ...values, isPublic: detail.checked })}
+          >
+            {t('form.public')}
+          </Checkbox>
         </SpaceBetween>
       </Modal>
       <Modal

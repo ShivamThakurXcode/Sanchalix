@@ -64,6 +64,8 @@ All secrets come from AWS Secrets Manager, injected as ECS secrets. Non-secrets 
 |---|---|---|---|
 | `NODE_ENV` | no | both | `production` |
 | `APP_URL` | no | both | `https://app.sanchalix.app` |
+| `SITE_ROOT_DOMAIN` | no | web | `sanchalix.app`: a request for `{slug}.sanchalix.app` shows that school's website ([ADR-030](23-decision-log.md#adr-030-a-public-website-for-every-school-from-predesigned-templates)). Needs a wildcard DNS record and certificate. Unset in development |
+| `SITE_CUSTOM_DOMAINS` | no | web | `true` lets a school serve its website on its own domain, after it proves ownership with a DNS record. Needs `SITE_ROOT_DOMAIN`, a host that accepts any domain name (a CNAME target of `sites.{SITE_ROOT_DOMAIN}`) and certificates issued on demand. Leave unset until that is in place |
 | `MONGODB_URI` | yes | both | Atlas SRV string, TLS |
 | `MONGODB_CSFLE_KMS_KEY_ARN` | no | both | The KMS key for field-level encryption |
 | `REDIS_URL` | yes | both | `rediss://…` |

@@ -58,7 +58,9 @@ Requirements for every Sanchalix module. Each module lists its features with MoS
 | Feature | MoSCoW | Release |
 |---|---|---|
 | Admission pipeline (enquiry → accepted) with a status board | M | MVP |
-| Public online admission form per school (`/apply/{schoolCode}`) | S | v1 |
+| Public online admission form on the school's website (`{slug}.sanchalix.app/apply`), filing an enquiry with source `website`; the school switches it on | S | v1 |
+| School website from three predesigned templates: colour, headline, about, contact, notices, events, teachers and gallery; draft, preview and publish; per-school robots.txt, sitemap and School structured data | M | v1 |
+| Custom domain with verified DNS; downloads and news posts; analytics for the website | C | v2 |
 | Document checklist and upload, with verification | M | MVP |
 | Accept → create Student + Guardians + Enrollment in one step; admission number auto-generated | M | MVP |
 | Student profile with tabs (overview, attendance, academics, fees, documents, guardians, history) | M | MVP |

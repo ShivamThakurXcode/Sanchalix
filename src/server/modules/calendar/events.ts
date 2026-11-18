@@ -21,6 +21,7 @@ export const EventInput = z
     type: z.enum(EVENT_TYPES, `${E}.type`).exclude(['holiday']),
     start: Day('start'),
     end: Day('end'),
+    isPublic: z.boolean().default(false),
   })
   .refine(({ start, end }) => end >= start, { path: ['end'], message: `${E}.endBeforeStart` });
 export type EventInput = z.infer<typeof EventInput>;
@@ -33,6 +34,7 @@ export type CalendarItem = {
   type: (typeof EVENT_TYPES)[number];
   start: string;
   end: string;
+  isPublic?: boolean;
 };
 
 const shift = (month: string, by: number) => {
@@ -71,7 +73,7 @@ export async function getMonth(ctx: RequestContext, requested: string | undefine
   const [first, last] = [`${month}-01`, `${month}-31`];
   const [events, holidays, exams] = await Promise.all([
     Event.find({ schoolId, start: { $lte: last }, end: { $gte: first } })
-      .select('title type start end')
+      .select('title type start end isPublic')
       .lean(),
     Holiday.find({ schoolId, date: { $gte: first, $lte: last } })
       .select('date name')
@@ -86,6 +88,7 @@ export async function getMonth(ctx: RequestContext, requested: string | undefine
       type: event.type,
       start: event.start,
       end: event.end,
+      isPublic: event.isPublic,
     })),
     ...holidays.map((holiday) => ({
       id: null,
@@ -151,7 +154,7 @@ export async function addEvent(ctx: RequestContext, input: EventInput) {
 
 export async function updateEvent(ctx: RequestContext, id: string, input: EventInput) {
   const before = await Event.findOneAndUpdate({ schoolId: ctx.schoolId, _id: id }, { ...input, updatedBy: ctx.userId })
-    .select('title type start end')
+        .select('title type start end')
     .lean();
   if (!before) throw new AppError('NOT_FOUND', `${E}.notFound`);
   return {

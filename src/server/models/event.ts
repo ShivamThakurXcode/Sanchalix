@@ -14,6 +14,7 @@ const schema = new Schema(
     end: { type: String, required: true, match: DATE_STR },
     allDay: { type: Boolean, default: true },
     audience: { type: { type: String, enum: ['school', 'role'], default: 'school' }, roles: [String] },
+    isPublic: { type: Boolean, default: false },
     linked: { kind: String, id: Schema.Types.ObjectId },
     ...audit,
   },

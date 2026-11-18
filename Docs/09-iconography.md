@@ -548,6 +548,9 @@ Key = the key in `icons.tsx`. Component = the Reicon component. Default size is 
 | Concept | Key | Component | Where it is used |
 |---|---|---|---|
 | Settings | `settings` | `Settings2` | Side nav: Settings |
+| School website | `website` | `Globe` | Side nav: Website; the website editor |
+| Move up / Move down | `moveUp` / `moveDown` | `ArrowUp` / `ArrowDown` | Website editor: reorder the sections, always with an `ariaLabel` naming the section |
+| Gallery | `gallery` | `Gallery` | Website editor: Gallery tab, the gallery section |
 | Users | `users` | `Users` | Settings → Users |
 | Roles and permissions | `roles` | `ShieldCheck` | Settings → Roles; the permission matrix view |
 | Audit log | `auditLog` | `History` | Settings → Audit log; the "History" tab on records |

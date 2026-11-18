@@ -40,6 +40,7 @@ type ModuleKey =
   | 'promotion'
   | 'users'
   | 'settings'
+  | 'website'
   | 'outbox';
 type Group = 'people' | 'academics' | 'fees' | 'communication' | 'admin';
 
@@ -101,6 +102,7 @@ const MODULES: (Omit<NavItem, 'text' | 'group' | 'banner'> & { key: ModuleKey; g
   { key: 'promotion', group: 'admin', href: '/promotion', icon: 'promote', permission: 'sis.enrollment.update' },
   { key: 'users', group: 'admin', href: '/users', icon: 'users', permission: 'users.user.read' },
   { key: 'outbox', group: 'admin', href: '/outbox', icon: 'sms', permission: 'messaging.outbox.read' },
+  { key: 'website', group: 'admin', href: '/website', icon: 'website', permission: 'website.manage' },
   { key: 'settings', group: 'admin', href: '/settings', icon: 'settings', permission: 'settings.school.update' },
 ];
 
@@ -134,6 +136,7 @@ const ILLUSTRATED = new Set<ModuleKey>([
   'reports',
   'outbox',
   'settings',
+  'website',
 ]);
 
 // Pages with no artwork of their own borrow the picture of a related page.
@@ -144,6 +147,7 @@ const SHARED_BANNER: Partial<Record<ModuleKey, string>> = {
   reports: 'dashboard',
   outbox: 'announcements',
   settings: 'users',
+  website: 'dashboard',
 };
 
 async function PlatformLayout({ platform, children }: { platform: PlatformContext; children: ReactNode }) {

@@ -16,6 +16,7 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "seed": "node --conditions=react-server --env-file=.env.local node_modules/tsx/dist/cli.mjs scripts/seed.ts",
+    "seed:website": "tsx --conditions=react-server --env-file=.env.local scripts/seedWebsite.ts",
     "totp": "tsx scripts/totp.ts",
     "blog:import": "tsx --conditions=react-server --env-file=.env.local scripts/importBlogPosts.ts",
     "superadmin": "tsx --conditions=react-server --env-file=.env.local scripts/createSuperAdmin.ts",

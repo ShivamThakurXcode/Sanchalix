@@ -24,6 +24,8 @@ export const AnnouncementInput = z.object({
   audience: Audience,
   /** A notice: each recipient is asked to confirm they have read it. */
   requiresAck: z.boolean().default(false),
+  /** Also shown on the school's public website. Only an announcement for the whole school can be. */
+  isPublic: z.boolean().default(false),
   /** Besides the app, which always gets it. People who have switched a channel off in Profile are skipped. */
   channels: z.array(z.enum(['email', 'sms'])).max(2).default([]),
   /** Leave empty to publish now. A later date holds it until that morning. */

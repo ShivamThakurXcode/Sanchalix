@@ -52,6 +52,14 @@ const schema = new Schema(
     currency: { type: String, default: 'INR' },
     locales: { type: [String], default: ['en', 'hi'] },
     logoUrl: String,
+    slug: { type: String, match: /^[a-z0-9-]{3,30}$/ },
+    // Addresses the website used before, so an old link or search result still finds it.
+    slugHistory: [String],
+    customDomain: { type: String, lowercase: true },
+    // Set when the school's DNS shows it owns customDomain. Until then the domain is not served.
+    customDomainVerifiedAt: Date,
+    phone: String,
+    email: { type: String, lowercase: true },
     settings: { type: settings, default: () => ({}) },
     integrations: {
       razorpay: { keyId: String, keySecret: secret, webhookSecret: secret },
@@ -66,5 +74,8 @@ const schema = new Schema(
 
 schema.index({ code: 1 }, { unique: true });
 schema.index({ organizationId: 1 });
+schema.index({ slugHistory: 1 });
+schema.index({ slug: 1 }, { unique: true, partialFilterExpression: { slug: { $type: 'string' } } });
+schema.index({ customDomain: 1 }, { unique: true, partialFilterExpression: { customDomain: { $type: 'string' } } });
 
 export const School = defineModel('School', schema, 'schools');

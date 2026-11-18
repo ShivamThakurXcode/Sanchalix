@@ -32,6 +32,7 @@ import { StaffInput } from '@/server/modules/hr/schemas';
 import { createStaff } from '@/server/modules/hr/service';
 import { addDocument, verifyDocument } from '@/server/modules/sis/documents';
 import { createSubject } from '@/server/modules/timetable/service';
+import { seedGreenValleyWebsite } from './seedWebsite';
 
 const ADDRESS = { line1: '12 School Road', city: 'Bhopal', state: 'Madhya Pradesh', pincode: '462001' };
 const DAY_MS = 86_400_000;
@@ -165,14 +166,14 @@ export async function seedGreenValleyDemo(schoolId: Types.ObjectId, domain: stri
     ['2027-01-26', 'Republic Day'],
   ] as const;
   for (const [date, name] of holidays) await addHoliday(admin, { date, name });
-  for (const [title, type, start, end] of [
-    ['Parent-teacher meeting', 'ptm', shift(5), shift(5)],
-    ['Half-yearly examinations', 'exam', shift(8), shift(15)],
-    ['Annual sports day', 'sports', shift(25), shift(26)],
-    ['Science exhibition', 'academic', shift(40), shift(40)],
-    ['Annual day', 'cultural', shift(70), shift(70)],
+  for (const [title, type, start, end, isPublic] of [
+    ['Parent-teacher meeting', 'ptm', shift(5), shift(5), false],
+    ['Half-yearly examinations', 'exam', shift(8), shift(15), true],
+    ['Annual sports day', 'sports', shift(25), shift(26), true],
+    ['Science exhibition', 'academic', shift(40), shift(40), true],
+    ['Annual day', 'cultural', shift(70), shift(70), true],
   ] as const) {
-    await addEvent(principal, EventInput.parse({ title, type, start, end }));
+    await addEvent(principal, EventInput.parse({ title, type, start, end, isPublic }));
   }
 
   // The last working days before today. Today is left untaken so attendance can be tried by hand.
@@ -468,13 +469,15 @@ export async function seedGreenValleyDemo(schoolId: Types.ObjectId, domain: stri
   }
 
   // Announcements last, so every account above gets its notification.
-  for (const [title, body, audience] of [
-    ['Half-yearly examination schedule', 'The half-yearly examinations begin next week. The date sheet is on the calendar. Students must carry their ID cards.', { type: 'school' }],
-    ['Fee reminder: Quarter 3', 'Quarter 3 fees are due soon. Please pay at the school fee counter between 9 am and 1 pm.', { type: 'role', roles: ['parent'] }],
-    ['Staff meeting on Saturday', 'All teaching staff are requested to attend the meeting in the conference room at 2 pm.', { type: 'role', roles: ['teacher'] }],
+  for (const [title, body, audience, isPublic] of [
+    ['Half-yearly examination schedule', 'The half-yearly examinations begin next week. The date sheet is on the calendar. Students must carry their ID cards.', { type: 'school' }, true],
+    ['Fee reminder: Quarter 3', 'Quarter 3 fees are due soon. Please pay at the school fee counter between 9 am and 1 pm.', { type: 'role', roles: ['parent'] }, false],
+    ['Staff meeting on Saturday', 'All teaching staff are requested to attend the meeting in the conference room at 2 pm.', { type: 'role', roles: ['teacher'] }, false],
   ] as const) {
-    await publishAnnouncement(principal, { title, body, audience: audience as never });
+    await publishAnnouncement(principal, { title, body, audience: audience as never, isPublic });
   }
+
+  await seedGreenValleyWebsite(schoolId, domain);
 
   return {
     staff: staff.length,

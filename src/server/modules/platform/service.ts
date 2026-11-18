@@ -16,6 +16,7 @@ import { Staff } from '@/server/models/staff';
 import { Student } from '@/server/models/student';
 import { User } from '@/server/models/user';
 import { temporaryPassword } from '@/server/modules/users/service';
+import { defaultSlug } from '@/server/modules/website/slug';
 
 const E = 'platform.errors';
 const text = (key: string, max: number) => z.string().trim().min(1, `${E}.${key}`).max(max, `${E}.${key}`);
@@ -170,6 +171,11 @@ export async function getSchool(id: string): Promise<SchoolDetail | null> {
   };
 }
 
+const slugFor = (code: string) => {
+  const slug = defaultSlug(code);
+  return slug ? { slug } : {};
+};
+
 /** The Indian school year that includes today: April to March. */
 const yearFor = (today: Date) => {
   const start = today.getUTCMonth() >= 3 ? today.getUTCFullYear() : today.getUTCFullYear() - 1;
@@ -196,7 +202,7 @@ export async function createSchool(input: SchoolInput, today = new Date()) {
   await withTransaction(async (session) => {
     await Organization.create([{ _id: organizationId, name: input.name, billingEmail: input.admin.email, plan: input.plan }], { session });
     await School.create(
-      [{ _id: schoolId, organizationId, name: input.name, code: input.code, board: input.board, address, status: 'onboarding' }],
+      [{ _id: schoolId, organizationId, name: input.name, code: input.code, ...slugFor(input.code), board: input.board, address, status: 'onboarding' }],
       { session },
     );
     await Branch.create([{ schoolId, name: 'Main campus', code: 'MAIN', address, isDefault: true }], { session });

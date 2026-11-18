@@ -5,6 +5,8 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
   experimental: { authInterrupts: true },
+  // A school's gallery photos are served resized and compressed. Only that route may be optimized, and with no query string.
+  images: { localPatterns: [{ pathname: '/api/site/**', search: '' }] },
   // The container image runs a self-contained server. Left off elsewhere, so `next start` keeps working.
   ...(process.env.BUILD_STANDALONE && { output: 'standalone' as const }),
   // pdfkit reads its font files from its own folder at run time, which a bundled copy can't find.

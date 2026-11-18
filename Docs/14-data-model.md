@@ -94,13 +94,18 @@ Indexes: `{ name: 1 }`.
 | currency | ISO 4217 | default `INR` |
 | locales | string[] | default `['en', 'hi']` |
 | logoUrl | string | Storage key of the uploaded logo (`school/school/uuid.ext`), served at `/api/v1/settings/logo` |
+| slug | string | optional, unique, `^[a-z0-9-]{3,30}$`, not a platform name (`www`, `app`, `api`…). The school's website address, `{slug}.sanchalix.app`. Set to the lower-cased `code` at creation unless that is a platform name ([ADR-030](23-decision-log.md#adr-030-a-public-website-for-every-school-from-predesigned-templates)) |
+| slugHistory | string[] | addresses the website used before, so an old link forwards (a permanent redirect) to the current one; another school can't take one |
+| customDomain | string | optional, unique, lower-case; the school's own domain for its website. It is served only once `customDomainVerifiedAt` is set |
+| customDomainVerifiedAt | Date | set when the school's DNS shows a `_sanchalix.{domain}` TXT record equal to `sanchalix-verify={token}` (a hash of the school, the domain and the app secret); cleared when the domain changes |
+| phone, email | string | optional; public contact details shown on the school's website |
 | settings | SchoolSettings | see below |
 | integrations | `{ razorpay?: { keyId, keySecret🔒, webhookSecret🔒 }, stripe?: {...🔒}, emailDomain?, allowedGoogleDomains: string[] }` | optional; the platform defaults apply when unset |
 | status | `'onboarding' \| 'active' \| 'suspended'` | |
 
 `SchoolSettings`: `attendanceMode: 'daily' | 'period' | 'both'`, `absenceAlertTime: 'HH:mm'` (default `09:30`; the time parents are texted about an absence), `leaveQuotas: { CL, SL, EL }` (days a year, defaults 12, 10 and 15), `attendanceEditWindow: 'same_day'`, `leaveCountsAsAbsent: boolean`, `transportWindows: { start: 'HH:mm', end: 'HH:mm' }[]` (when route notices may bypass quiet hours), `lateFeeRule: { graceDays, amountMinor, perDay }`, `quietHours: { start: 'HH:mm', end: 'HH:mm' }`, `shiftDueDates: boolean` (default false; a due date on a holiday or closed day moves to the next working day when invoices are issued), `weekStart: 0-6`, `workingDays: number[]`, `receiptPrefix`, `messagingStudentsEnabled: boolean`, `aiInsightsEnabled: boolean` (default false), `llmSummariesEnabled: boolean` (default false), `defaultGradingSchemeId`, `onboardingCompletedAt: Date` (set when the school admin finishes first-run setup; unset means the setup wizard still shows on the dashboard).
 
-Indexes: `{ code: 1 } unique`, `{ organizationId: 1 }`.
+Indexes: `{ code: 1 } unique`, `{ organizationId: 1 }`, `{ slugHistory: 1 }`, `{ slug: 1 } unique` and `{ customDomain: 1 } unique` (both partial: only where the field is set).
 
 ### users
 One login identity, which can hold several roles.
@@ -419,8 +424,21 @@ Indexes: `{ provider: 1, eventId: 1 } unique`, `{ processedAt: 1 }` (partial, wh
 ## Communication
 
 ### announcements
-`schoolId`, `kind: 'announcement' | 'notice'`, `title` (≤120), `body` (sanitised Markdown, ≤5,000), `attachments`, `audience: { type: 'school' | 'branch' | 'class' | 'section' | 'role', ids: ObjectId[], roles?: RoleKey[] }`, `channels: ('in_app' | 'email' | 'sms' | 'push')[]`, `requiresAck: boolean`, `acks: { userId, at }[]`, `publishAt`, `expiresAt`, `status: 'draft' | 'scheduled' | 'published' | 'archived'`, `authorId`.
+`schoolId`, `kind: 'announcement' | 'notice'`, `title` (≤120), `body` (sanitised Markdown, ≤5,000), `attachments`, `audience: { type: 'school' | 'branch' | 'class' | 'section' | 'role', ids: ObjectId[], roles?: RoleKey[] }`, `channels: ('in_app' | 'email' | 'sms' | 'push')[]`, `requiresAck: boolean`, `isPublic: boolean` (default false; only an announcement for the whole school can be public, and it then appears on the school's website), `acks: { userId, at }[]`, `publishAt`, `expiresAt`, `status: 'draft' | 'scheduled' | 'published' | 'archived'`, `authorId`.
 Indexes: `{ schoolId: 1, status: 1, publishAt: -1 }`, `{ schoolId: 1, 'audience.ids': 1 }`.
+
+### websites
+One per school. The school's public website ([ADR-030](23-decision-log.md#adr-030-a-public-website-for-every-school-from-predesigned-templates)): `schoolId`, `template: 'classic' | 'modern' | 'minimal'`, `theme: { primary: '#rrggbb' }` (one of six colours that keep white text at 4.5:1; default `#0b5cad`), `hero: { headline ≤120, subline ≤240 }`, `about` (plain text, ≤3,000), `sections: { about, programmes, facilities, notices, events, staff, testimonials, gallery, downloads, contact: boolean }` (all default true), `sectionOrder: SectionKey[]` (the order they appear; a section not listed follows in the default order), `programmes` and `facilities: { title ≤80, text ≤400 }[]` (up to 8 and 12), `testimonials: { quote ≤300, by ≤80 }[]` (up to 6), `pages: { slug, title ≤80, body ≤5,000 }[]` (up to 5 plain-text pages at `/p/{slug}`), `staffPhotos: { staffId, storageKey }[]` (a picture for a chosen teacher, shown only while that teacher is in `staffIds`), `applyClassIds: ObjectId<Class>[]` (classes taking applications; empty means all of the current year), `staffIds: ObjectId<Staff>[]` (the teachers shown; only active teaching staff of the school are kept), `admissionsOpen: boolean` (default false), `status: 'draft' | 'published'`.
+Indexes: `{ schoolId: 1 } unique`.
+
+### galleryItems
+The photos on a school's website: `schoolId`, `storageKey` (`{schoolId}/{itemId}/{uuid}.{ext}`, JPEG, PNG or WebP), `caption` (≤120), `order` (lowest first; a photo with none sorts first, newest first, until the school moves one). At most 24 a school. Indexes: `{ schoolId: 1, createdAt: -1 }`.
+
+### websiteDownloads
+PDF files on a school's website: `schoolId`, `title` (≤80), `storageKey` (`{schoolId}/{id}/{uuid}.pdf`), `fileName` (cleaned, ≤100), `size`. At most 10 a school. Indexes: `{ schoolId: 1, createdAt: -1 }`.
+
+### siteVisits
+Page-view counts for a school's website, with nothing that identifies a visitor: `schoolId`, `day` (`YYYY-MM-DD` in the school's time zone), `kind: 'home' | 'apply' | 'page' | 'news'`, `count`, `expiresAt` (400 days). Indexes: `{ schoolId: 1, day: 1, kind: 1 } unique`, a TTL on `expiresAt`.
 
 ### threads and messages
 `threads`: `schoolId`, `participantIds: ObjectId<User>[]` (2–10), `studentId?` (context), `subject`, `lastMessageAt`, `unreadBy: { userId, count }[]`.
@@ -470,7 +488,7 @@ Indexes: `{ schoolId: 1, roomId: 1, bed: 1, to: 1 }`.
 ## Calendar
 
 ### events
-`schoolId`, `branchId?`, `title`, `type: 'academic' | 'exam' | 'ptm' | 'sports' | 'cultural' | 'holiday' | 'other'`, `start`, `end`, `allDay`, `audience` (same shape as announcements), `linked: { kind, id }?`.
+`schoolId`, `branchId?`, `title`, `type: 'academic' | 'exam' | 'ptm' | 'sports' | 'cultural' | 'holiday' | 'other'`, `start`, `end`, `allDay`, `audience` (same shape as announcements), `isPublic: boolean` (default false; shows the title and dates on the school's website), `linked: { kind, id }?`.
 
 ### holidays
 `schoolId`, `date`, `name`, `branchIds?` (default all).

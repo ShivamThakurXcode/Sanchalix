@@ -61,6 +61,7 @@ export function OnboardingWizard({ data }: { data: Data }) {
   const [school, setSchool] = useState({
     name: settings.name,
     affiliationNo: settings.affiliationNo,
+    slug: settings.slug || settings.code.toLowerCase(),
     ...settings.address,
   });
   const [workingDays, setWorkingDays] = useState(settings.workingDays);
@@ -85,6 +86,7 @@ export function OnboardingWizard({ data }: { data: Data }) {
     const result = await updateSchoolSettings({
       name: school.name,
       affiliationNo: school.affiliationNo,
+      slug: school.slug,
       address: {
         line1: school.line1,
         city: school.city,
@@ -256,6 +258,7 @@ export function OnboardingWizard({ data }: { data: Data }) {
                             span(6),
                             span(6),
                             span(6),
+                            span(6),
                             span(2),
                             span(2),
                             span(2),
@@ -263,6 +266,7 @@ export function OnboardingWizard({ data }: { data: Data }) {
                         >
                           {text("name")}
                           {text("affiliationNo")}
+                          {text("slug")}
                           {text("line1", "address.line1")}
                           {text("city", "address.city")}
                           {text("state", "address.state")}
