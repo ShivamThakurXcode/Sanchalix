@@ -1,9 +1,8 @@
 import "server-only";
 import { Schema } from "mongoose";
-import { SECTION_KEYS, TEMPLATES } from "@/server/modules/website/palette";
+import { SECTION_KEYS } from "@/server/modules/website/palette";
 import { audit, defineTenantModel } from "./shared";
 
-export const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
 
 const card = () => ({
   _id: false,
@@ -13,8 +12,6 @@ const card = () => ({
 
 const schema = new Schema(
   {
-    template: { type: String, enum: TEMPLATES, default: "classic" },
-    theme: { primary: { type: String, match: HEX_COLOUR, default: "#0b5cad" } },
     hero: {
       headline: { type: String, maxlength: 120 },
       subline: { type: String, maxlength: 240 },

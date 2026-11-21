@@ -13,14 +13,10 @@ import { type DomainInfo, getDomainInfo } from "./domain";
 import { listDownloads } from "./downloads";
 import { listGallery } from "./gallery";
 import {
-  COLOURS,
-  colourOf,
   MAX_PAGES,
   orderSections,
-  PALETTE,
   SECTION_KEYS,
   type SectionKey,
-  TEMPLATES,
 } from "./palette";
 import { isUsableSlug } from "./slug";
 
@@ -47,12 +43,10 @@ const Optional = (schema: z.ZodType<string>) =>
 
 export const WebsiteInput = z.object({
   slug: z.string().trim().toLowerCase().refine(isUsableSlug, `${E}.slug`),
-  template: z.enum(TEMPLATES),
   admissionsOpen: z.boolean(),
   applyClassIds: z
     .array(z.string().regex(/^[0-9a-f]{24}$/, `${E}.classes`))
     .max(40, `${E}.classes`),
-  colour: z.enum(COLOURS),
   headline: z.string().trim().min(1, `${E}.headline`).max(120, `${E}.headline`),
   subline: z.string().trim().max(240, `${E}.subline`),
   about: z.string().trim().max(3000, `${E}.about`),
@@ -146,14 +140,12 @@ export async function getWebsite(ctx: RequestContext): Promise<WebsiteEditor> {
   return {
     slug,
     status: site?.status ?? "draft",
-    template: site?.template ?? "classic",
     admissionsOpen: site?.admissionsOpen ?? false,
     applyClassIds: (site?.applyClassIds ?? []).map(String),
     classOptions: classes.map((item) => ({
       id: String(item._id),
       name: item.name,
     })),
-    colour: colourOf(site?.theme?.primary),
     headline: site?.hero?.headline ?? school.name,
     subline: site?.hero?.subline ?? "",
     about: site?.about ?? "",
@@ -254,9 +246,7 @@ export async function saveWebsite(ctx: RequestContext, input: WebsiteInput) {
       pages: input.pages,
       sectionOrder: orderSections(input.sectionOrder),
       staffIds: staff.map((member) => member._id),
-      template: input.template,
       admissionsOpen: input.admissionsOpen,
-      "theme.primary": PALETTE[input.colour],
       "hero.headline": input.headline,
       "hero.subline": input.subline,
       about: input.about,

@@ -45,10 +45,8 @@ const seed = async (code: string, slug?: string): Promise<RequestContext> => {
 const input = (slug: string) =>
   WebsiteInput.parse({
     slug,
-    template: "modern",
     admissionsOpen: true,
     applyClassIds: [],
-    colour: "teal",
     headline: "Welcome",
     subline: "",
     about: "About us",
@@ -96,8 +94,6 @@ it("saves a school its own website, which starts offline", async () => {
   await saveWebsite(ctx, input(`one-${stamp}`));
   expect(await getWebsite(ctx)).toMatchObject({
     status: "draft",
-    template: "modern",
-    colour: "teal",
     about: "About us",
     email: "office@example.com",
     sections: { notices: false, about: true },

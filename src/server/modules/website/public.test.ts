@@ -206,8 +206,6 @@ it("returns only the whitelisted fields", async () => {
       "sections",
       "slug",
       "staff",
-      "template",
-      "theme",
       "events",
       "gallery",
       "hasLogo",

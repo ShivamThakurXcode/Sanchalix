@@ -2,16 +2,12 @@ import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { notFoundOrMoved } from "@/features/website/moved";
-import { PageHead } from "@/features/website/PageHead";
 import { SectionBody } from "@/features/website/sections";
-import { SiteFrame } from "@/features/website/SiteFrame";
+import { SitePage } from "@/features/website/SitePage";
 import { getContext } from "@/server/auth/context";
 import { can } from "@/server/auth/permissions";
 import { recordVisit } from "@/server/modules/website/analytics";
-import {
-  sectionOfPath,
-  visibleSections,
-} from "@/server/modules/website/nav";
+import { sectionOfPath, visibleSections } from "@/server/modules/website/nav";
 import { getPublicSite } from "@/server/modules/website/public";
 
 async function load(params: Promise<{ slug: string; section: string }>) {
@@ -54,11 +50,8 @@ export default async function SectionPage({
   if (!key || !visibleSections(site).includes(key)) notFound();
   if (!site.preview) after(() => recordVisit(slug, "page"));
   return (
-    <SiteFrame site={site} current={key}>
-      <PageHead site={site} title={t(`${key}.title`)} />
-      <section className="vw-site-section">
-        <SectionBody site={site} name={key} />
-      </section>
-    </SiteFrame>
+    <SitePage site={site} title={t(`${key}.title`)}>
+      <SectionBody site={site} name={key} />
+    </SitePage>
   );
 }

@@ -1,7 +1,19 @@
 "use client";
 
+import Alert from "@cloudscape-design/components/alert";
+import Button from "@cloudscape-design/components/button";
+import Checkbox from "@cloudscape-design/components/checkbox";
+import Container from "@cloudscape-design/components/container";
+import DatePicker from "@cloudscape-design/components/date-picker";
+import Form from "@cloudscape-design/components/form";
+import FormField from "@cloudscape-design/components/form-field";
+import Header from "@cloudscape-design/components/header";
+import Input from "@cloudscape-design/components/input";
+import Select from "@cloudscape-design/components/select";
+import SpaceBetween from "@cloudscape-design/components/space-between";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
+import { svg } from "@/components/icons";
 
 type Result =
   | { ok: true; data: { applicationNo: string } }
@@ -24,8 +36,10 @@ const BLANK = {
   consent: false,
   website: "",
 };
+const GENDERS = ["female", "male", "other", "undisclosed"];
+const RELATIONS = ["mother", "father", "guardian", "other"];
+const today = new Date().toISOString().slice(0, 10);
 
-// ADR-030: part of the public school site, so plain HTML controls rather than Cloudscape.
 export function ApplyForm({
   slug,
   classes,
@@ -81,187 +95,177 @@ export function ApplyForm({
 
   if (applicationNo !== null) {
     return (
-      <div role="status" className="vw-site-done">
-        <h2>{t("done.title")}</h2>
-        <p>
-          {applicationNo
-            ? t("done.body", { number: applicationNo })
-            : t("done.bodyNoNumber")}
-        </p>
-      </div>
+      <Alert type="success" header={t("done.title")}>
+        {applicationNo
+          ? t("done.body", { number: applicationNo })
+          : t("done.bodyNoNumber")}
+      </Alert>
     );
   }
 
-  const field = (
-    key: keyof typeof BLANK,
-    label: string,
-    props: {
-      type?: string;
-      required?: boolean;
-      autoComplete?: string;
-      hint?: string;
-      inputMode?: "tel" | "email";
-    } = {},
-  ) => {
-    const id = `apply-${key}`;
-    const errorKey =
-      key === "guardianName"
-        ? "guardian.name"
-        : key === "phone"
-          ? "guardian.phone"
-          : key === "email"
-            ? "guardian.email"
-            : key;
-    return (
-      <div className="vw-site-field">
-        <label htmlFor={id}>{label}</label>
-        {props.hint && <span id={`${id}-hint`}>{props.hint}</span>}
-        <input
-          id={id}
-          value={String(values[key])}
-          onChange={(event) => set(key, event.target.value)}
-          aria-invalid={Boolean(errors[errorKey])}
-          aria-describedby={
-            [props.hint && `${id}-hint`, errors[errorKey] && `${id}-error`]
-              .filter(Boolean)
-              .join(" ") || undefined
-          }
-          {...props}
-        />
-        {errors[errorKey] && (
-          <span id={`${id}-error`} className="vw-site-error">
-            {errors[errorKey]}
-          </span>
-        )}
-      </div>
-    );
+  const options = {
+    gender: GENDERS.map((value) => ({
+      value,
+      label: t(`genders.${value}`),
+    })),
+    relation: RELATIONS.map((value) => ({
+      value,
+      label: t(`relations.${value}`),
+    })),
+    classId: classes.map((schoolClass) => ({
+      value: schoolClass.id,
+      label: schoolClass.name,
+    })),
   };
+  const pick = (key: "gender" | "relation" | "classId") =>
+    options[key].find((option) => option.value === values[key]) ?? null;
 
   return (
-    <form
-      className="vw-site-form"
-      noValidate
-      onSubmit={(event) => void submit(event)}
-    >
-      {error && !error.fieldErrors && (
-        <p role="alert" className="vw-site-error">
-          {error.message}
-        </p>
-      )}
-      <fieldset>
-        <legend>{t("child")}</legend>
-        {field("firstName", t("firstName"), {
-          required: true,
-          autoComplete: "off",
-        })}
-        {field("lastName", t("lastName"), { autoComplete: "off" })}
-        {field("dob", t("dob"), { type: "date", required: true })}
-        <div className="vw-site-field">
-          <label htmlFor="apply-gender">{t("gender")}</label>
-          <select
-            id="apply-gender"
-            value={values.gender}
-            required
-            onChange={(event) => set("gender", event.target.value)}
-            aria-invalid={Boolean(errors.gender)}
+    <form noValidate onSubmit={(event) => void submit(event)}>
+      <Form
+        errorText={error && !error.fieldErrors ? error.message : undefined}
+        actions={
+          <Button
+            variant="primary"
+            formAction="submit"
+            loading={busy}
+            loadingText={t("sending")}
+            iconSvg={svg("send")}
           >
-            <option value="" disabled>
-              {t("choose")}
-            </option>
-            {["female", "male", "other", "undisclosed"].map((value) => (
-              <option key={value} value={value}>
-                {t(`genders.${value}`)}
-              </option>
-            ))}
-          </select>
-          {errors.gender && (
-            <span className="vw-site-error">{errors.gender}</span>
-          )}
-        </div>
-        <div className="vw-site-field">
-          <label htmlFor="apply-classId">{t("classSought")}</label>
-          <select
-            id="apply-classId"
-            value={values.classId}
-            required
-            onChange={(event) => set("classId", event.target.value)}
-            aria-invalid={Boolean(errors.classId)}
-          >
-            <option value="" disabled>
-              {t("choose")}
-            </option>
-            {classes.map((schoolClass) => (
-              <option key={schoolClass.id} value={schoolClass.id}>
-                {schoolClass.name}
-              </option>
-            ))}
-          </select>
-          {errors.classId && (
-            <span className="vw-site-error">{errors.classId}</span>
-          )}
-        </div>
-        {field("previousSchool", t("previousSchool"), { autoComplete: "off" })}
-      </fieldset>
-      <fieldset>
-        <legend>{t("guardian")}</legend>
-        {field("guardianName", t("guardianName"), {
-          required: true,
-          autoComplete: "name",
-        })}
-        <div className="vw-site-field">
-          <label htmlFor="apply-relation">{t("relation")}</label>
-          <select
-            id="apply-relation"
-            value={values.relation}
-            onChange={(event) => set("relation", event.target.value)}
-          >
-            {["mother", "father", "guardian", "other"].map((value) => (
-              <option key={value} value={value}>
-                {t(`relations.${value}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-        {field("phone", t("phone"), {
-          type: "tel",
-          required: true,
-          autoComplete: "tel-national",
-          inputMode: "tel",
-          hint: t("phoneHint"),
-        })}
-        {field("email", t("email"), {
-          type: "email",
-          autoComplete: "email",
-          inputMode: "email",
-        })}
-      </fieldset>
-      <div className="vw-site-honey" aria-hidden="true">
-        <label htmlFor="apply-website">{t("honeypot")}</label>
-        <input
-          id="apply-website"
-          tabIndex={-1}
-          autoComplete="off"
-          value={values.website}
-          onChange={(event) => set("website", event.target.value)}
-        />
-      </div>
-      <div className="vw-site-field">
-        <label className="vw-site-check">
-          <input
-            type="checkbox"
-            checked={values.consent}
-            onChange={(event) => set("consent", event.target.checked)}
-            aria-invalid={Boolean(errors.consent)}
-          />
-          {t("consent")}
-        </label>
-        {errors.consent && (
-          <span className="vw-site-error">{errors.consent}</span>
-        )}
-      </div>
-      <button type="submit" className="vw-site-button" disabled={busy}>
-        {busy ? t("sending") : t("send")}
-      </button>
+            {t("send")}
+          </Button>
+        }
+      >
+        <SpaceBetween size="l">
+          <Container header={<Header variant="h2">{t("child")}</Header>}>
+            <SpaceBetween size="m">
+              <FormField label={t("firstName")} errorText={errors.firstName}>
+                <Input
+                  value={values.firstName}
+                  autoComplete={false}
+                  onChange={({ detail }) => set("firstName", detail.value)}
+                />
+              </FormField>
+              <FormField label={t("lastName")} errorText={errors.lastName}>
+                <Input
+                  value={values.lastName}
+                  autoComplete={false}
+                  onChange={({ detail }) => set("lastName", detail.value)}
+                />
+              </FormField>
+              <FormField
+                label={t("dob")}
+                constraintText={t("dobHint")}
+                errorText={errors.dob}
+              >
+                <DatePicker
+                  value={values.dob}
+                  placeholder="YYYY/MM/DD"
+                  isDateEnabled={(date) =>
+                    date.toISOString().slice(0, 10) <= today
+                  }
+                  onChange={({ detail }) => set("dob", detail.value)}
+                />
+              </FormField>
+              <FormField label={t("gender")} errorText={errors.gender}>
+                <Select
+                  selectedOption={pick("gender")}
+                  options={options.gender}
+                  placeholder={t("choose")}
+                  onChange={({ detail }) =>
+                    set("gender", detail.selectedOption.value ?? "")
+                  }
+                />
+              </FormField>
+              <FormField label={t("classSought")} errorText={errors.classId}>
+                <Select
+                  selectedOption={pick("classId")}
+                  options={options.classId}
+                  placeholder={t("choose")}
+                  onChange={({ detail }) =>
+                    set("classId", detail.selectedOption.value ?? "")
+                  }
+                />
+              </FormField>
+              <FormField
+                label={t("previousSchool")}
+                errorText={errors.previousSchool}
+              >
+                <Input
+                  value={values.previousSchool}
+                  autoComplete={false}
+                  onChange={({ detail }) => set("previousSchool", detail.value)}
+                />
+              </FormField>
+            </SpaceBetween>
+          </Container>
+          <Container header={<Header variant="h2">{t("guardian")}</Header>}>
+            <SpaceBetween size="m">
+              <FormField
+                label={t("guardianName")}
+                errorText={errors["guardian.name"]}
+              >
+                <Input
+                  value={values.guardianName}
+                  autoComplete="name"
+                  onChange={({ detail }) => set("guardianName", detail.value)}
+                />
+              </FormField>
+              <FormField label={t("relation")}>
+                <Select
+                  selectedOption={pick("relation")}
+                  options={options.relation}
+                  onChange={({ detail }) =>
+                    set("relation", detail.selectedOption.value ?? "mother")
+                  }
+                />
+              </FormField>
+              <FormField
+                label={t("phone")}
+                constraintText={t("phoneHint")}
+                errorText={errors["guardian.phone"]}
+              >
+                <Input
+                  value={values.phone}
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  onChange={({ detail }) => set("phone", detail.value)}
+                />
+              </FormField>
+              <FormField
+                label={t("email")}
+                errorText={errors["guardian.email"]}
+              >
+                <Input
+                  value={values.email}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  onChange={({ detail }) => set("email", detail.value)}
+                />
+              </FormField>
+            </SpaceBetween>
+          </Container>
+          <div className="vw-site-honey" aria-hidden="true">
+            <label htmlFor="apply-website">{t("honeypot")}</label>
+            <input
+              id="apply-website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={values.website}
+              onChange={(event) => set("website", event.target.value)}
+            />
+          </div>
+          <FormField errorText={errors.consent}>
+            <Checkbox
+              checked={values.consent}
+              onChange={({ detail }) => set("consent", detail.checked)}
+            >
+              {t("consent")}
+            </Checkbox>
+          </FormField>
+        </SpaceBetween>
+      </Form>
     </form>
   );
 }

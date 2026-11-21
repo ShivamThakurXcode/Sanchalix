@@ -1,10 +1,10 @@
+import Box from "@cloudscape-design/components/box";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { notFoundOrMoved } from "@/features/website/moved";
-import { PageHead } from "@/features/website/PageHead";
 import { NoticeList } from "@/features/website/sections";
-import { SiteFrame } from "@/features/website/SiteFrame";
+import { SitePage } from "@/features/website/SitePage";
 import { getContext } from "@/server/auth/context";
 import { can } from "@/server/auth/permissions";
 import { recordVisit } from "@/server/modules/website/analytics";
@@ -44,15 +44,12 @@ export default async function NewsPage({
   if (!site.preview) after(() => recordVisit(slug, "news"));
   const base = siteBase(slug);
   return (
-    <SiteFrame site={site} current="notices">
-      <PageHead site={site} title={t("notices.all")} />
-      <section className="vw-site-section">
-        {notices.length === 0 ? (
-          <p>{t("notices.none")}</p>
-        ) : (
-          <NoticeList notices={notices} slug={slug} />
-        )}
-      </section>
-    </SiteFrame>
+    <SitePage site={site} title={t("notices.all")}>
+      {notices.length === 0 ? (
+        <Box color="text-body-secondary">{t("notices.none")}</Box>
+      ) : (
+        <NoticeList notices={notices} slug={slug} />
+      )}
+    </SitePage>
   );
 }

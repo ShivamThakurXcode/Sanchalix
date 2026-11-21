@@ -10,7 +10,6 @@ import { School } from '@/server/models/school';
 import { Staff } from '@/server/models/staff';
 import { User } from '@/server/models/user';
 import { Website } from '@/server/models/website';
-import { PALETTE } from '@/server/modules/website/palette';
 import { putFile } from '@/server/storage/store';
 
 const DAY_MS = 86_400_000;
@@ -80,9 +79,7 @@ export async function seedGreenValleyWebsite(schoolId: Types.ObjectId, domain: s
     { schoolId },
     {
       status: 'published',
-      template: 'modern',
       admissionsOpen: true,
-      'theme.primary': PALETTE.green,
       'hero.headline': 'Green Valley School, Bhopal',
       'hero.subline': 'A caring CBSE school where every child is known by name.',
       about:

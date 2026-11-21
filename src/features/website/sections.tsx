@@ -1,6 +1,14 @@
+import Box from "@cloudscape-design/components/box";
+import Button from "@cloudscape-design/components/button";
+import ColumnLayout from "@cloudscape-design/components/column-layout";
+import Container from "@cloudscape-design/components/container";
+import Header from "@cloudscape-design/components/header";
+import Link from "@cloudscape-design/components/link";
+import SpaceBetween from "@cloudscape-design/components/space-between";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { svg } from "@/components/icons";
 import type { SectionKey } from "@/server/modules/website/palette";
 import type { PublicSite } from "@/server/modules/website/public";
 import { siteBase } from "@/server/modules/website/slug";
@@ -26,19 +34,7 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase();
 
-const DateTile = ({ iso, timeZone }: { iso: string; timeZone: string }) => {
-  const when = new Date(iso);
-  const part = (options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat("en-IN", { ...options, timeZone }).format(when);
-  return (
-    <span className="vw-site-date" aria-hidden="true">
-      <b>{part({ day: "numeric" })}</b>
-      <span>{part({ month: "short" })}</span>
-    </span>
-  );
-};
-
-export async function NoticeList({
+export function NoticeList({
   notices,
   slug,
 }: {
@@ -47,40 +43,44 @@ export async function NoticeList({
 }) {
   const base = siteBase(slug);
   return (
-    <ul className="vw-site-list">
+    <SpaceBetween size="m">
       {notices.map((notice) => (
-        <li key={notice.id} className="vw-site-dated">
-          <DateTile iso={notice.date} timeZone="Asia/Kolkata" />
-          <div>
-            <h3 className="vw-site-item-title">
-              <a href={`${base}/news/${notice.id}`}>{notice.title}</a>
-            </h3>
-            <time dateTime={notice.date}>
-              {date.format(new Date(notice.date))}
-            </time>
-            <p className="vw-site-prose">{notice.excerpt}</p>
-          </div>
-        </li>
+        <Container
+          key={notice.id}
+          header={
+            <Header
+              variant="h3"
+              description={date.format(new Date(notice.date))}
+            >
+              <Link
+                fontSize="heading-m"
+                href={`${base}/news/${notice.id}`}
+                variant="primary"
+              >
+                {notice.title}
+              </Link>
+            </Header>
+          }
+        >
+          <div className="vw-site-prose">{notice.excerpt}</div>
+        </Container>
       ))}
-    </ul>
+    </SpaceBetween>
   );
 }
 
-const Cards = ({
-  items,
-  kind,
-}: {
-  items: { title: string; text: string }[];
-  kind: "rows" | "tiles";
-}) => (
-  <ul className={`vw-site-${kind}`}>
+const Cards = ({ items }: { items: { title: string; text: string }[] }) => (
+  <ColumnLayout columns={3} minColumnWidth={240}>
     {items.map((item) => (
-      <li key={item.title}>
-        <h3>{item.title}</h3>
-        {item.text && <p>{item.text}</p>}
-      </li>
+      <Container
+        key={item.title}
+        fitHeight
+        header={<Header variant="h3">{item.title}</Header>}
+      >
+        {item.text && <Box color="text-body-secondary">{item.text}</Box>}
+      </Container>
     ))}
-  </ul>
+  </ColumnLayout>
 );
 
 /** What one section shows. Its own page gives it in full; the home page gives it a few items of the same site. */
@@ -101,167 +101,212 @@ export async function SectionBody({
       // The gallery's first photograph is the hero, so the second sits beside the words.
       const picture = site.gallery[1];
       return (
-        <div
-          className={`vw-site-about${picture ? " vw-site-about--photo" : ""}`}
+        <Container
+          {...(picture && {
+            media: {
+              position: "side" as const,
+              width: "40%",
+              content: (
+                <Image
+                  className="vw-site-cover"
+                  src={photo(picture.id)}
+                  alt={picture.caption}
+                  width={640}
+                  height={480}
+                  sizes="(max-width: 900px) 100vw, 40vw"
+                  unoptimized={unoptimized}
+                />
+              ),
+            },
+          })}
         >
-          <p className="vw-site-prose vw-site-lead">{site.about}</p>
-          {picture && (
-            <figure>
-              <Image
-                src={photo(picture.id)}
-                alt={picture.caption}
-                width={640}
-                height={800}
-                sizes="(max-width: 832px) 100vw, 40vw"
-                unoptimized={unoptimized}
-              />
-            </figure>
-          )}
-        </div>
+          <div className="vw-site-prose">
+            <Box fontSize="heading-s" variant="p">
+              {site.about}
+            </Box>
+          </div>
+        </Container>
       );
     }
     case "programmes":
-      return <Cards items={site.programmes} kind="rows" />;
+      return <Cards items={site.programmes} />;
     case "facilities":
-      return <Cards items={site.facilities} kind="tiles" />;
+      return <Cards items={site.facilities} />;
     case "notices":
       return <NoticeList notices={site.notices} slug={site.slug} />;
     case "events":
       return (
-        <ul className="vw-site-list">
+        <ColumnLayout columns={3} minColumnWidth={240}>
           {site.events.map((event) => (
-            <li key={event.id} className="vw-site-dated">
-              <DateTile iso={event.start} timeZone="UTC" />
-              <div>
-                <h3 className="vw-site-item-title">{event.title}</h3>
-                <p>
-                  <time dateTime={event.start}>
-                    {day.format(new Date(event.start))}
-                  </time>
-                  {event.end !== event.start && (
-                    <>
-                      {" – "}
-                      <time dateTime={event.end}>
-                        {day.format(new Date(event.end))}
-                      </time>
-                    </>
-                  )}
-                </p>
-              </div>
-            </li>
+            <Container
+              key={event.id}
+              fitHeight
+              header={
+                <Header
+                  variant="h3"
+                  description={
+                    event.end !== event.start
+                      ? `${day.format(new Date(event.start))} – ${day.format(new Date(event.end))}`
+                      : day.format(new Date(event.start))
+                  }
+                >
+                  {event.title}
+                </Header>
+              }
+            />
           ))}
-        </ul>
+        </ColumnLayout>
       );
     case "staff":
       return (
-        <ul className="vw-site-people">
+        <ColumnLayout columns={4} minColumnWidth={200}>
           {site.staff.map((member) => (
-            <li key={member.id}>
-              <div className="vw-site-portrait">
-                {member.hasPhoto ? (
+            <Container
+              key={member.id}
+              fitHeight
+              media={{
+                position: "top",
+                height: 220,
+                content: member.hasPhoto ? (
                   <Image
+                    className="vw-site-cover"
                     src={photo(`staff-${member.id}`)}
                     alt=""
                     width={320}
-                    height={400}
-                    sizes="(max-width: 640px) 50vw, 20vw"
+                    height={220}
+                    sizes="(max-width: 900px) 50vw, 20vw"
                     unoptimized={unoptimized}
                   />
                 ) : (
-                  <span aria-hidden="true">{initials(member.name)}</span>
-                )}
-              </div>
-              <h3>{member.name}</h3>
-              <p>{member.designation}</p>
-            </li>
+                  <div className="vw-site-initials" aria-hidden="true">
+                    {initials(member.name)}
+                  </div>
+                ),
+              }}
+            >
+              <Box variant="h3">{member.name}</Box>
+              <Box color="text-body-secondary">{member.designation}</Box>
+            </Container>
           ))}
-        </ul>
+        </ColumnLayout>
       );
     case "testimonials":
       return (
-        <ul className="vw-site-quotes">
+        <ColumnLayout columns={2} minColumnWidth={300}>
           {site.testimonials.map((item) => (
-            <li key={`${item.by}-${item.quote.slice(0, 20)}`}>
+            <Container key={`${item.by}-${item.quote.slice(0, 20)}`} fitHeight>
               <figure className="vw-site-quote">
-                <blockquote>{item.quote}</blockquote>
-                <figcaption>{item.by}</figcaption>
+                <blockquote>
+                  <Box fontSize="heading-m">{item.quote}</Box>
+                </blockquote>
+                <figcaption>
+                  <Box color="text-body-secondary" fontWeight="bold">
+                    {item.by}
+                  </Box>
+                </figcaption>
               </figure>
-            </li>
+            </Container>
           ))}
-        </ul>
+        </ColumnLayout>
       );
     case "gallery":
       return (
-        <ul className="vw-site-photos">
+        <ColumnLayout columns={3} minColumnWidth={240}>
           {site.gallery.map((item) => (
-            <li key={item.id}>
-              <figure>
-                <Image
-                  src={photo(item.id)}
-                  alt={item.caption || t("gallery.photo")}
-                  width={640}
-                  height={480}
-                  sizes="(max-width: 832px) 50vw, 25vw"
-                  unoptimized={unoptimized}
-                />
-                {item.caption && <figcaption>{item.caption}</figcaption>}
-              </figure>
-            </li>
+            <Container
+              key={item.id}
+              fitHeight
+              media={{
+                position: "top",
+                height: 200,
+                content: (
+                  <Image
+                    className="vw-site-cover"
+                    src={photo(item.id)}
+                    alt={item.caption || t("gallery.photo")}
+                    width={640}
+                    height={400}
+                    sizes="(max-width: 900px) 100vw, 33vw"
+                    unoptimized={unoptimized}
+                  />
+                ),
+              }}
+            >
+              {item.caption && (
+                <Box color="text-body-secondary">{item.caption}</Box>
+              )}
+            </Container>
           ))}
-        </ul>
+        </ColumnLayout>
       );
     case "downloads":
       return (
-        <ul className="vw-site-files">
+        <SpaceBetween size="m">
           {site.downloads.map((item) => (
-            <li key={item.id}>
-              <span className="vw-site-pdf" aria-hidden="true">
-                PDF
-              </span>
-              <a href={photo(`dl-${item.id}`)} download>
-                {item.title}
-              </a>
-              <span>{t("downloads.meta", { size: size(item.size) })}</span>
-            </li>
+            <Container
+              key={item.id}
+              header={
+                <Header
+                  variant="h3"
+                  description={t("downloads.meta", { size: size(item.size) })}
+                  actions={
+                    <Button
+                      href={photo(`dl-${item.id}`)}
+                      download
+                      iconSvg={svg("download")}
+                      ariaLabel={t("downloads.label", { title: item.title })}
+                    >
+                      {t("downloads.get")}
+                    </Button>
+                  }
+                >
+                  {item.title}
+                </Header>
+              }
+            />
           ))}
-        </ul>
+        </SpaceBetween>
       );
     case "contact":
       return (
-        <div className="vw-site-split">
-          <dl className="vw-site-contact">
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <Button
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.name}, ${site.address}`)}`}
+                  target="_blank"
+                  iconSvg={svg("external")}
+                  iconAlign="right"
+                >
+                  {t("contact.map")}
+                </Button>
+              }
+            >
+              {site.name}
+            </Header>
+          }
+        >
+          <ColumnLayout columns={3} variant="text-grid" minColumnWidth={220}>
             <div>
-              <dt>{t("contact.address")}</dt>
-              <dd>{site.address}</dd>
+              <Box variant="awsui-key-label">{t("contact.address")}</Box>
+              <div>{site.address}</div>
             </div>
             {site.phone && (
               <div>
-                <dt>{t("contact.phone")}</dt>
-                <dd>
-                  <a href={`tel:${site.phone}`}>{site.phone}</a>
-                </dd>
+                <Box variant="awsui-key-label">{t("contact.phone")}</Box>
+                <Link href={`tel:${site.phone}`}>{site.phone}</Link>
               </div>
             )}
             {site.email && (
               <div>
-                <dt>{t("contact.email")}</dt>
-                <dd>
-                  <a href={`mailto:${site.email}`}>{site.email}</a>
-                </dd>
+                <Box variant="awsui-key-label">{t("contact.email")}</Box>
+                <Link href={`mailto:${site.email}`}>{site.email}</Link>
               </div>
             )}
-          </dl>
-          <div>
-            <a
-              className="vw-site-cta"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.name}, ${site.address}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t("contact.map")}
-            </a>
-          </div>
-        </div>
+          </ColumnLayout>
+        </Container>
       );
   }
 }

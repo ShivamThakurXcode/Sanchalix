@@ -3401,29 +3401,11 @@
       "columns": { "photo": "Photo", "caption": "Caption", "actions": "Actions" }
     },
     "design": {
-      "title": "Look and sections",
-      "template": "Design",
-      "colour": "Colour",
+      "title": "Sections",
       "sections": "Sections to show",
       "sectionsHint": "Use the arrows to move a section. A section with nothing in it is left out on its own.",
       "moveUp": "Move {section} up",
       "moveDown": "Move {section} down"
-    },
-    "templates": {
-      "classic": "Classic",
-      "classicHint": "A bold colour band at the top, then plain sections",
-      "modern": "Modern",
-      "modernHint": "Large headline, sections on cards",
-      "minimal": "Minimal",
-      "minimalHint": "Text first, no colour band"
-    },
-    "colours": {
-      "blue": "Blue",
-      "teal": "Teal",
-      "green": "Green",
-      "maroon": "Maroon",
-      "purple": "Purple",
-      "slate": "Slate"
     },
     "sections": {
       "about": "About",
@@ -3584,9 +3566,9 @@
       "contact": "Contact",
       "home": "Back to the school website",
       "homeShort": "Home",
-      "menu": "Menu",
+      "more": "More",
       "apply": "Apply for admission",
-      "signIn": "Parent and staff sign in"
+      "signIn": "Sign in"
     },
     "apply": {
       "title": "Apply for admission",
@@ -3596,6 +3578,7 @@
       "firstName": "Child's first name",
       "lastName": "Child's last name",
       "dob": "Date of birth",
+      "dobHint": "Pick a date or type it as year/month/day.",
       "gender": "Gender",
       "genders": { "female": "Girl", "male": "Boy", "other": "Other", "undisclosed": "Prefer not to say" },
       "classSought": "Class applying for",
@@ -3619,6 +3602,8 @@
       }
     },
     "footerLinks": "Quick links",
+    "credit": "Website made with Sanchalix",
+    "readNotice": "Read notice",
     "breadcrumb": "You are here",
     "more": {
       "about": "Read more about us",
@@ -3640,7 +3625,7 @@
     "events": { "title": "Coming up" },
     "staff": { "title": "Our teachers" },
     "gallery": { "title": "Gallery", "photo": "School photo" },
-    "downloads": { "title": "Downloads", "meta": "(PDF, {size})" },
+    "downloads": { "title": "Downloads", "meta": "PDF, {size}", "get": "Download", "label": "Download {title}" },
     "about": { "title": "About us" },
     "notices": { "title": "Notices", "all": "All notices", "none": "There are no notices right now." },
     "contact": { "title": "Contact us", "address": "Address", "map": "Open in Maps, new tab", "phone": "Phone", "email": "Email" },

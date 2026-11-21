@@ -1,9 +1,10 @@
+import Container from "@cloudscape-design/components/container";
+import Header from "@cloudscape-design/components/header";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { notFoundOrMoved } from "@/features/website/moved";
-import { PageHead } from "@/features/website/PageHead";
-import { SiteFrame } from "@/features/website/SiteFrame";
+import { SitePage } from "@/features/website/SitePage";
 import { getContext } from "@/server/auth/context";
 import { can } from "@/server/auth/permissions";
 import { recordVisit } from "@/server/modules/website/analytics";
@@ -58,16 +59,20 @@ export default async function NoticePage({
   if (!site.preview) after(() => recordVisit(slug, "news"));
   const base = siteBase(slug);
   return (
-    <SiteFrame site={site} current="notices">
-      <PageHead
-        site={site}
-        title={notice.title}
-        parent={{ href: `${base}/news`, text: t("notices.all") }}
-      />
-      <article className="vw-site-section">
-        <time dateTime={notice.date}>{date.format(new Date(notice.date))}</time>
-        <p className="vw-site-prose">{notice.body}</p>
-      </article>
-    </SiteFrame>
+    <SitePage
+      site={site}
+      title={notice.title}
+      parent={{ href: `${base}/news`, text: t("notices.all") }}
+    >
+      <Container
+        header={
+          <Header variant="h2" description={date.format(new Date(notice.date))}>
+            {notice.title}
+          </Header>
+        }
+      >
+        <div className="vw-site-prose">{notice.body}</div>
+      </Container>
+    </SitePage>
   );
 }

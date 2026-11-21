@@ -31,19 +31,13 @@ import {
   publishWebsite,
   updateWebsite,
 } from "@/server/modules/website/actions";
-import {
-  COLOURS,
-  type SectionKey,
-  TEMPLATES,
-} from "@/server/modules/website/palette";
+import type { SectionKey } from "@/server/modules/website/palette";
 import type { WebsiteEditor as Website } from "@/server/modules/website/service";
 
 const FIELDS = [
   "slug",
-  "template",
   "admissionsOpen",
   "applyClassIds",
-  "colour",
   "headline",
   "subline",
   "about",
@@ -430,43 +424,6 @@ export function WebsiteEditor({ website }: { website: Website }) {
                 header={<Header variant="h2">{t("design.title")}</Header>}
               >
                 <SpaceBetween size="l">
-                  <FormField label={t("design.template")}>
-                    <Select
-                      selectedOption={{
-                        value: form.template,
-                        label: t(`templates.${form.template}`),
-                      }}
-                      options={TEMPLATES.map((template) => ({
-                        value: template,
-                        label: t(`templates.${template}`),
-                        description: t(`templates.${template}Hint`),
-                      }))}
-                      onChange={({ detail }) =>
-                        set(
-                          "template",
-                          detail.selectedOption.value as typeof form.template,
-                        )
-                      }
-                    />
-                  </FormField>
-                  <FormField label={t("design.colour")}>
-                    <Select
-                      selectedOption={{
-                        value: form.colour,
-                        label: t(`colours.${form.colour}`),
-                      }}
-                      options={COLOURS.map((colour) => ({
-                        value: colour,
-                        label: t(`colours.${colour}`),
-                      }))}
-                      onChange={({ detail }) =>
-                        set(
-                          "colour",
-                          detail.selectedOption.value as typeof form.colour,
-                        )
-                      }
-                    />
-                  </FormField>
                   <FormField
                     label={t("design.sections")}
                     description={t("design.sectionsHint")}

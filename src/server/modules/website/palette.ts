@@ -1,21 +1,3 @@
-// Each of these keeps white text at 4.5:1 or better, so a school can't pick a colour that makes the hero unreadable.
-export const PALETTE = {
-  blue: "#0b5cad",
-  teal: "#0f766e",
-  green: "#15803d",
-  maroon: "#9f1239",
-  purple: "#6d28d9",
-  slate: "#334155",
-} as const;
-
-export type Colour = keyof typeof PALETTE;
-export const COLOURS = Object.keys(PALETTE) as [Colour, ...Colour[]];
-export const colourOf = (hex: string | undefined): Colour =>
-  COLOURS.find((key) => PALETTE[key] === hex) ?? "blue";
-
-export const TEMPLATES = ["classic", "modern", "minimal"] as const;
-export type Template = (typeof TEMPLATES)[number];
-
 // The order they appear in until a school moves them.
 export const SECTION_KEYS = [
   "about",

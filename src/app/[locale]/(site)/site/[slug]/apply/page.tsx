@@ -3,8 +3,9 @@ import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { notFoundOrMoved } from "@/features/website/moved";
 import { ApplyForm } from "@/features/website/ApplyForm";
-import { PageHead } from "@/features/website/PageHead";
-import { SiteFrame } from "@/features/website/SiteFrame";
+import Box from "@cloudscape-design/components/box";
+import SpaceBetween from "@cloudscape-design/components/space-between";
+import { SitePage } from "@/features/website/SitePage";
 import { recordVisit } from "@/server/modules/website/analytics";
 import {
   getPublicSite,
@@ -32,12 +33,11 @@ export default async function ApplyPage({
   if (!site || !classes) notFound();
   after(() => recordVisit(slug, "apply"));
   return (
-    <SiteFrame site={site} current="apply">
-      <PageHead site={site} title={t("apply.title")} />
-      <section className="vw-site-section">
-        <p className="vw-site-prose">{t("apply.intro")}</p>
+    <SitePage site={site} title={t("apply.title")}>
+      <SpaceBetween size="l">
+        <Box variant="p">{t("apply.intro")}</Box>
         <ApplyForm slug={slug} classes={classes} />
-      </section>
-    </SiteFrame>
+      </SpaceBetween>
+    </SitePage>
   );
 }

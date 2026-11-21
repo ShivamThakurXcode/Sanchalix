@@ -17,13 +17,11 @@ import {
   orderSections,
   SECTION_KEYS,
   type SectionKey,
-  type Template,
 } from "./palette";
 import { DOMAIN, SLUG } from "./slug";
 
 export type PublicSite = {
   slug: string;
-  template: Template;
   name: string;
   board: string;
   city: string;
@@ -32,7 +30,6 @@ export type PublicSite = {
   email: string | null;
   hasLogo: boolean;
   admissionsOpen: boolean;
-  theme: { primary: string };
   hero: { headline: string; subline: string };
   about: string;
   preview: boolean;
@@ -84,7 +81,7 @@ async function findSite(slug: string, previewFor?: Types.ObjectId) {
     ...(!preview && { status: "published" }),
   })
     .select(
-      "template theme hero about sections sectionOrder staffIds staffPhotos admissionsOpen applyClassIds programmes facilities testimonials pages",
+      "hero about sections sectionOrder staffIds staffPhotos admissionsOpen applyClassIds programmes facilities testimonials pages",
     )
     .lean();
   return site ? { school, site, preview } : null;
@@ -148,7 +145,6 @@ export async function getPublicSite(
 
   return {
     slug: school.slug ?? slug,
-    template: site.template ?? "classic",
     name: school.name,
     board: school.board,
     city: school.address.city,
@@ -162,7 +158,6 @@ export async function getPublicSite(
     email: school.email ?? null,
     hasLogo: Boolean(school.logoUrl),
     admissionsOpen: Boolean(site.admissionsOpen),
-    theme: { primary: site.theme?.primary ?? "#0b5cad" },
     hero: {
       headline: site.hero?.headline ?? school.name,
       subline: site.hero?.subline ?? "",

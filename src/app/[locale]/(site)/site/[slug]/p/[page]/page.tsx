@@ -1,8 +1,8 @@
+import Container from "@cloudscape-design/components/container";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { notFoundOrMoved } from "@/features/website/moved";
-import { PageHead } from "@/features/website/PageHead";
-import { SiteFrame } from "@/features/website/SiteFrame";
+import { SitePage } from "@/features/website/SitePage";
 import { getContext } from "@/server/auth/context";
 import { can } from "@/server/auth/permissions";
 import { recordVisit } from "@/server/modules/website/analytics";
@@ -34,7 +34,7 @@ export async function generateMetadata({
     : {};
 }
 
-export default async function SitePage({
+export default async function CustomPage({
   params,
 }: {
   params: Promise<{ slug: string; page: string }>;
@@ -45,11 +45,10 @@ export default async function SitePage({
   if (!site || !content) notFound();
   if (!site.preview) after(() => recordVisit(site.slug, "page"));
   return (
-    <SiteFrame site={site} current={`page:${(await params).page}`}>
-      <PageHead site={site} title={content.title} />
-      <section className="vw-site-section">
-        <p className="vw-site-prose">{content.body}</p>
-      </section>
-    </SiteFrame>
+    <SitePage site={site} title={content.title}>
+      <Container>
+        <div className="vw-site-prose">{content.body}</div>
+      </Container>
+    </SitePage>
   );
 }
